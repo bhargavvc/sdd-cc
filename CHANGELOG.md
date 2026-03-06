@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **`/gsd:quick --research` flag** — Spawns focused research agent before planning, composable with `--discuss` and `--full`. Addresses the middle-ground gap between quick and full milestone workflows (#317)
+
 ### Fixed
 - OpenCode agent frontmatter conversion — agents now get correct `name:`, `model: inherit`, `mode: subagent` instead of broken command-style conversion that stripped name and kept `color:`/`skills:`/`tools:`
 - Local install: workflow and reference files now get absolute path to `gsd-tools.cjs` instead of `$HOME/.claude/get-shit-done/`, so local installs work when GSD is outside `$HOME` and spawned subagents with empty `$HOME` still resolve the path (#820)
