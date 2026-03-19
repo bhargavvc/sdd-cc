@@ -110,6 +110,18 @@ Phase: "API documentation"
 1. Retry the question once with the same parameters
 2. If still empty, present the options as a plain-text numbered list and ask the user to type their choice number
 Never proceed with an empty answer.
+
+**Text mode (`workflow.text_mode: true` in config or `--text` flag):**
+When text mode is active, **do not use AskUserQuestion at all**. Instead, present every
+question as a plain-text numbered list and ask the user to type their choice number.
+This is required for Claude Code remote sessions (`/rc` mode) where the Claude App
+cannot forward TUI menu selections back to the host.
+
+Enable text mode:
+- Per-session: pass `--text` flag to any command (e.g., `/gsd:discuss-phase --text`)
+- Per-project: `gsd-tools config-set workflow.text_mode true`
+
+Text mode applies to ALL workflows in the session, not just discuss-phase.
 </answer_validation>
 
 <process>
@@ -240,6 +252,47 @@ Structure the extracted information:
 - `discuss_areas`: Pre-fill answers or flag conflicts ("This contradicts Phase 3 — same here or different?")
 
 **If no prior context exists:** Continue without — this is expected for early phases.
+</step>
+
+<step name="cross_reference_todos">
+Check if any pending todos are relevant to this phase's scope. Surfaces backlog items that might otherwise be missed.
+
+**Load and match todos:**
+```bash
+TODO_MATCHES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" todo match-phase "${PHASE_NUMBER}")
+```
+
+Parse JSON for: `todo_count`, `matches[]` (each with `file`, `title`, `area`, `score`, `reasons`).
+
+**If `todo_count` is 0 or `matches` is empty:** Skip silently — no workflow slowdown.
+
+**If matches found:**
+
+Present matched todos to the user. Show each match with its title, area, and why it matched:
+
+```
+📋 Found {N} pending todo(s) that may be relevant to Phase {X}:
+
+{For each match:}
+- **{title}** (area: {area}, relevance: {score}) — matched on {reasons}
+```
+
+Use AskUserQuestion (multiSelect) asking which todos to fold into this phase's scope:
+
+```
+Which of these todos should be folded into Phase {X} scope?
+(Select any that apply, or none to skip)
+```
+
+**For selected (folded) todos:**
+- Store internally as `<folded_todos>` for inclusion in CONTEXT.md `<decisions>` section
+- These become additional scope items that downstream agents (researcher, planner) will see
+
+**For unselected (reviewed but not folded) todos:**
+- Store internally as `<reviewed_todos>` for inclusion in CONTEXT.md `<deferred>` section
+- This prevents future phases from re-surfacing the same todos as "missed"
+
+**Auto mode (`--auto`):** Fold all todos with score >= 0.4 automatically. Log the selection.
 </step>
 
 <step name="scout_codebase">
@@ -404,7 +457,57 @@ Continue to discuss_areas with selected areas.
 <step name="discuss_areas">
 For each selected area, conduct a focused discussion loop.
 
+**Research-before-questions mode:** Check if `research_questions` is enabled in config (from init context or `.planning/config.json`). When enabled, before presenting questions for each area:
+1. Do a brief web search for best practices related to the area topic
+2. Summarize the top findings in 2-3 bullet points
+3. Present the research alongside the question so the user can make a more informed decision
+
+Example with research enabled:
+```
+Let's talk about [Authentication Strategy].
+
+📊 Best practices research:
+• OAuth 2.0 + PKCE is the current standard for SPAs (replaces implicit flow)
+• Session tokens with httpOnly cookies preferred over localStorage for XSS protection
+• Consider passkey/WebAuthn support — adoption is accelerating in 2025-2026
+
+With that context: How should users authenticate?
+```
+
+When disabled (default), skip the research and present questions directly as before.
+
+**Text mode support:** Parse optional `--text` from `$ARGUMENTS`.
+- Accept `--text` flag OR read `workflow.text_mode` from config (from init context)
+- When active, replace ALL `AskUserQuestion` calls with plain-text numbered lists
+- User types a number to select, or types free text for "Other"
+- This is required for Claude Code remote sessions (`/rc` mode) where TUI menus
+  don't work through the Claude App
+
 **Batch mode support:** Parse optional `--batch` from `$ARGUMENTS`.
+- Accept `--batch`, `--batch=N`, or `--batch N`
+
+**Analyze mode support:** Parse optional `--analyze` from `$ARGUMENTS`.
+When `--analyze` is active, before presenting each question (or question group in batch mode), provide a brief **trade-off analysis** for the decision:
+- 2-3 options with pros/cons based on codebase context and common patterns
+- A recommended approach with reasoning
+- Known pitfalls or constraints from prior phases
+
+Example with `--analyze`:
+```
+**Trade-off analysis: Authentication strategy**
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Session cookies | Simple, httpOnly prevents XSS | Requires CSRF protection, sticky sessions |
+| JWT (stateless) | Scalable, no server state | Token size, revocation complexity |
+| OAuth 2.0 + PKCE | Industry standard for SPAs | More setup, redirect flow UX |
+
+💡 Recommended: OAuth 2.0 + PKCE — your app has social login in requirements (REQ-04) and this aligns with the existing NextAuth setup in `src/lib/auth.ts`.
+
+How should users authenticate?
+```
+
+This gives the user context to make informed decisions without extra prompting. When `--analyze` is absent, present questions directly as before.
 - Accept `--batch`, `--batch=N`, or `--batch N`
 - Default to 4 questions per batch when no number is provided
 - Clamp explicit sizes to 2-5 so a batch stays answerable
@@ -500,10 +603,22 @@ Back to [current area]: [return to current question]"
 ```
 
 Track deferred ideas internally.
+
+**Track discussion log data internally:**
+For each question asked, accumulate:
+- Area name
+- All options presented (label + description)
+- Which option the user selected (or their free-text response)
+- Any follow-up notes or clarifications the user provided
+This data is used to generate DISCUSSION-LOG.md in the `write_context` step.
 </step>
 
 <step name="write_context">
 Create CONTEXT.md capturing decisions made.
+
+**Also generate DISCUSSION-LOG.md** — a full audit trail of the discuss-phase Q&A.
+This file is for human reference only (software audits, compliance reviews). It is NOT
+consumed by downstream agents (researcher, planner, executor).
 
 **Find or create phase directory:**
 
@@ -543,6 +658,11 @@ mkdir -p ".planning/phases/${padded_phase}-${phase_slug}"
 
 ### Claude's Discretion
 [Areas where user said "you decide" — note that Claude has flexibility here]
+
+### Folded Todos
+[If any todos were folded into scope from the cross_reference_todos step, list them here.
+Each entry should include the todo title, original problem, and how it fits this phase's scope.
+If no todos were folded: omit this subsection entirely.]
 
 </decisions>
 
@@ -594,6 +714,12 @@ Every entry needs a full relative path — not just a name.]
 ## Deferred Ideas
 
 [Ideas that came up but belong in other phases. Don't lose them.]
+
+### Reviewed Todos (not folded)
+[If any todos were reviewed in cross_reference_todos but not folded into scope,
+list them here so future phases know they were considered.
+Each entry: todo title + reason it was deferred (out of scope, belongs in Phase Y, etc.)
+If no reviewed-but-deferred todos: omit this subsection entirely.]
 
 [If none: "None — discussion stayed within phase scope"]
 
@@ -648,10 +774,54 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 </step>
 
 <step name="git_commit">
-Commit phase context (uses `commit_docs` from init internally):
+**Write DISCUSSION-LOG.md before committing:**
+
+**File location:** `${phase_dir}/${padded_phase}-DISCUSSION-LOG.md`
+
+```markdown
+# Phase [X]: [Name] - Discussion Log
+
+> **Audit trail only.** Do not use as input to planning, research, or execution agents.
+> Decisions are captured in CONTEXT.md — this log preserves the alternatives considered.
+
+**Date:** [ISO date]
+**Phase:** [phase number]-[phase name]
+**Areas discussed:** [comma-separated list]
+
+---
+
+[For each gray area discussed:]
+
+## [Area Name]
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| [Option 1] | [Description from AskUserQuestion] | |
+| [Option 2] | [Description] | ✓ |
+| [Option 3] | [Description] | |
+
+**User's choice:** [Selected option or free-text response]
+**Notes:** [Any clarifications, follow-up context, or rationale the user provided]
+
+---
+
+[Repeat for each area]
+
+## Claude's Discretion
+
+[List areas where user said "you decide" or deferred to Claude]
+
+## Deferred Ideas
+
+[Ideas mentioned during discussion that were noted for future phases]
+```
+
+Write file.
+
+Commit phase context and discussion log:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${padded_phase}): capture phase context" --files "${phase_dir}/${padded_phase}-CONTEXT.md"
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${padded_phase}): capture phase context" --files "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
 ```
 
 Confirm: "Committed: docs(${padded_phase}): capture phase context"

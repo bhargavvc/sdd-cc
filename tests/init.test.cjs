@@ -679,6 +679,7 @@ describe('cmdInitQuick', () => {
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
+    assert.strictEqual(output.branch_name, null);
     assert.strictEqual(output.slug, 'fix-login-bug');
     assert.strictEqual(output.description, 'Fix login bug');
 
@@ -735,6 +736,44 @@ describe('cmdInitQuick', () => {
 
     const output = JSON.parse(result.output);
     assert.ok(output.slug.length <= 40, `Slug should be <= 40 chars, got ${output.slug.length}: "${output.slug}"`);
+  });
+
+  test('returns quick branch name when quick_branch_template is configured', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'config.json'),
+      JSON.stringify({
+        git: {
+          quick_branch_template: 'gsd/quick-{num}-{slug}',
+        },
+      }, null, 2)
+    );
+
+    const result = runGsdTools('init quick "Fix login bug"', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.ok(output.branch_name, 'branch_name should be set');
+    assert.ok(output.branch_name.startsWith('gsd/quick-'));
+    assert.ok(output.branch_name.endsWith('-fix-login-bug'));
+    assert.ok(output.branch_name.includes(output.quick_id), 'branch_name should include quick_id');
+  });
+
+  test('uses fallback slug in quick branch name when description is omitted', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'config.json'),
+      JSON.stringify({
+        git: {
+          quick_branch_template: 'gsd/quick-{quick}-{slug}',
+        },
+      }, null, 2)
+    );
+
+    const result = runGsdTools('init quick', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.ok(output.branch_name, 'branch_name should be set');
+    assert.ok(output.branch_name.endsWith('-quick'), `Expected fallback slug in branch name, got "${output.branch_name}"`);
   });
 });
 
@@ -906,6 +945,99 @@ describe('cmdInitNewMilestone', () => {
     assert.strictEqual(output2.state_exists, true);
     assert.strictEqual(output2.roadmap_exists, true);
     assert.strictEqual(output2.project_exists, true);
+  });
+
+  test('reports latest completed milestone and archive target for reset flow', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'MILESTONES.md'),
+      '# Milestones\n\n## v1.2 Search Refresh (Shipped: 2026-02-18)\n\n---\n'
+    );
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06-refine-search'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '07-polish'), { recursive: true });
+
+    const result = runGsdTools('init new-milestone', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.latest_completed_milestone, 'v1.2');
+    assert.strictEqual(output.latest_completed_milestone_name, 'Search Refresh');
+    assert.strictEqual(output.phase_dir_count, 2);
+    assert.strictEqual(output.phase_archive_path, '.planning/milestones/v1.2-phases');
+  });
+
+  test('reset flow metadata is null-safe when no milestones file exists', () => {
+    const result = runGsdTools('init new-milestone', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.latest_completed_milestone, null);
+    assert.strictEqual(output.latest_completed_milestone_name, null);
+    assert.strictEqual(output.phase_dir_count, 0);
+    assert.strictEqual(output.phase_archive_path, null);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// findProjectRoot integration — gsd-tools resolves project root from sub-repo
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('findProjectRoot integration via --cwd', () => {
+  let projectRoot;
+
+  beforeEach(() => {
+    projectRoot = createTempProject();
+    // Add ROADMAP.md so init quick doesn't error
+    fs.writeFileSync(
+      path.join(projectRoot, '.planning', 'ROADMAP.md'),
+      '# Roadmap\n\n## Phase 1: Foundation\n**Goal:** Setup\n'
+    );
+    // Write sub_repos config
+    fs.writeFileSync(
+      path.join(projectRoot, '.planning', 'config.json'),
+      JSON.stringify({ sub_repos: ['backend', 'frontend'] })
+    );
+    // Create sub-repo directory
+    fs.mkdirSync(path.join(projectRoot, 'backend'));
+  });
+
+  afterEach(() => {
+    cleanup(projectRoot);
+  });
+
+  test('init quick from sub-repo CWD returns project_root pointing to parent', () => {
+    const backendDir = path.join(projectRoot, 'backend');
+    const result = runGsdTools(['init', 'quick', 'test task', '--cwd', backendDir]);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.ok('project_root' in output, 'Should have project_root');
+    assert.strictEqual(output.project_root, projectRoot, 'project_root should be the parent, not the sub-repo');
+    assert.ok(output.roadmap_exists, 'Should find ROADMAP.md at project root');
+  });
+
+  test('init quick from project root returns project_root as-is', () => {
+    const result = runGsdTools(['init', 'quick', 'test task', '--cwd', projectRoot]);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.project_root, projectRoot);
+  });
+
+  test('state load from sub-repo CWD reads project root config', () => {
+    // Write STATE.md at project root
+    fs.writeFileSync(
+      path.join(projectRoot, '.planning', 'STATE.md'),
+      '---\ncurrent_phase: 1\nphase_name: Foundation\n---\n# State\n'
+    );
+
+    const backendDir = path.join(projectRoot, 'backend');
+    const result = runGsdTools(['state', '--cwd', backendDir]);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    // Should find config from project root, not from backend/
+    assert.deepStrictEqual(output.config.sub_repos, ['backend', 'frontend'],
+      'Should read sub_repos from project root config');
   });
 });
 

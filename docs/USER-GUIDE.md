@@ -50,6 +50,10 @@ A detailed reference for workflows, troubleshooting, and configuration. For quic
              │  │ /gsd:verify-work   │    │  <- Manual UAT
              │  └──────────┬─────────┘    │
              │             │              │
+             │  ┌──────────▼─────────┐    │
+             │  │ /gsd:ship          │    │  <- Create PR (optional)
+             │  └──────────┬─────────┘    │
+             │             │              │
              │     Next Phase?────────────┘
              │             │ No
              └─────────────┼──────────────┘
@@ -284,6 +288,8 @@ Controlled by `workflow.ui_safety_gate` config toggle.
 | `/gsd:plan-phase [N]` | Research + plan + verify | Before executing a phase |
 | `/gsd:execute-phase <N>` | Execute all plans in parallel waves | After planning is complete |
 | `/gsd:verify-work [N]` | Manual UAT with auto-diagnosis | After execution completes |
+| `/gsd:ship [N]` | Create PR from verified work | After verification passes |
+| `/gsd:next` | Auto-detect state and run next step | Anytime — "what should I do next?" |
 | `/gsd:ui-review [N]` | Retroactive 6-pillar visual audit | After execution or verify-work (frontend projects) |
 | `/gsd:audit-milestone` | Verify milestone met its definition of done | Before completing milestone |
 | `/gsd:complete-milestone` | Archive milestone, tag release | All phases verified |
@@ -295,7 +301,8 @@ Controlled by `workflow.ui_safety_gate` config toggle.
 |---------|---------|-------------|
 | `/gsd:progress` | Show status and next steps | Anytime -- "where am I?" |
 | `/gsd:resume-work` | Restore full context from last session | Starting a new session |
-| `/gsd:pause-work` | Save context handoff | Stopping mid-phase |
+| `/gsd:pause-work` | Save structured handoff (HANDOFF.json + continue-here.md) | Stopping mid-phase |
+| `/gsd:session-report` | Generate session summary with work and outcomes | End of session, stakeholder sharing |
 | `/gsd:help` | Show all commands | Quick reference |
 | `/gsd:update` | Update GSD with changelog preview | Check for new versions |
 | `/gsd:join-discord` | Open Discord community invite | Questions or community |
@@ -352,7 +359,8 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:n
   "git": {
     "branching_strategy": "none",
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
-    "milestone_branch_template": "gsd/{milestone}-{slug}"
+    "milestone_branch_template": "gsd/{milestone}-{slug}",
+    "quick_branch_template": null
   }
 }
 ```
@@ -394,6 +402,7 @@ Disable these to speed up phases in familiar domains or when conserving tokens.
 | `git.branching_strategy` | `none`, `phase`, `milestone` | `none` | When and how branches are created |
 | `git.phase_branch_template` | Template string | `gsd/phase-{phase}-{slug}` | Branch name for phase strategy |
 | `git.milestone_branch_template` | Template string | `gsd/{milestone}-{slug}` | Branch name for milestone strategy |
+| `git.quick_branch_template` | Template string or `null` | `null` | Optional branch name for `/gsd:quick` tasks |
 
 **Branching strategies explained:**
 
@@ -403,7 +412,15 @@ Disable these to speed up phases in familiar domains or when conserving tokens.
 | `phase` | At each `execute-phase` | One phase per branch | Code review per phase, granular rollback |
 | `milestone` | At first `execute-phase` | All phases share one branch | Release branches, PR per version |
 
-**Template variables:** `{phase}` = zero-padded number (e.g., "03"), `{slug}` = lowercase hyphenated name, `{milestone}` = version (e.g., "v1.0").
+**Template variables:** `{phase}` = zero-padded number (e.g., "03"), `{slug}` = lowercase hyphenated name, `{milestone}` = version (e.g., "v1.0"), `{num}` / `{quick}` = quick task ID (e.g., "260317-abc").
+
+Example quick-task branching:
+
+```json
+"git": {
+  "quick_branch_template": "gsd/quick-{num}-{slug}"
+}
+```
 
 ### Model Profiles (Per-Agent Breakdown)
 
@@ -425,7 +442,7 @@ Disable these to speed up phases in familiar domains or when conserving tokens.
 - **quality** -- Opus for all decision-making agents, Sonnet for read-only verification. Use when quota is available and the work is critical.
 - **balanced** -- Opus only for planning (where architecture decisions happen), Sonnet for everything else. The default for good reason.
 - **budget** -- Sonnet for anything that writes code, Haiku for research and verification. Use for high-volume work or less critical phases.
-- **inherit** -- All agents use the current session model. Best when switching models dynamically (for example OpenCode `/model`).
+- **inherit** -- All agents use the current session model. Best when switching models dynamically (e.g. OpenCode `/model`), or **required** when using non-Anthropic providers (OpenRouter, local models) to avoid unexpected API costs.
 
 ---
 
@@ -442,12 +459,14 @@ claude --dangerously-skip-permissions
 /gsd:plan-phase 1           # Research + plan + verify
 /gsd:execute-phase 1        # Parallel execution
 /gsd:verify-work 1          # Manual UAT
+/gsd:ship 1                 # Create PR from verified work
 /gsd:ui-review 1            # Visual audit (frontend phases)
 /clear
-/gsd:discuss-phase 2        # Repeat for each phase
+/gsd:next                   # Auto-detect and run next step
 ...
 /gsd:audit-milestone        # Check everything shipped
 /gsd:complete-milestone     # Archive, tag, done
+/gsd:session-report         # Generate session summary
 ```
 
 ### New Project from Existing Document
@@ -539,6 +558,10 @@ Do not re-run `/gsd:execute-phase`. Use `/gsd:quick` for targeted fixes, or `/gs
 
 Switch to budget profile: `/gsd:set-profile budget`. Disable research and plan-check agents via `/gsd:settings` if the domain is familiar to you (or to Claude).
 
+### Using Non-Anthropic Models (OpenRouter, Local)
+
+If GSD subagents call Anthropic models and you're paying through OpenRouter or a local provider, switch to the `inherit` profile: `/gsd:set-profile inherit`. This makes all agents use your current session model instead of specific Anthropic models. See also `/gsd:settings` → Model Profile → Inherit.
+
 ### Working on a Sensitive/Private Project
 
 Set `commit_docs: false` during `/gsd:new-project` or via `/gsd:settings`. Add `.planning/` to your `.gitignore`. Planning artifacts stay local and never touch git.
@@ -550,6 +573,21 @@ Since v1.17, the installer backs up locally modified files to `gsd-local-patches
 ### Subagent Appears to Fail but Work Was Done
 
 A known workaround exists for a Claude Code classification bug. GSD's orchestrators (execute-phase, quick) spot-check actual output before reporting failure. If you see a failure message but commits were made, check `git log` -- the work may have succeeded.
+
+### Parallel Execution Causes Build Lock Errors
+
+If you see pre-commit hook failures, cargo lock contention, or 30+ minute execution times during parallel wave execution, this is caused by multiple agents triggering build tools simultaneously. GSD handles this automatically since v1.26 — parallel agents use `--no-verify` on commits and the orchestrator runs hooks once after each wave. If you're on an older version, add this to your project's `CLAUDE.md`:
+
+```markdown
+## Git Commit Rules for Agents
+All subagent/executor commits MUST use `--no-verify`.
+```
+
+To disable parallel execution entirely: `/gsd:settings` → set `parallelization.enabled` to `false`.
+
+### Windows: Installation Crashes on Protected Directories
+
+If the installer crashes with `EPERM: operation not permitted, scandir` on Windows, this is caused by OS-protected directories (e.g., Chromium browser profiles). Fixed since v1.24 — update to the latest version. As a workaround, temporarily rename the problematic directory before running the installer.
 
 ---
 
@@ -566,6 +604,9 @@ A known workaround exists for a Claude Code classification bug. GSD's orchestrat
 | Plan doesn't match your vision | `/gsd:discuss-phase [N]` then re-plan |
 | Costs running high | `/gsd:set-profile budget` and `/gsd:settings` to toggle agents off |
 | Update broke local changes | `/gsd:reapply-patches` |
+| Want session summary for stakeholder | `/gsd:session-report` |
+| Don't know what step is next | `/gsd:next` |
+| Parallel execution build errors | Update GSD or set `parallelization.enabled: false` |
 
 ---
 
@@ -581,7 +622,9 @@ For reference, here is what GSD creates in your project:
   STATE.md                # Decisions, blockers, session memory
   config.json             # Workflow configuration
   MILESTONES.md           # Completed milestone archive
+  HANDOFF.json            # Structured session handoff (from /gsd:pause-work)
   research/               # Domain research from /gsd:new-project
+  reports/                # Session reports (from /gsd:session-report)
   todos/
     pending/              # Captured ideas awaiting work
     done/                 # Completed todos

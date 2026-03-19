@@ -23,7 +23,7 @@ Initialize a new project with deep context gathering.
 | `--auto @file.md` | Auto-extract from document, skip interactive questions |
 
 **Prerequisites:** No existing `.planning/PROJECT.md`
-**Produces:** `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, `config.json`, `research/`
+**Produces:** `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, `config.json`, `research/`, `CLAUDE.md`
 
 ```bash
 /gsd:new-project                    # Interactive mode
@@ -134,6 +134,71 @@ User acceptance testing with auto-diagnosis.
 
 ---
 
+### `/gsd:next`
+
+Automatically advance to the next logical workflow step. Reads project state and runs the appropriate command.
+
+**Prerequisites:** `.planning/` directory exists
+**Behavior:**
+- No project → suggests `/gsd:new-project`
+- Phase needs discussion → runs `/gsd:discuss-phase`
+- Phase needs planning → runs `/gsd:plan-phase`
+- Phase needs execution → runs `/gsd:execute-phase`
+- Phase needs verification → runs `/gsd:verify-work`
+- All phases complete → suggests `/gsd:complete-milestone`
+
+```bash
+/gsd:next                           # Auto-detect and run next step
+```
+
+---
+
+### `/gsd:session-report`
+
+Generate a session report with work summary, outcomes, and estimated resource usage.
+
+**Prerequisites:** Active project with recent work
+**Produces:** `.planning/reports/SESSION_REPORT.md`
+
+```bash
+/gsd:session-report                 # Generate post-session summary
+```
+
+**Report includes:**
+- Work performed (commits, plans executed, phases progressed)
+- Outcomes and deliverables
+- Blockers and decisions made
+- Estimated token/cost usage
+- Next steps recommendation
+
+---
+
+### `/gsd:ship`
+
+Create PR from completed phase work with auto-generated body.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `N` | No | Phase number or milestone version (e.g., `4` or `v1.0`) |
+| `--draft` | No | Create as draft PR |
+
+**Prerequisites:** Phase verified (`/gsd:verify-work` passed), `gh` CLI installed and authenticated
+**Produces:** GitHub PR with rich body from planning artifacts, STATE.md updated
+
+```bash
+/gsd:ship 4                         # Ship phase 4
+/gsd:ship 4 --draft                 # Ship as draft PR
+```
+
+**PR body includes:**
+- Phase goal from ROADMAP.md
+- Changes summary from SUMMARY.md files
+- Requirements addressed (REQ-IDs)
+- Verification status
+- Key decisions
+
+---
+
 ### `/gsd:ui-review`
 
 Retroactive 6-pillar visual audit of implemented frontend.
@@ -148,6 +213,19 @@ Retroactive 6-pillar visual audit of implemented frontend.
 ```bash
 /gsd:ui-review                      # Audit current phase
 /gsd:ui-review 3                    # Audit phase 3
+```
+
+---
+
+### `/gsd:audit-uat`
+
+Cross-phase audit of all outstanding UAT and verification items.
+
+**Prerequisites:** At least one phase has been executed with UAT or verification
+**Produces:** Categorized audit report with human test plan
+
+```bash
+/gsd:audit-uat
 ```
 
 ---
@@ -185,6 +263,7 @@ Start next version cycle.
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `name` | No | Milestone name |
+| `--reset-phase-numbers` | No | Restart the new milestone at Phase 1 and archive old phase dirs before roadmapping |
 
 **Prerequisites:** Previous milestone completed
 **Produces:** Updated `PROJECT.md`, new `REQUIREMENTS.md`, new `ROADMAP.md`
@@ -192,6 +271,7 @@ Start next version cycle.
 ```bash
 /gsd:new-milestone                  # Interactive
 /gsd:new-milestone "v2.0 Mobile"    # Named milestone
+/gsd:new-milestone --reset-phase-numbers "v2.0 Mobile"  # Restart milestone numbering at 1
 ```
 
 ---

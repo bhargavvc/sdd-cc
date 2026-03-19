@@ -222,6 +222,13 @@ Ask inline (freeform, NOT AskUserQuestion):
 
 Wait for their response. This gives you the context needed to ask intelligent follow-up questions.
 
+**Research-before-questions mode:** Check if `research_questions` is enabled in `.planning/config.json` (or the config from init context). When enabled, before asking follow-up questions about a topic area:
+1. Do a brief web search for best practices related to what the user described
+2. Mention key findings naturally as you ask questions (e.g., "Most projects like this use X — is that what you're thinking, or something different?")
+3. This makes questions more informed without changing the conversational flow
+
+When disabled (default), ask questions directly as before.
+
 **Follow the thread:**
 
 Based on what they said, ask follow-up questions that dig into their response. Use AskUserQuestion with options that probe what they mentioned — interpretations, clarifications, concrete examples.
@@ -333,6 +340,27 @@ Initialize with any decisions made during questioning:
 ```markdown
 ---
 *Last updated: [date] after initialization*
+```
+
+**Evolution section** (include at the end of PROJECT.md, before the footer):
+
+```markdown
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
 ```
 
 Do not compress. Capture everything gathered.
@@ -499,6 +527,36 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "chore: add project 
 ```
 
 **Note:** Run `/gsd:settings` anytime to update these preferences.
+
+## 5.1. Sub-Repo Detection
+
+**Detect multi-repo workspace:**
+
+Check for directories with their own `.git` folders (separate repos within the workspace):
+
+```bash
+find . -maxdepth 1 -type d -not -name ".*" -not -name "node_modules" -exec test -d "{}/.git" \; -print
+```
+
+**If sub-repos found:**
+
+Strip the `./` prefix to get directory names (e.g., `./backend` → `backend`).
+
+Use AskUserQuestion:
+- header: "Multi-Repo Workspace"
+- question: "I detected separate git repos in this workspace. Which directories contain code that GSD should commit to?"
+- multiSelect: true
+- options: one option per detected directory
+  - "[directory name]" — Separate git repo
+
+**If user selects one or more directories:**
+- Set `planning.sub_repos` in config.json to the selected directory names array (e.g., `["backend", "frontend"]`)
+- Auto-set `planning.commit_docs` to `false` (planning docs stay local in multi-repo workspaces)
+- Add `.planning/` to `.gitignore` if not already present
+
+Config changes are saved locally — no commit needed since `commit_docs` is `false` in multi-repo mode.
+
+**If no sub-repos found or user selects none:** Continue with no changes to config.
 
 ## 5.5. Resolve Model Profile
 
@@ -1011,10 +1069,18 @@ Use AskUserQuestion:
 
 **If "Review full file":** Display raw `cat .planning/ROADMAP.md`, then re-ask.
 
+**Generate or refresh project CLAUDE.md before final commit:**
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" generate-claude-md
+```
+
+This ensures new projects get the default GSD workflow-enforcement guidance and current project context in `CLAUDE.md`.
+
 **Commit roadmap (after approval or auto mode):**
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: create roadmap ([N] phases)" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: create roadmap ([N] phases)" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md CLAUDE.md
 ```
 
 ## 9. Done
@@ -1035,6 +1101,7 @@ Present completion summary:
 | Research       | `.planning/research/`       |
 | Requirements   | `.planning/REQUIREMENTS.md` |
 | Roadmap        | `.planning/ROADMAP.md`      |
+| Project guide  | `CLAUDE.md`                 |
 
 **[N] phases** | **[X] requirements** | Ready to build ✓
 ```
@@ -1085,6 +1152,7 @@ Exit skill and invoke SlashCommand("/gsd:discuss-phase 1 --auto")
 - `.planning/REQUIREMENTS.md`
 - `.planning/ROADMAP.md`
 - `.planning/STATE.md`
+- `CLAUDE.md`
 
 </output>
 
@@ -1106,6 +1174,7 @@ Exit skill and invoke SlashCommand("/gsd:discuss-phase 1 --auto")
 - [ ] ROADMAP.md created with phases, requirement mappings, success criteria
 - [ ] STATE.md initialized
 - [ ] REQUIREMENTS.md traceability updated
+- [ ] CLAUDE.md generated with GSD workflow guidance
 - [ ] User knows next step is `/gsd:discuss-phase 1`
 
 **Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.

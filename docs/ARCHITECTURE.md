@@ -171,7 +171,7 @@ Runtime hooks that integrate with the host AI agent:
 
 ### CLI Tools (`get-shit-done/bin/`)
 
-Node.js CLI utility (`gsd-tools.cjs`) with 11 domain modules:
+Node.js CLI utility (`gsd-tools.cjs`) with 15 domain modules:
 
 | Module | Responsibility |
 |--------|---------------|
@@ -246,6 +246,14 @@ Each executor gets:
 - The specific PLAN.md to execute
 - Project context (PROJECT.md, STATE.md)
 - Phase context (CONTEXT.md, RESEARCH.md if available)
+
+#### Parallel Commit Safety
+
+When multiple executors run within the same wave, two mechanisms prevent conflicts:
+
+1. **`--no-verify` commits** — Parallel agents skip pre-commit hooks (which can cause build lock contention, e.g., cargo lock fights in Rust projects). The orchestrator runs `git hook run pre-commit` once after each wave completes.
+
+2. **STATE.md file locking** — All `writeStateMd()` calls use lockfile-based mutual exclusion (`STATE.md.lock` with `O_EXCL` atomic creation). This prevents the read-modify-write race condition where two agents read STATE.md, modify different fields, and the last writer overwrites the other's changes. Includes stale lock detection (10s timeout) and spin-wait with jitter.
 
 ---
 
@@ -334,8 +342,8 @@ UI-SPEC.md (per phase) ───────────────────
 ├── commands/gsd/*.md               # 37 slash commands
 ├── get-shit-done/
 │   ├── bin/gsd-tools.cjs           # CLI utility
-│   ├── bin/lib/*.cjs               # 11 domain modules
-│   ├── workflows/*.md              # 41 workflow definitions
+│   ├── bin/lib/*.cjs               # 15 domain modules
+│   ├── workflows/*.md              # 42 workflow definitions
 │   ├── references/*.md             # 13 shared reference docs
 │   └── templates/                  # Planning artifact templates
 ├── agents/*.md                     # 15 agent definitions
@@ -358,7 +366,7 @@ Equivalent paths for other runtimes:
 
 ```
 .planning/
-├── PROJECT.md              # Project vision, constraints, decisions
+├── PROJECT.md              # Project vision, constraints, decisions, evolution rules
 ├── REQUIREMENTS.md         # Scoped requirements (v1/v2/out-of-scope)
 ├── ROADMAP.md              # Phase breakdown with status tracking
 ├── STATE.md                # Living memory: position, decisions, blockers, metrics

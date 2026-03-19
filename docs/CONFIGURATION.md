@@ -42,7 +42,8 @@ GSD stores project settings in `.planning/config.json`. Created during `/gsd:new
   "git": {
     "branching_strategy": "none",
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
-    "milestone_branch_template": "gsd/{milestone}-{slug}"
+    "milestone_branch_template": "gsd/{milestone}-{slug}",
+    "quick_branch_template": null
   },
   "gates": {
     "confirm_project": true,
@@ -133,6 +134,8 @@ To keep planning artifacts out of git:
 | `parallelization.max_concurrent_agents` | number | `3` | Maximum simultaneous agents |
 | `parallelization.min_plans_for_parallel` | number | `2` | Minimum plans to trigger parallel execution |
 
+> **Pre-commit hooks and parallel execution**: When parallelization is enabled, executor agents commit with `--no-verify` to avoid build lock contention (e.g., cargo lock fights in Rust projects). The orchestrator validates hooks once after each wave completes. STATE.md writes are protected by file-level locking to prevent concurrent write corruption. If you need hooks to run per-commit, set `parallelization.enabled: false`.
+
 ---
 
 ## Git Branching
@@ -142,6 +145,7 @@ To keep planning artifacts out of git:
 | `git.branching_strategy` | enum | `none` | `none`, `phase`, or `milestone` |
 | `git.phase_branch_template` | string | `gsd/phase-{phase}-{slug}` | Branch name template for phase strategy |
 | `git.milestone_branch_template` | string | `gsd/{milestone}-{slug}` | Branch name template for milestone strategy |
+| `git.quick_branch_template` | string or null | `null` | Optional branch name template for `/gsd:quick` tasks |
 
 ### Strategy Comparison
 
@@ -158,6 +162,15 @@ To keep planning artifacts out of git:
 | `{phase}` | `phase_branch_template` | `03` (zero-padded) |
 | `{slug}` | Both templates | `user-authentication` (lowercase, hyphenated) |
 | `{milestone}` | `milestone_branch_template` | `v1.0` |
+| `{num}` / `{quick}` | `quick_branch_template` | `260317-abc` (quick task ID) |
+
+Example quick-task branching:
+
+```json
+"git": {
+  "quick_branch_template": "gsd/quick-{num}-{slug}"
+}
+```
 
 ### Merge Options at Milestone Completion
 
@@ -246,7 +259,7 @@ Valid override values: `opus`, `sonnet`, `haiku`, `inherit`
 | `quality` | Opus for all decision-making, Sonnet for verification | Quota available, critical architecture work |
 | `balanced` | Opus for planning only, Sonnet for everything else | Normal development (default) |
 | `budget` | Sonnet for code-writing, Haiku for research/verification | High-volume work, less critical phases |
-| `inherit` | All agents use current session model | Dynamic model switching (OpenCode `/model`) |
+| `inherit` | All agents use current session model | Dynamic model switching, **non-Anthropic providers** (OpenRouter, local models) |
 
 ---
 

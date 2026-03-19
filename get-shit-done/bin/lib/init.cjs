@@ -5,7 +5,34 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, findPhaseInternal, getRoadmapPhaseInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, getMilestonePhaseFilter, stripShippedMilestones, normalizePhaseName, toPosixPath, output, error } = require('./core.cjs');
+const { loadConfig, resolveModelInternal, findPhaseInternal, getRoadmapPhaseInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, getMilestonePhaseFilter, stripShippedMilestones, extractCurrentMilestone, normalizePhaseName, toPosixPath, output, error } = require('./core.cjs');
+
+function getLatestCompletedMilestone(cwd) {
+  const milestonesPath = path.join(cwd, '.planning', 'MILESTONES.md');
+  if (!fs.existsSync(milestonesPath)) return null;
+
+  try {
+    const content = fs.readFileSync(milestonesPath, 'utf-8');
+    const match = content.match(/^##\s+(v[\d.]+)\s+(.+?)\s+\(Shipped:/m);
+    if (!match) return null;
+    return {
+      version: match[1],
+      name: match[2].trim(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Inject `project_root` into an init result object.
+ * Workflows use this to prefix `.planning/` paths correctly when Claude's CWD
+ * differs from the project root (e.g., inside a sub-repo).
+ */
+function withProjectRoot(cwd, result) {
+  result.project_root = cwd;
+  return result;
+}
 
 function cmdInitExecutePhase(cwd, phase, raw) {
   if (!phase) {
@@ -30,7 +57,9 @@ function cmdInitExecutePhase(cwd, phase, raw) {
 
     // Config flags
     commit_docs: config.commit_docs,
+    sub_repos: config.sub_repos,
     parallelization: config.parallelization,
+    context_window: config.context_window,
     branching_strategy: config.branching_strategy,
     phase_branch_template: config.phase_branch_template,
     milestone_branch_template: config.milestone_branch_template,
@@ -77,7 +106,7 @@ function cmdInitExecutePhase(cwd, phase, raw) {
     config_path: '.planning/config.json',
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitPlanPhase(cwd, phase, raw) {
@@ -153,10 +182,10 @@ function cmdInitPlanPhase(cwd, phase, raw) {
       if (uatFile) {
         result.uat_path = toPosixPath(path.join(phaseInfo.directory, uatFile));
       }
-    } catch {}
+    } catch { /* intentionally empty */ }
   }
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitNewProject(cwd, raw) {
@@ -167,17 +196,26 @@ function cmdInitNewProject(cwd, raw) {
   const braveKeyFile = path.join(homedir, '.gsd', 'brave_api_key');
   const hasBraveSearch = !!(process.env.BRAVE_API_KEY || fs.existsSync(braveKeyFile));
 
-  // Detect existing code
+  // Detect existing code (cross-platform — no Unix `find` dependency)
   let hasCode = false;
   let hasPackageFile = false;
   try {
-    const files = execSync('find . -maxdepth 3 \\( -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.java" \\) 2>/dev/null | grep -v node_modules | grep -v .git | head -5', {
-      cwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    hasCode = files.trim().length > 0;
-  } catch {}
+    const codeExtensions = new Set(['.ts', '.js', '.py', '.go', '.rs', '.swift', '.java']);
+    const skipDirs = new Set(['node_modules', '.git', '.planning', '.claude', '__pycache__', 'target', 'dist', 'build']);
+    function findCodeFiles(dir, depth) {
+      if (depth > 3) return false;
+      let entries;
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return false; }
+      for (const entry of entries) {
+        if (entry.isFile() && codeExtensions.has(path.extname(entry.name))) return true;
+        if (entry.isDirectory() && !skipDirs.has(entry.name)) {
+          if (findCodeFiles(path.join(dir, entry.name), depth + 1)) return true;
+        }
+      }
+      return false;
+    }
+    hasCode = findCodeFiles(cwd, 0);
+  } catch { /* intentionally empty — best-effort detection */ }
 
   hasPackageFile = pathExistsInternal(cwd, 'package.json') ||
                    pathExistsInternal(cwd, 'requirements.txt') ||
@@ -215,12 +253,23 @@ function cmdInitNewProject(cwd, raw) {
     project_path: '.planning/PROJECT.md',
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitNewMilestone(cwd, raw) {
   const config = loadConfig(cwd);
   const milestone = getMilestoneInfo(cwd);
+  const latestCompleted = getLatestCompletedMilestone(cwd);
+  const phasesDir = path.join(cwd, '.planning', 'phases');
+  let phaseDirCount = 0;
+
+  try {
+    if (fs.existsSync(phasesDir)) {
+      phaseDirCount = fs.readdirSync(phasesDir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .length;
+    }
+  } catch {}
 
   const result = {
     // Models
@@ -235,6 +284,10 @@ function cmdInitNewMilestone(cwd, raw) {
     // Current milestone
     current_milestone: milestone.version,
     current_milestone_name: milestone.name,
+    latest_completed_milestone: latestCompleted?.version || null,
+    latest_completed_milestone_name: latestCompleted?.name || null,
+    phase_dir_count: phaseDirCount,
+    phase_archive_path: latestCompleted ? `.planning/milestones/${latestCompleted.version}-phases` : null,
 
     // File existence
     project_exists: pathExistsInternal(cwd, '.planning/PROJECT.md'),
@@ -247,7 +300,7 @@ function cmdInitNewMilestone(cwd, raw) {
     state_path: '.planning/STATE.md',
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitQuick(cwd, description, raw) {
@@ -267,6 +320,13 @@ function cmdInitQuick(cwd, description, raw) {
   const timeBlocks = Math.floor(secondsSinceMidnight / 2);
   const timeEncoded = timeBlocks.toString(36).padStart(3, '0');
   const quickId = dateStr + '-' + timeEncoded;
+  const branchSlug = slug || 'quick';
+  const quickBranchName = config.quick_branch_template
+    ? config.quick_branch_template
+        .replace('{num}', quickId)
+        .replace('{quick}', quickId)
+        .replace('{slug}', branchSlug)
+    : null;
 
   const result = {
     // Models
@@ -277,6 +337,7 @@ function cmdInitQuick(cwd, description, raw) {
 
     // Config
     commit_docs: config.commit_docs,
+    branch_name: quickBranchName,
 
     // Quick task info
     quick_id: quickId,
@@ -297,7 +358,7 @@ function cmdInitQuick(cwd, description, raw) {
 
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitResume(cwd, raw) {
@@ -307,7 +368,7 @@ function cmdInitResume(cwd, raw) {
   let interruptedAgentId = null;
   try {
     interruptedAgentId = fs.readFileSync(path.join(cwd, '.planning', 'current-agent-id.txt'), 'utf-8').trim();
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // File existence
@@ -329,7 +390,7 @@ function cmdInitResume(cwd, raw) {
     commit_docs: config.commit_docs,
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitVerifyWork(cwd, phase, raw) {
@@ -358,7 +419,7 @@ function cmdInitVerifyWork(cwd, phase, raw) {
     has_verification: phaseInfo?.has_verification || false,
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitPhaseOp(cwd, phase, raw) {
@@ -459,10 +520,10 @@ function cmdInitPhaseOp(cwd, phase, raw) {
       if (uatFile) {
         result.uat_path = toPosixPath(path.join(phaseInfo.directory, uatFile));
       }
-    } catch {}
+    } catch { /* intentionally empty */ }
   }
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitTodos(cwd, area, raw) {
@@ -494,9 +555,9 @@ function cmdInitTodos(cwd, area, raw) {
           area: todoArea,
           path: '.planning/todos/pending/' + file,
         });
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // Config
@@ -521,7 +582,7 @@ function cmdInitTodos(cwd, area, raw) {
     pending_dir_exists: pathExistsInternal(cwd, '.planning/todos/pending'),
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitMilestoneOp(cwd, raw) {
@@ -543,9 +604,9 @@ function cmdInitMilestoneOp(cwd, raw) {
         const phaseFiles = fs.readdirSync(path.join(phasesDir, dir));
         const hasSummary = phaseFiles.some(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md');
         if (hasSummary) completedPhases++;
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   // Check archive
   const archiveDir = path.join(cwd, '.planning', 'archive');
@@ -554,7 +615,7 @@ function cmdInitMilestoneOp(cwd, raw) {
     archivedMilestones = fs.readdirSync(archiveDir, { withFileTypes: true })
       .filter(e => e.isDirectory())
       .map(e => e.name);
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // Config
@@ -582,7 +643,7 @@ function cmdInitMilestoneOp(cwd, raw) {
     phases_dir_exists: pathExistsInternal(cwd, '.planning/phases'),
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitMapCodebase(cwd, raw) {
@@ -593,7 +654,7 @@ function cmdInitMapCodebase(cwd, raw) {
   let existingMaps = [];
   try {
     existingMaps = fs.readdirSync(codebaseDir).filter(f => f.endsWith('.md'));
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // Models
@@ -616,7 +677,7 @@ function cmdInitMapCodebase(cwd, raw) {
     codebase_dir_exists: pathExistsInternal(cwd, '.planning/codebase'),
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 function cmdInitProgress(cwd, raw) {
@@ -633,8 +694,8 @@ function cmdInitProgress(cwd, raw) {
   const roadmapPhaseNums = new Set();
   const roadmapPhaseNames = new Map();
   try {
-    const roadmapContent = stripShippedMilestones(
-      fs.readFileSync(path.join(cwd, '.planning', 'ROADMAP.md'), 'utf-8')
+    const roadmapContent = extractCurrentMilestone(
+      fs.readFileSync(path.join(cwd, '.planning', 'ROADMAP.md'), 'utf-8'), cwd
     );
     const headingPattern = /#{2,4}\s*Phase\s+(\d+[A-Z]?(?:\.\d+)*)\s*:\s*([^\n]+)/gi;
     let hm;
@@ -642,7 +703,7 @@ function cmdInitProgress(cwd, raw) {
       roadmapPhaseNums.add(hm[1]);
       roadmapPhaseNames.set(hm[1], hm[2].replace(/\(INSERTED\)/i, '').trim());
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const isDirInMilestone = getMilestonePhaseFilter(cwd);
   const seenPhaseNums = new Set();
@@ -695,7 +756,7 @@ function cmdInitProgress(cwd, raw) {
         nextPhase = phaseInfo;
       }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   // Add phases defined in ROADMAP but not yet scaffolded to disk
   for (const [num, name] of roadmapPhaseNames) {
@@ -726,7 +787,7 @@ function cmdInitProgress(cwd, raw) {
     const state = fs.readFileSync(path.join(cwd, '.planning', 'STATE.md'), 'utf-8');
     const pauseMatch = state.match(/\*\*Paused At:\*\*\s*(.+)/);
     if (pauseMatch) pausedAt = pauseMatch[1].trim();
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // Models
@@ -763,7 +824,7 @@ function cmdInitProgress(cwd, raw) {
     config_path: '.planning/config.json',
   };
 
-  output(result, raw);
+  output(withProjectRoot(cwd, result), raw);
 }
 
 module.exports = {
