@@ -4695,12 +4695,11 @@ function handleStatusline(settings, isInteractive, callback) {
  * @returns {boolean} true if install succeeded
  */
 function installSdk() {
-  const sdkVersion = pkg.version;
-  const sdkPkg = `@gsd-build/sdk@${sdkVersion}`;
+  const sdkPkg = '@gsd-build/sdk@latest';
   console.log(`\n  ${cyan}Installing GSD SDK...${reset}`);
   console.log(`  ${dim}npm install -g ${sdkPkg}${reset}\n`);
   try {
-    require('child_process').execSync(`npm install -g ${sdkPkg}`, { stdio: 'inherit' });
+    require('child_process').execSync(`npm install -g --force --no-fund --loglevel=error ${sdkPkg}`, { stdio: 'pipe' });
     console.log(`\n  ${green}✓${reset} GSD SDK installed (${cyan}gsd-sdk${reset} command available)`);
     return true;
   } catch (e) {
