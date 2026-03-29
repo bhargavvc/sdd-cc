@@ -836,6 +836,44 @@ describe('generate-slug command', () => {
     assert.ok(!result.success, 'should fail without text');
     assert.ok(result.error.includes('text required'), 'error should mention text required');
   });
+
+  test('--raw output contains no newlines or JSON fragments (issue #1391)', () => {
+    const result = runGsdTools('generate-slug "execution flow graph view" --raw', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    assert.strictEqual(result.output, 'execution-flow-graph-view');
+    assert.ok(!result.output.includes('\n'), 'slug must not contain newlines');
+    assert.ok(!result.output.includes('{'), 'slug must not contain JSON braces');
+    assert.ok(!result.output.includes('"'), 'slug must not contain quotes');
+  });
+
+  test('--raw output is safe for use in directory names', () => {
+    const result = runGsdTools('generate-slug "milestone plan editor with launch" --raw', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    assert.match(result.output, /^[a-z0-9-]+$/, 'slug must only contain lowercase alphanumeric and hyphens');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// add-backlog template regression (issue #1391)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('add-backlog template slug safety (issue #1391)', () => {
+  test('add-backlog.md uses --raw flag for generate-slug', () => {
+    const templatePath = path.join(__dirname, '..', 'commands', 'gsd', 'add-backlog.md');
+    const template = fs.readFileSync(templatePath, 'utf-8');
+
+    // The generate-slug call must include --raw to avoid JSON in directory names
+    assert.match(template, /generate-slug.*--raw/,
+      'add-backlog.md must use --raw flag with generate-slug to prevent JSON in directory names');
+  });
+
+  test('thread.md uses --raw flag for generate-slug', () => {
+    const templatePath = path.join(__dirname, '..', 'commands', 'gsd', 'thread.md');
+    const template = fs.readFileSync(templatePath, 'utf-8');
+
+    assert.match(template, /generate-slug.*--raw/,
+      'thread.md must use --raw flag with generate-slug to prevent JSON in file names');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
