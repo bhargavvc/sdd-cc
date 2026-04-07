@@ -38,7 +38,7 @@ echo "  Done."
 # Step 4: Run rebrand
 echo ""
 echo "[4/5] Running rebrand..."
-bash scripts/rebrand-sdd-to-sdd.sh
+bash scripts/rebrand-gsd-to-sdd.sh
 echo "  Done."
 
 # Step 5: Summary
