@@ -5,7 +5,7 @@
  * PreToolUse hook entry in install.js. This test ensures the registration block
  * exists with the correct structure.
  *
- * Also tests the broader anti-pattern: every hook in gsdHooks that is a JS
+ * Also tests the broader anti-pattern: every hook in sddHooks that is a JS
  * PreToolUse/PostToolUse hook should have a corresponding registration block.
  */
 const { describe, test } = require('node:test');
@@ -31,7 +31,7 @@ describe('workflow-guard hook registration (#1767)', () => {
       [
         'install.js must construct a command path for sdd-workflow-guard.js',
         '(e.g. buildHookCommand or node + dirName pattern).',
-        'Currently only referenced in gsdHooks cleanup array.',
+        'Currently only referenced in sddHooks cleanup array.',
       ].join(' ')
     );
   });
@@ -63,11 +63,11 @@ describe('workflow-guard hook registration (#1767)', () => {
 });
 
 describe('hook registration completeness anti-pattern guard', () => {
-  test('every JS hook in gsdHooks has a command construction in install.js', () => {
+  test('every JS hook in sddHooks has a command construction in install.js', () => {
     const content = fs.readFileSync(INSTALL_JS, 'utf-8');
-    // Extract gsdHooks array entries
-    const hooksMatch = content.match(/gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(hooksMatch, 'gsdHooks array must exist in install.js');
+    // Extract sddHooks array entries
+    const hooksMatch = content.match(/sddHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(hooksMatch, 'sddHooks array must exist in install.js');
 
     const hookNames = hooksMatch[1]
       .match(/'([^']+)'/g)
@@ -78,7 +78,7 @@ describe('hook registration completeness anti-pattern guard', () => {
     const missing = [];
     for (const hook of jsHooks) {
       // Each JS hook should have a buildHookCommand or 'node ' command construction
-      // that references the hook filename (not just the gsdHooks array or uninstall filter)
+      // that references the hook filename (not just the sddHooks array or uninstall filter)
       const hookBase = hook.replace('.js', '');
       const lines = content.split('\n').filter(line =>
         line.includes(hook) &&
@@ -92,7 +92,7 @@ describe('hook registration completeness anti-pattern guard', () => {
     assert.strictEqual(
       missing.length, 0,
       [
-        'Every JS hook in gsdHooks must have a command construction in install.js.',
+        'Every JS hook in sddHooks must have a command construction in install.js.',
         'Missing registration for:',
         ...missing.map(h => `  - ${h}`),
       ].join('\n')

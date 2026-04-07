@@ -176,21 +176,21 @@ describe('installer hook registration', () => {
   });
 
   test('install.js adds all 3 new hooks to the uninstall cleanup list', () => {
-    const gsdHooksMatch = installSource.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'install.js should define gsdHooks array for uninstall cleanup');
+    const sddHooksMatch = installSource.match(/const sddHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(sddHooksMatch, 'install.js should define sddHooks array for uninstall cleanup');
 
-    const gsdHooksContent = gsdHooksMatch[1];
+    const sddHooksContent = sddHooksMatch[1];
     assert.ok(
-      gsdHooksContent.includes('sdd-session-state.sh'),
-      'gsdHooks should include sdd-session-state.sh'
+      sddHooksContent.includes('sdd-session-state.sh'),
+      'sddHooks should include sdd-session-state.sh'
     );
     assert.ok(
-      gsdHooksContent.includes('sdd-validate-commit.sh'),
-      'gsdHooks should include sdd-validate-commit.sh'
+      sddHooksContent.includes('sdd-validate-commit.sh'),
+      'sddHooks should include sdd-validate-commit.sh'
     );
     assert.ok(
-      gsdHooksContent.includes('sdd-phase-boundary.sh'),
-      'gsdHooks should include sdd-phase-boundary.sh'
+      sddHooksContent.includes('sdd-phase-boundary.sh'),
+      'sddHooks should include sdd-phase-boundary.sh'
     );
   });
 

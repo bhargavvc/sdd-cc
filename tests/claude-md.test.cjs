@@ -6,7 +6,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('generate-claude-md', () => {
   let tmpDir;
@@ -25,7 +25,7 @@ describe('generate-claude-md', () => {
       '# Test Project\n\n## What This Is\n\nA small test project.\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -49,7 +49,7 @@ describe('generate-claude-md', () => {
     );
     fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), '## Local Notes\n\nKeep this intro.\n');
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -99,7 +99,7 @@ describe('generate-claude-md skills section', () => {
   });
 
   test('includes skills fallback when no skills directories exist', () => {
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -119,7 +119,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: api-payments\ndescription: Payment gateway integration.\n---\n\n# API Payments\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -140,7 +140,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: data-sync\ndescription: ERP synchronization flows.\n---\n\n# Data Sync\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -149,12 +149,12 @@ describe('generate-claude-md skills section', () => {
   });
 
   test('skips sdd- prefixed skill directories', () => {
-    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'sdd-plan-phase');
+    const sddSkillDir = path.join(tmpDir, '.claude', 'skills', 'sdd-plan-phase');
     const userSkillDir = path.join(tmpDir, '.claude', 'skills', 'my-feature');
-    fs.mkdirSync(gsdSkillDir, { recursive: true });
+    fs.mkdirSync(sddSkillDir, { recursive: true });
     fs.mkdirSync(userSkillDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdSkillDir, 'SKILL.md'),
+      path.join(sddSkillDir, 'SKILL.md'),
       '---\nname: sdd-plan-phase\ndescription: SDD internal skill.\n---\n'
     );
     fs.writeFileSync(
@@ -162,7 +162,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: my-feature\ndescription: Custom project skill.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -179,7 +179,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: complex-skill\ndescription: First line of description.\n  Continued on second line.\n  And a third line.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -198,7 +198,7 @@ describe('generate-claude-md skills section', () => {
     fs.writeFileSync(path.join(dir1, 'SKILL.md'), skillContent);
     fs.writeFileSync(path.join(dir2, 'SKILL.md'), skillContent);
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -209,7 +209,7 @@ describe('generate-claude-md skills section', () => {
 
   test('updates existing skills section on regeneration', () => {
     // First generation — no skills
-    runGsdTools('generate-claude-md', tmpDir);
+    runSddTools('generate-claude-md', tmpDir);
     let content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     assert.ok(content.includes('No project skills found'));
 
@@ -221,7 +221,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: new-skill\ndescription: Just added.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -238,7 +238,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: ordering-test\ndescription: Verify section order.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runSddTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');

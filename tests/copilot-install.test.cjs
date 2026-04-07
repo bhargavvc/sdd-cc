@@ -28,7 +28,7 @@ const {
   SDD_COPILOT_INSTRUCTIONS_MARKER,
   SDD_COPILOT_INSTRUCTIONS_CLOSE_MARKER,
   mergeCopilotInstructions,
-  stripGsdFromCopilotInstructions,
+  stripSddFromCopilotInstructions,
   writeManifest,
   reportLocalPatches,
 } = require('../bin/install.js');
@@ -900,17 +900,17 @@ describe('Copilot instructions merge/strip', () => {
     });
   });
 
-  describe('stripGsdFromCopilotInstructions', () => {
+  describe('stripSddFromCopilotInstructions', () => {
     test('returns null when content is SDD-only', () => {
       const content = makeSddBlock('- SDD instructions only') + '\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const result = stripSddFromCopilotInstructions(content);
       assert.strictEqual(result, null, 'returns null for SDD-only content');
     });
 
     test('returns cleaned content when user content exists before markers', () => {
       const content = '# My Setup\n\nCustom rules here.\n\n' +
         makeSddBlock('- SDD stuff') + '\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const result = stripSddFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# My Setup'), 'user content preserved');
@@ -922,7 +922,7 @@ describe('Copilot instructions merge/strip', () => {
 
     test('returns cleaned content when user content exists after markers', () => {
       const content = makeSddBlock('- SDD stuff') + '\n\n# My Notes\n\nPersonal notes.\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const result = stripSddFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# My Notes'), 'user content after preserved');
@@ -933,7 +933,7 @@ describe('Copilot instructions merge/strip', () => {
 
     test('returns cleaned content preserving both before and after', () => {
       const content = '# Before\n\n' + makeSddBlock('- SDD middle') + '\n\n# After\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const result = stripSddFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# Before'), 'content before preserved');
@@ -944,7 +944,7 @@ describe('Copilot instructions merge/strip', () => {
 
     test('returns original content when no markers found', () => {
       const content = '# Just user content\n\nNo SDD markers here.\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const result = stripSddFromCopilotInstructions(content);
       assert.strictEqual(result, content, 'returns content unchanged');
     });
   });
@@ -978,12 +978,12 @@ describe('Copilot uninstall skill removal', () => {
     const sddSkills = entries
       .filter(e => e.isDirectory() && e.name.startsWith('sdd-'))
       .map(e => e.name);
-    const nonGsdSkills = entries
+    const nonSddSkills = entries
       .filter(e => e.isDirectory() && !e.name.startsWith('sdd-'))
       .map(e => e.name);
 
     assert.deepStrictEqual(sddSkills.sort(), ['sdd-bar', 'sdd-foo'], 'identifies sdd-* skills');
-    assert.deepStrictEqual(nonGsdSkills, ['custom-skill'], 'preserves non-sdd skills');
+    assert.deepStrictEqual(nonSddSkills, ['custom-skill'], 'preserves non-sdd skills');
   });
 
   test('cleans SDD section from copilot-instructions.md on uninstall', () => {
@@ -992,7 +992,7 @@ describe('Copilot uninstall skill removal', () => {
       '- SDD managed content\n' +
       SDD_COPILOT_INSTRUCTIONS_CLOSE_MARKER + '\n';
 
-    const result = stripGsdFromCopilotInstructions(content);
+    const result = stripSddFromCopilotInstructions(content);
 
     assert.ok(result !== null, 'does not return null when user content exists');
     assert.ok(result.includes('# My Setup'), 'user content preserved');
@@ -1006,7 +1006,7 @@ describe('Copilot uninstall skill removal', () => {
       '- Only SDD content\n' +
       SDD_COPILOT_INSTRUCTIONS_CLOSE_MARKER + '\n';
 
-    const result = stripGsdFromCopilotInstructions(content);
+    const result = stripSddFromCopilotInstructions(content);
 
     assert.strictEqual(result, null, 'returns null signaling file deletion');
   });
@@ -1440,10 +1440,10 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
   test('clean uninstall when no user files exist', () => {
     runClaudeUninstall(tmpDir);
 
-    const gsdDir = path.join(tmpDir, '.claude', 'sdd');
+    const sddDir = path.join(tmpDir, '.claude', 'sdd');
     const cmdDir = path.join(tmpDir, '.claude', 'commands', 'sdd');
     // Directories should be fully removed when no user files to preserve
-    assert.ok(!fs.existsSync(gsdDir), 'sdd/ should not exist after clean uninstall');
+    assert.ok(!fs.existsSync(sddDir), 'sdd/ should not exist after clean uninstall');
     assert.ok(!fs.existsSync(cmdDir), 'commands/sdd/ should not exist after clean uninstall');
   });
 });

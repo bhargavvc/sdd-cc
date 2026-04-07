@@ -169,10 +169,10 @@ describe('configureKiloPermissions', () => {
 
     const configPath = path.join(configDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
+    const sddPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[sddPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[sddPath], 'allow');
   });
 
   test('updates existing kilo.jsonc configs via JSONC parsing', () => {
@@ -183,11 +183,11 @@ describe('configureKiloPermissions', () => {
     configureKiloPermissions(true);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
+    const sddPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
 
     assert.strictEqual(config.permission.bash, 'ask');
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[sddPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[sddPath], 'allow');
   });
 
   test('writes permissions to an explicit config dir argument', () => {
@@ -197,10 +197,10 @@ describe('configureKiloPermissions', () => {
 
     const configPath = path.join(explicitDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${explicitDir.replace(/\\/g, '/')}/sdd/*`;
+    const sddPath = `${explicitDir.replace(/\\/g, '/')}/sdd/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[sddPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[sddPath], 'allow');
   });
 });
 

@@ -66,10 +66,10 @@ describe('configureOpencodePermissions', () => {
     configureOpencodePermissions(true, configDir);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
+    const sddPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[sddPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[sddPath], 'allow');
   });
 
   test('finishInstall passes the actual config dir to OpenCode permissions', () => {

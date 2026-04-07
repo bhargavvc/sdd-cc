@@ -37,10 +37,10 @@ describe('loadConfig ~/.sdd/defaults.json fallback (#1683)', () => {
     const tmpDir = createBareTmpDir();
 
     // Create ~/.sdd/defaults.json under fake SDD_HOME
-    const gsdDir = path.join(tmpDir, '.sdd');
-    fs.mkdirSync(gsdDir, { recursive: true });
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdDir, 'defaults.json'),
+      path.join(sddDir, 'defaults.json'),
       JSON.stringify({ model_profile: 'quality', context_window: 1000000 })
     );
 
@@ -63,10 +63,10 @@ describe('loadConfig ~/.sdd/defaults.json fallback (#1683)', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning'), { recursive: true });
 
     // Create defaults.json — should NOT be consulted
-    const gsdDir = path.join(tmpDir, '.sdd');
-    fs.mkdirSync(gsdDir, { recursive: true });
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdDir, 'defaults.json'),
+      path.join(sddDir, 'defaults.json'),
       JSON.stringify({ model_profile: 'quality', context_window: 1000000 })
     );
 
@@ -88,10 +88,10 @@ describe('loadConfig ~/.sdd/defaults.json fallback (#1683)', () => {
     );
 
     // Also write defaults.json with a different value
-    const gsdDir = path.join(tmpDir, '.sdd');
-    fs.mkdirSync(gsdDir, { recursive: true });
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdDir, 'defaults.json'),
+      path.join(sddDir, 'defaults.json'),
       JSON.stringify({ model_profile: 'quality', context_window: 1000000 })
     );
 
@@ -106,10 +106,10 @@ describe('loadConfig ~/.sdd/defaults.json fallback (#1683)', () => {
   test('defaults.json with unknown keys → unknown keys NOT passed through', (t) => {
     const tmpDir = createBareTmpDir();
 
-    const gsdDir = path.join(tmpDir, '.sdd');
-    fs.mkdirSync(gsdDir, { recursive: true });
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdDir, 'defaults.json'),
+      path.join(sddDir, 'defaults.json'),
       JSON.stringify({
         model_profile: 'quality',
         unknown_key: 'should_not_appear',
@@ -129,9 +129,9 @@ describe('loadConfig ~/.sdd/defaults.json fallback (#1683)', () => {
   test('defaults.json with invalid JSON → returns hardcoded defaults', (t) => {
     const tmpDir = createBareTmpDir();
 
-    const gsdDir = path.join(tmpDir, '.sdd');
-    fs.mkdirSync(gsdDir, { recursive: true });
-    fs.writeFileSync(path.join(gsdDir, 'defaults.json'), '{ not valid json !!!');
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
+    fs.writeFileSync(path.join(sddDir, 'defaults.json'), '{ not valid json !!!');
 
     process.env.SDD_HOME = tmpDir;
     t.after(() => { delete process.env.SDD_HOME; cleanup(tmpDir); });

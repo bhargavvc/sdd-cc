@@ -188,27 +188,27 @@ describe('install.js source correctness', () => {
   });
 
   test('sdd-workflow-guard.js is in uninstall hook list', () => {
-    const gsdHooksMatch = src.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'gsdHooks array should exist');
-    const gsdHooksContent = gsdHooksMatch[1];
+    const sddHooksMatch = src.match(/const sddHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(sddHooksMatch, 'sddHooks array should exist');
+    const sddHooksContent = sddHooksMatch[1];
     assert.ok(
-      gsdHooksContent.includes('sdd-workflow-guard.js'),
-      'gsdHooks should include sdd-workflow-guard.js'
+      sddHooksContent.includes('sdd-workflow-guard.js'),
+      'sddHooks should include sdd-workflow-guard.js'
     );
   });
 
   test('phantom sdd-check-update.sh is not in uninstall hook list', () => {
-    const gsdHooksMatch = src.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'gsdHooks array should exist');
-    const gsdHooksContent = gsdHooksMatch[1];
+    const sddHooksMatch = src.match(/const sddHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(sddHooksMatch, 'sddHooks array should exist');
+    const sddHooksContent = sddHooksMatch[1];
     assert.ok(
-      !gsdHooksContent.includes('sdd-check-update.sh'),
-      'gsdHooks should not include phantom sdd-check-update.sh'
+      !sddHooksContent.includes('sdd-check-update.sh'),
+      'sddHooks should not include phantom sdd-check-update.sh'
     );
   });
 
-  test('isGsdHookCommand covers all SDD hook names', () => {
-    // The consolidated uninstall cleanup uses isGsdHookCommand — verify all hook names are present
+  test('isSddHookCommand covers all SDD hook names', () => {
+    // The consolidated uninstall cleanup uses isSddHookCommand — verify all hook names are present
     const expectedHookNames = [
       'sdd-check-update', 'sdd-statusline', 'sdd-session-state',
       'sdd-context-monitor', 'sdd-phase-boundary', 'sdd-prompt-guard',
@@ -217,7 +217,7 @@ describe('install.js source correctness', () => {
     for (const name of expectedHookNames) {
       assert.ok(
         src.includes(`'${name}'`) || src.includes(`"${name}"`),
-        `isGsdHookCommand should match ${name}`
+        `isSddHookCommand should match ${name}`
       );
     }
   });
@@ -313,8 +313,8 @@ describe('writeManifest includes .sh hooks', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('uninstall settings cleanup preserves user hooks', () => {
-  // Mirror the isGsdHookCommand logic from install.js
-  const isGsdHookCommand = (cmd) =>
+  // Mirror the isSddHookCommand logic from install.js
+  const isSddHookCommand = (cmd) =>
     cmd && (cmd.includes('sdd-check-update') || cmd.includes('sdd-statusline') ||
       cmd.includes('sdd-session-state') || cmd.includes('sdd-context-monitor') ||
       cmd.includes('sdd-phase-boundary') || cmd.includes('sdd-prompt-guard') ||
@@ -322,11 +322,11 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       cmd.includes('sdd-workflow-guard'));
 
   // Simulate the per-hook filtering logic from uninstall
-  function filterGsdHooks(entries) {
+  function filterSddHooks(entries) {
     return entries
       .map(entry => {
         if (!entry.hooks || !Array.isArray(entry.hooks)) return entry;
-        entry.hooks = entry.hooks.filter(h => !isGsdHookCommand(h.command));
+        entry.hooks = entry.hooks.filter(h => !isSddHookCommand(h.command));
         return entry.hooks.length > 0 ? entry : null;
       })
       .filter(Boolean);
@@ -341,7 +341,7 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       ],
     }];
 
-    const result = filterGsdHooks(entries);
+    const result = filterSddHooks(entries);
     assert.strictEqual(result.length, 1, 'entry should survive with remaining user hook');
     assert.strictEqual(result[0].hooks.length, 1, 'only user hook should remain');
     assert.ok(result[0].hooks[0].command.includes('custom-lint'), 'user hook preserved');
@@ -355,7 +355,7 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       ],
     }];
 
-    const result = filterGsdHooks(entries);
+    const result = filterSddHooks(entries);
     assert.strictEqual(result.length, 0, 'entry should be removed when all hooks are SDD');
   });
 
@@ -367,7 +367,7 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       ],
     }];
 
-    const result = filterGsdHooks(entries);
+    const result = filterSddHooks(entries);
     assert.strictEqual(result.length, 1, 'entry should survive');
     assert.strictEqual(result[0].hooks.length, 1, 'user hook should remain');
   });
@@ -379,14 +379,14 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       { url: 'https://example.com/webhook' },
     ];
 
-    const result = filterGsdHooks(JSON.parse(JSON.stringify(entries)));
+    const result = filterSddHooks(JSON.parse(JSON.stringify(entries)));
     assert.strictEqual(result.length, 2, 'both non-array entries should survive');
     assert.deepStrictEqual(result[0], { type: 'custom', command: 'echo hello' }, 'first non-array entry preserved');
     assert.deepStrictEqual(result[1], { url: 'https://example.com/webhook' }, 'second non-array entry preserved');
   });
 
-  test('all SDD hook names are recognized by isGsdHookCommand', () => {
-    const gsdCommands = [
+  test('all SDD hook names are recognized by isSddHookCommand', () => {
+    const sddCommands = [
       'node /path/sdd-check-update.js',
       'node /path/sdd-statusline.js',
       'bash /path/sdd-session-state.sh',
@@ -398,8 +398,8 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       'node /path/sdd-workflow-guard.js',
     ];
 
-    for (const cmd of gsdCommands) {
-      assert.ok(isGsdHookCommand(cmd), `should recognize: ${cmd}`);
+    for (const cmd of sddCommands) {
+      assert.ok(isSddHookCommand(cmd), `should recognize: ${cmd}`);
     }
   });
 });

@@ -208,7 +208,7 @@ describe('sdd-read-guard hook', () => {
     const content = fs.readFileSync(installPath, 'utf8');
     assert.ok(
       content.includes("'sdd-read-guard.js'"),
-      'sdd-read-guard.js must be in the uninstall gsdHooks list'
+      'sdd-read-guard.js must be in the uninstall sddHooks list'
     );
   });
 
