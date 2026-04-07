@@ -1,0 +1,2052 @@
+# Changelog
+
+All notable changes to SDD will be documented in this file.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+## [1.34.2] - 2026-04-06
+
+### Changed
+- **Node.js minimum lowered to 22** — `engines.node` was raised to `>=24.0.0` based on a CI matrix change, but Node 22 is still in Active LTS until October 2026. Restoring Node 22 support eliminates the `EBADENGINE` warning for users on the previous LTS line. CI matrix now tests against both Node 22 and Node 24.
+
+## [1.34.1] - 2026-04-06
+
+### Fixed
+- **npm publish catchup** — v1.33.0 and v1.34.0 were tagged but never published to npm; this release makes all changes available via `npx @bhargavvc/sdd-cc@latest`
+- Removed npm v1.32.0 stuck notice from README
+
+## [1.34.0] - 2026-04-06
+
+### Added
+- **Gates taxonomy reference** — 4 canonical gate types (pre-flight, revision, escalation, abort) with phase matrix wired into plan-checker and verifier agents (#1781)
+- **Post-merge hunk verification** — `reapply-patches` now detects silently dropped hunks after three-way merge (#1775)
+- **Execution context profiles** — Three context profiles (`dev`, `research`, `review`) for mode-specific agent output guidance (#1807)
+
+### Fixed
+- **Shell hooks missing from npm package** — `hooks/*.sh` files excluded from tarball due to `hooks/dist` allowlist; changed to `hooks` (#1852 #1862)
+- **detectConfigDir priority** — `.claude` now searched first so Claude Code users don't see false update warnings when multiple runtimes are installed (#1860)
+- **Milestone backlog preservation** — `phases clear` no longer wipes 999.x backlog phases (#1858)
+
+## [1.33.0] - 2026-04-05
+
+### Added
+- **Queryable codebase intelligence system** -- Persistent `.planning/intel/` store with structured JSON files (files, exports, symbols, patterns, dependencies). Query via `sdd-tools intel` subcommands. Incremental updates via `sdd-intel-updater` agent. Opt-in; projects without intel store are unaffected. (#1688)
+- **Shared behavioral references** — Add questioning, domain-probes, and UI-brand reference docs wired into workflows (#1658)
+- **Chore / Maintenance issue template** — Structured template for internal maintenance tasks (#1689)
+- **Typed contribution templates** — Separate Bug, Enhancement, and Feature issue/PR templates with approval gates (#1673)
+- **MODEL_ALIAS_MAP regression test** — Ensures model aliases stay current (#1698)
+
+### Changed
+- **CONFIG_DEFAULTS constant** — Deduplicate config defaults into single source of truth in core.cjs (#1708)
+- **Test standardization** — All tests migrated to `node:assert/strict` and `t.after()` cleanup per CONTRIBUTING.md (#1675)
+- **CI matrix** — Drop Windows runner, add static hardcoded-path detection (#1676)
+
+### Fixed
+- **Kilo path replacement** — `copyFlattenedCommands` now applies path replacement for Kilo runtime (#1710)
+- **Prompt guard injection pattern** — Add missing 'act as' pattern to hook (#1697)
+- **Frontmatter inline array parser** — Respect quoted commas in array values (REG-04) (#1695)
+- **Cross-platform planning lock** — Replace shell `sleep` with `Atomics.wait` for Windows compatibility (#1693)
+- **MODEL_ALIAS_MAP** — Update to current Claude model IDs: opus→claude-opus-4-6, sonnet→claude-sonnet-4-6, haiku→claude-haiku-4-5 (#1691)
+- **Skill path replacement** — `copyCommandsAsClaudeSkills` now applies path replacement correctly (#1677)
+- **Runtime detection for /sdd-review** — Environment-based detection instead of hardcoded paths (#1463)
+- **Marketing text in runtime prompt** — Remove marketing taglines from runtime selection (#1672, #1655)
+- **Discord invite link** — Update from vanity URL to permanent invite link (#1648)
+
+### Documentation
+- **COMMANDS.md** — Add /sdd-secure-phase and /sdd-docs-update (#1706)
+- **AGENTS.md** — Add 3 missing agents, fix stale counts (#1703)
+- **ARCHITECTURE.md** — Update component counts and missing entries (#1701)
+- **Localized documentation** — Full v1.32.0 audit for all language READMEs
+
+## [1.32.0] - 2026-04-04
+
+### Added
+- **Trae runtime support** — Install SDD for Trae IDE via `--trae` flag (#1566)
+- **Kilo CLI runtime support** — Full Kilo runtime integration with skill conversion and config management
+- **Augment Code runtime support** — Full Augment runtime with skill conversion
+- **Cline runtime support** — Install SDD for Cline via `.clinerules` (#1605)
+- **`state validate` command** — Detects drift between STATE.md and filesystem reality (#1627)
+- **`state sync` command** — Reconstructs STATE.md from actual project state with `--verify` dry-run (#1627)
+- **`state planned-phase` command** — Records state transition after plan-phase completes (#1627)
+- **`--to N` flag for autonomous mode** — Stop execution after completing a specific phase (#1644)
+- **`--power` flag for discuss-phase** — File-based bulk question answering (#1513)
+- **`--interactive` flag for autonomous** — Lean context with user input
+- **`--diagnose` flag for debug** — Diagnosis-only mode without fix attempts (#1396)
+- **`/sdd-analyze-dependencies` command** — Detect phase dependencies (#1607)
+- **Anti-pattern severity levels** — Mandatory understanding checks at resume (#1491)
+- **Methodology artifact type** — Consumption mechanisms for methodology documents (#1488)
+- **Planner reachability check** — Validates plan steps are achievable (#1606)
+- **Playwright-MCP automated UI verification** — Optional visual verification in verify-phase (#1604)
+- **Pause-work expansion** — Supports non-phase contexts with richer handoffs (#1608)
+- **Research gate** — Blocks planning when RESEARCH.md has unresolved open questions (#1618)
+- **Context reduction** — Markdown truncation and cache-friendly prompt ordering for SDK (#1615)
+- **Verifier milestone scope filtering** — Gaps addressed in later phases marked as deferred, not gaps (#1624)
+- **Read-before-edit guard hook** — Advisory PreToolUse hook prevents infinite retry loops in non-Claude runtimes (#1628)
+- **Response language config** — `response_language` setting for cross-phase language consistency (#1412)
+- **Manual update procedure** — `docs/manual-update.md` for non-npm installs
+- **Commit-docs hook** — Guard for `commit_docs` enforcement (#1395)
+- **Community hooks opt-in** — Optional hooks for SDD projects
+- **OpenCode reviewer** — Added as peer reviewer in `/sdd-review`
+- **Multi-project workspace** — `SDD_PROJECT` env var support
+- **Manager passthrough flags** — Per-step flag configuration via config (#1410)
+- **Adaptive context enrichment** — For 1M-token models
+- **Test quality audit step** — Added to verify-phase workflow
+
+### Changed
+- **Modular planner decomposition** — `sdd-planner.md` split into reference files to stay under 50K char limit (#1612)
+- **Sequential worktree dispatch** — Replaced timing-based stagger with sequential `Task()` + `run_in_background` (#1541)
+- **Skill format migration** — All user-facing suggestions updated from `/sdd:xxx` to `/sdd-xxx` (#1579)
+
+### Fixed
+- **Phase resolution prefix collision** — `find-phase` now uses exact token matching; `1009` no longer matches `1009A` (#1635)
+- **Roadmap backlog phase lookup** — `roadmap get-phase` falls back to full ROADMAP.md for phases outside current milestone (#1634)
+- **Performance Metrics in `phase complete`** — Now updates Velocity and By Phase table on phase completion (#1627)
+- **Ghost `state update-position` command** — Removed dead reference from execute-phase.md (#1627)
+- **Semver comparison for update check** — Proper `isNewer()` comparison replaces `!==`; no longer flags newer-than-npm as update available (#1617)
+- **Next Up block ordering** — `/clear` shown before command (#1631)
+- **Chain flag preservation** — Preserved across discuss → plan → execute (#1633)
+- **Config key validation** — Unrecognized keys in config.json now warn instead of silent drop (#1542)
+- **Parallel worktree STATE.md overwrites** — Orchestrator owns STATE.md/ROADMAP.md writes (#1599)
+- **Dependent plan wave ordering** — Detects `files_modified` overlap and enforces wave ordering (#1587)
+- **Windows session path hash** — Uses `realpathSync.native` (#1593)
+- **STATE.md progress counters** — Corrected during plan execution (#1597)
+- **Workspace agent path resolution** — Correct in worktree context (#1512)
+- **Milestone phase cleanup** — Clears phases directory on new milestone (#1588)
+- **Workstreams allowed-tools** — Removed unnecessary Write permission (#1637)
+- **Executor/planner MCP tools** — Instructed to use available MCP tools (#1603)
+- **Bold plan checkboxes** — Fixed in ROADMAP.md
+- **Backlog recommendations** — Fixed BACKLOG phase handling
+- **Session ID path traversal** — Validated `planningDir`
+- **Copilot executor Task descriptions** — Added required `description` param
+- **OpenCode permission string guard** — Fixed string-valued permission config
+- **Concurrency safety** — Atomic state writes
+- **Health validation** — STATE/ROADMAP cross-validation
+- **Workstream session routing** — Isolated per session with fallback
+
+## [1.31.0] - 2026-04-01
+
+### Added
+- **Claude Code 2.1.88+ skills migration** — Commands now install as `skills/sdd-*/SKILL.md` instead of deprecated `commands/sdd/`. Auto-cleans legacy directory on install
+- **`/sdd:docs-update` command** — Verified documentation generation with doc-writer and doc-verifier agents
+- **`--chain` flag for discuss-phase** — Interactive discuss that auto-chains into plan+execute
+- **`--only N` flag for autonomous** — Execute a single phase instead of all remaining
+- **Schema drift detection** — Prevents false-positive verification when ORM schema files change without migration
+- **`/sdd:secure-phase` command** — Security enforcement layer with threat-model-anchored verification
+- **Claim provenance tagging** — Researcher marks claims with source evidence
+- **Scope reduction detection** — Planner blocked from silently dropping requirements
+- **`workflow.use_worktrees` config** — Toggle to disable worktree isolation
+- **`project_code` config** — Prefix phase directories with project code
+- **Project skills discovery** — CLAUDE.md generation now includes project-specific skills section
+- **CodeRabbit integration** — Added to cross-AI review workflow
+- **SDD SDK enhancements** — Auto `--init` flag, headless prompts, prompt sanitizer
+
+### Changed
+- **`/sdd:quick --full` flag** — Now enables all phases (discussion + research + plan-checking + verification). New `--validate` flag covers previous `--full` behavior (plan-checking + verification only)
+
+### Fixed
+- **Gemini CLI agent loading** — Removed `permissionMode` that broke agent frontmatter parsing
+- **Phase count display** — Clarified misleading N/T banner in autonomous mode
+- **Workstream `set` command** — Now requires name arg, added `--clear` flag
+- **Infinite self-discuss loop** — Fixed in auto/headless mode with `max_discuss_passes` config
+- **Orphan worktree cleanup** — Post-execution cleanup added
+- **JSONC settings.json** — Comments no longer cause data loss
+- **Incremental checkpoint saves** — Discuss answers preserved on interrupt
+- **Stats accuracy** — Verification required for Complete status, added Executed state
+- **Three-way merge for reapply-patches** — Never-skip invariant for backed-up files
+- **SDK verify gates advance** — Skip advance when verification finds gaps
+- **Manager delegates to Skill pipeline** — Instead of raw Task prompts
+- **ROADMAP.md Plans column** — cmdPhaseComplete now updates correctly
+- **Decimal phase numbers** — Commit regex captures decimal phases
+- **Codex path replacement** — Added .claude path replacement
+- **Verifier loads all ROADMAP SCs** — Regardless of PLAN must_haves
+- **Verifier human_needed status** — Enforced when human verification items exist
+- **Hooks shared cache dir** — Correct stale hooks path
+- **Plan file naming** — Convention enforced in sdd-planner agent
+- **Copilot path replacement** — Fixed ~/.claude to ~/.github
+- **Windsurf trailing slash** — Removed from .windsurf/rules path
+- **Slug sanitization** — Added --raw flag, capped length to 60 chars
+
+## [1.30.0] - 2026-03-26
+
+### Added
+- **SDD SDK** — Headless TypeScript SDK (`@gsd-build/sdk`) with `sdd-sdk init` and `sdd-sdk auto` CLI commands for autonomous project execution
+- **`--sdk` installer flag** — Optionally install the SDD SDK during setup (interactive prompt or `--sdk` flag)
+
+## [1.29.0] - 2026-03-25
+
+### Added
+- **Windsurf runtime support** — Full installation and command conversion for Windsurf
+- **Agent skill injection** — Inject project-specific skills into subagents via `agent_skills` config section
+- **UI-phase and UI-review steps** in autonomous workflow
+- **Security scanning CI** — Prompt injection, base64, and secret scanning workflows
+- **Portuguese (pt-BR) documentation**
+- **Korean (ko-KR) documentation**
+- **Japanese (ja-JP) documentation**
+
+### Changed
+- Repository references updated from `glittercowboy` to `sdd-build`
+- Korean translations refined from formal -십시오 to natural -세요 style
+
+### Fixed
+- Frontmatter `must_haves` parser handles any YAML indentation width
+- `findProjectRoot` returns startDir when it already contains `.planning/`
+- Agent workflows include `<available_agent_types>` for named agent spawning
+- Begin-phase preserves Status/LastActivity/Progress in Current Position
+- Missing SDD agents detected with warning when `subagent_type` falls back to general-purpose
+- Codex re-install repairs trapped non-boolean keys under `[features]`
+- Invalid `\Z` regex anchor replaced and redundant pattern removed
+- Hook field validation prevents silent `settings.json` rejection
+- Codex preserves top-level config keys and uses absolute agent paths (≥0.116)
+- Windows shell robustness, `project_root` detection, and hook stdin safety
+- Brownfield project detection expanded to Android, Kotlin, Gradle, and 15+ ecosystems
+- Verify-work checkpoint rendering hardened
+- Worktree agents get `permissionMode: acceptEdits`
+- Security scan self-detection and Windows test compatibility
+
+## [1.28.0] - 2026-03-22
+
+### Added
+- **Workstream namespacing** — Parallel milestone work via `/sdd:workstreams`
+- **Multi-project workspace commands** — Manage multiple SDD projects from a single root
+- **`/sdd:forensics` command** — Post-mortem workflow investigation
+- **`/sdd:milestone-summary` command** — Post-build onboarding for completed milestones
+- **`workflow.skip_discuss` setting** — Bypass discuss-phase in autonomous mode
+- **`workflow.discuss_mode` assumptions config** — Control discuss-phase behavior
+- **UI-phase recommendation** — Automatically surfaced for UI-heavy phases
+- **CLAUDE.md compliance** — Added as plan-checker Dimension 10
+- **Data-flow tracing, environment audit, and behavioral spot-checks** in verification
+- **Multi-runtime selection** in interactive installer
+- **Text mode support** for plan-phase workflow
+- **"Follow the Indirection" debugging technique** in sdd-debugger
+- **`--reviews` flag** for `sdd:plan-phase`
+- **Temp file reaper** — Prevents unbounded /tmp accumulation
+
+### Changed
+- Test matrix optimized from 9 containers down to 4
+- Copilot skill/agent counts computed dynamically from source dirs
+- Wave-specific execution support in execute-phase
+
+### Fixed
+- Windows 8.3 short path failures in worktree tests
+- Worktree isolation enforced for code-writing agents
+- Linked worktrees respect `.planning/` before resolving to main repo
+- Path traversal prevention via workstream name sanitization
+- Strategy branch created before first commit (not at execute-phase)
+- `ProviderModelNotFoundError` on non-Claude runtimes
+- `$HOME` used instead of `~` in installed shell command paths
+- Subdirectory CWD preserved in monorepo worktrees
+- Stale hook detection checking wrong directory path
+- STATE.md frontmatter status preserved when body Status field missing
+- Pipe truncation fix using `fs.writeSync` for stdout
+- Verification gate before writing PROJECT.md in new-milestone
+- Removed `jq` as undocumented hard dependency
+- Discuss-phase no longer ignores workflow instructions
+- Gemini CLI uses `BeforeTool` hook event instead of `PreToolUse`
+
+## [1.27.0] - 2026-03-20
+
+### Added
+- **Advisor mode** — Research-backed discussion with parallel agents evaluating gray areas before you decide
+- **Multi-repo workspace support** — Auto-detection and project root resolution for monorepos and multi-repo setups
+- **Cursor CLI runtime support** — Full installation and command conversion for Cursor
+- **`/sdd:fast` command** — Trivial inline tasks that skip planning entirely
+- **`/sdd:review` command** — Cross-AI peer review of current phase or branch
+- **`/sdd:plant-seed` command** — Backlog parking lot for ideas and persistent context threads
+- **`/sdd:pr-branch` command** — Clean PR branches filtering `.planning/` commits
+- **`/sdd:audit-uat` command** — Verification debt tracking across phases
+- **`--analyze` flag for discuss-phase** — Trade-off analysis during discussion
+- **`research_before_questions` config option** — Run research before discussion questions instead of after
+- **Ticket-based phase identifiers** — Support for team workflows using ticket IDs
+- **Worktree-aware `.planning/` resolution** — File locking for safe parallel access
+- **Discussion audit trail** — Auto-generated `DISCUSSION-LOG.md` during discuss-phase
+- **Context window size awareness** — Optimized behavior for 1M+ context models
+- **Exa and Firecrawl MCP support** — Additional research tools for research agents
+- **Runtime State Inventory** — Researcher capability for rename/refactor phases
+- **Quick-task branch support** — Isolated branches for quick-mode tasks
+- **Decision IDs** — Discuss-to-plan traceability via decision identifiers
+- **Stub detection** — Verifier and executor detect incomplete implementations
+- **Security hardening** — Centralized `security.cjs` module with path traversal prevention, prompt injection detection/sanitization, safe JSON parsing, field name validation, and shell argument validation. PreToolUse `sdd-prompt-guard` hook scans writes to `.planning/` for injection patterns
+
+### Changed
+- CI matrix updated to Node 20, 22, 24 — dropped EOL Node 18
+- GitHub Actions upgraded for Node 24 compatibility
+- Consolidated `planningPaths()` helper across 4 modules — eliminated 34 inline path constructions
+- Deduplicated code, annotated empty catches, consolidated STATE.md field helpers
+- Materialize full config on new-project initialization
+- Workflow enforcement guidance embedded in generated CLAUDE.md
+
+### Fixed
+- Path traversal in `readTextArgOrFile` — arguments validate paths resolve within project directory
+- Codex config.toml corruption from non-boolean `[features]` keys
+- Stale hooks check filtered to sdd-prefixed files only
+- Universal agent name replacement for non-Claude runtimes
+- `--no-verify` support for parallel executor commits
+- ROADMAP fallback for plan-phase, execute-phase, and verify-work
+- Copilot sequential fallback and spot-check completion detection
+- `text_mode` config for Claude Code remote session compatibility
+- Cursor: preserve slash-prefixed commands and unquoted skill names
+- Semver 3+ segment parsing and CRLF frontmatter corruption recovery
+- STATE.md parsing fixes (compound Plan field, progress tables, lifecycle extraction)
+- Windows HOME sandboxing for tests
+- Hook manifest tracking for local patch detection
+- Cross-platform code detection and STATE.md file locking
+- Auto-detect `commit_docs` from gitignore in `loadConfig`
+- Context monitor hook matcher and timeout
+- Codex EOL preservation when enabling hooks
+- macOS `/var` symlink resolution in path validation
+
+## [1.26.0] - 2026-03-18
+
+### Added
+- **Developer profiling pipeline** — `/sdd:profile-user` analyzes Claude Code session history to build behavioral profiles across 8 dimensions (communication, decisions, debugging, UX, vendor choices, frustrations, learning style, explanation depth). Generates `USER-PROFILE.md`, `/sdd:dev-preferences`, and `CLAUDE.md` profile section. Includes `--questionnaire` fallback and `--refresh` for re-analysis (#1084)
+- **`/sdd:ship` command** — PR creation from verified phase work. Auto-generates rich PR body from planning artifacts, pushes branch, creates PR via `gh`, and updates STATE.md (#829)
+- **`/sdd:next` command** — Automatic workflow advancement to the next logical step (#927)
+- **Cross-phase regression gate** — Execute-phase runs prior phases' test suites after execution, catching regressions before they compound (#945)
+- **Requirements coverage gate** — Plan-phase verifies all phase requirements are covered by at least one plan before proceeding (#984)
+- **Structured session handoff artifact** — `/sdd:pause-work` writes `.planning/HANDOFF.json` for machine-readable cross-session continuity (#940)
+- **WAITING.json signal file** — Machine-readable signal for decision points requiring user input (#1034)
+- **Interactive executor mode** — Pair-programming style execution with step-by-step user involvement (#963)
+- **MCP tool awareness** — SDD subagents can discover and use MCP server tools (#973)
+- **Codex hooks support** — SessionStart hook support for Codex runtime (#1020)
+- **Model alias-to-full-ID resolution** — Task API compatibility for model alias strings (#991)
+- **Execution hardening** — Pre-wave dependency checks, cross-plan data contracts, and export-level spot checks (#1082)
+- **Markdown normalization** — Generated markdown conforms to markdownlint standards (#1112)
+- **`/sdd:audit-uat` command** — Cross-phase audit of all outstanding UAT and verification items. Scans every phase for pending, skipped, blocked, and human_needed items. Cross-references against codebase to detect stale documentation. Produces prioritized human test plan grouped by testability
+- **Verification debt tracking** — Five structural improvements to prevent silent loss of UAT/verification items when projects advance:
+  - Cross-phase health check in `/sdd:progress` (Step 1.6) surfaces outstanding items from ALL prior phases
+  - `status: partial` in UAT files distinguishes incomplete testing from completed sessions
+  - `result: blocked` with `blocked_by` tag for tests blocked by external dependencies (server, device, build, third-party)
+  - `human_needed` verification items now persist as HUMAN-UAT.md files (trackable across sessions)
+  - Phase completion and transition warnings surface verification debt non-blockingly
+- **Advisor mode for discuss-phase** — Spawns parallel research agents during `/sdd:discuss-phase` to evaluate gray areas before user decides. Returns structured comparison tables calibrated to user's vendor philosophy. Activates only when `USER-PROFILE.md` exists (#1211)
+
+### Changed
+- Test suite consolidated: runtime converters deduplicated, helpers standardized (#1169)
+- Added test coverage for model-profiles, templates, profile-pipeline, profile-output (#1170)
+- Documented `inherit` profile for non-Anthropic providers (#1036)
+
+### Fixed
+- Agent suggests non-existent `/sdd:transition` — replaced with real commands (#1081, #1100)
+- PROJECT.md drift and phase completion counter accuracy (#956)
+- Copilot executor stuck issue — runtime compatibility fallback added (#1128)
+- Explicit agent type listings prevent fallback after `/clear` (#949)
+- Nested Skill calls breaking AskUserQuestion (#1009)
+- Negative-heuristic `stripShippedMilestones` replaced with positive milestone lookup (#1145)
+- Hook version tracking, stale hook detection, stdin timeout, session-report command (#1153, #1157, #1161, #1162)
+- Hook build script syntax validation (#1165)
+- Verification examples use `fetch()` instead of `curl` for Windows compatibility (#899)
+- Sequential fallback for `map-codebase` on runtimes without Task tool (#1174)
+- Zsh word-splitting fix for RUNTIME_DIRS arrays (#1173)
+- CRLF frontmatter parsing, duplicate cwd crash, STATE.md phase transitions (#1105)
+- Requirements `mark-complete` made idempotent (#948)
+- Profile template paths, field names, and evidence key corrections (#1095)
+- Duplicate variable declaration removed (#1101)
+
+## [1.25.0] - 2026-03-16
+
+### Added
+- **Antigravity runtime support** — Full installation support for the Antigravity AI agent runtime (`--antigravity`), alongside Claude Code, OpenCode, Gemini, Codex, and Copilot
+- **`/sdd:do` command** — Freeform text router that dispatches natural language to the right SDD command
+- **`/sdd:note` command** — Zero-friction idea capture with append, list, and promote-to-todo subcommands
+- **Context window warning toggle** — Config option to disable context monitor warnings (`hooks.context_monitor: false`)
+- **Comprehensive documentation** — New `docs/` directory with feature, architecture, agent, command, CLI, and configuration guides
+
+### Changed
+- `/sdd:discuss-phase` shows remaining discussion areas when asking to continue or move on
+- `/sdd:plan-phase` asks user about research instead of silently deciding
+- Improved GitHub issue and PR templates with industry best practices
+- Settings clarify balanced profile uses Sonnet for research
+
+### Fixed
+- Executor checks for untracked files after task commits
+- Researcher verifies package versions against npm registry before recommending
+- Health check adds CWD guard and strips archived milestones
+- `core.cjs` returns `opus` directly instead of mapping to `inherit`
+- Stats command corrects git and roadmap reporting
+- Init prefers current milestone phase-op targets
+- **Antigravity skills** — `processAttribution` was missing from `copyCommandsAsAntigravitySkills`, causing SKILL.md files to be written without commit attribution metadata
+- Copilot install tests updated for UI agent count changes
+
+## [1.24.0] - 2026-03-15
+
+### Added
+- **`/sdd:quick --research` flag** — Spawns focused research agent before planning, composable with `--discuss` and `--full` (#317)
+- **`inherit` model profile** for OpenCode — agents inherit the user's selected runtime model via `/model`
+- **Persistent debug knowledge base** — resolved debug sessions append to `.planning/debug/knowledge-base.md`, eliminating cold-start investigation on recurring issues
+- **Programmatic `/sdd:set-profile`** — runs as a script instead of LLM-driven workflow, executes in seconds instead of 30-40s
+
+### Fixed
+- ROADMAP.md searches scoped to current milestone — multi-milestone projects no longer match phases from archived milestones
+- OpenCode agent frontmatter conversion — agents get correct `name:`, `model: inherit`, `mode: subagent`
+- `opencode.jsonc` config files respected during install (previously only `.json` was detected) (#1053)
+- Windows installer crash on EPERM/EACCES when scanning protected directories (#964)
+- `sdd-tools.cjs` uses absolute paths in all install types (#820)
+- Invalid `skills:` frontmatter removed from UI agent files
+
+## [1.23.0] - 2026-03-15
+
+### Added
+- `/sdd:ui-phase` + `/sdd:ui-review` — UI design contract generation and retroactive 6-pillar visual audit for frontend phases (closes #986)
+- `/sdd:stats` — project statistics dashboard: phases, plans, requirements, git metrics, and timeline
+- **Copilot CLI** runtime support — install with `--copilot`, maps Claude Code tools to GitHub Copilot tools
+- **`sdd-autonomous` skill** for Codex runtime — enables autonomous SDD execution
+- **Node repair operator** — autonomous recovery when task verification fails: RETRY, DECOMPOSE, or PRUNE before escalating to user. Configurable via `workflow.node_repair_budget` (default: 2 attempts). Disable with `workflow.node_repair: false`
+- Mandatory `read_first` and `acceptance_criteria` sections in plans to prevent shallow execution
+- Mandatory `canonical_refs` section in CONTEXT.md for traceable decisions
+- Quick mode uses `YYMMDD-xxx` timestamp IDs instead of auto-increment numbers
+
+### Changed
+- `/sdd:discuss-phase` supports explicit `--batch` mode for grouped question intake
+
+### Fixed
+- `/sdd:new-milestone` no longer resets `workflow.research` config during milestone transitions
+- `/sdd:update` is runtime-aware and targets the correct runtime directory
+- Phase-complete properly updates REQUIREMENTS.md traceability (closes #848)
+- Auto-advance no longer triggers without `--auto` flag (closes #1026, #932)
+- `--auto` flag correctly skips interactive discussion questions (closes #1025)
+- Decimal phase numbers correctly padded in init.cjs (closes #915)
+- Empty-answer validation guards added to discuss-phase (closes #912)
+- Tilde paths in templates prevent PII leak in `.planning/` files (closes #987)
+- Invalid `commit-docs` command replaced with `commit` in workflows (closes #968)
+- Uninstall mode indicator shown in banner output (closes #1024)
+- WSL + Windows Node.js mismatch detected with user warning (closes #1021)
+- Deprecated Codex config keys removed to fix UI instability
+- Unsupported Gemini agent `skills` frontmatter stripped for compatibility
+- Roadmap `complete` checkbox overrides `disk_status` for phase detection
+- Plan-phase Nyquist validation works when research is disabled (closes #1002)
+- Valid Codex agent TOML emitted by installer
+- Escape characters corrected in grep commands
+
+## [1.22.4] - 2026-03-03
+
+### Added
+- `--discuss` flag for `/sdd:quick` — lightweight pre-planning discussion to gather context before quick tasks
+
+### Fixed
+- Windows: `@file:` protocol resolution for large init payloads (>50KB) — all 32 workflow/agent files now resolve temp file paths instead of letting agents hallucinate `/tmp` paths (#841)
+- Missing `skills` frontmatter on sdd-nyquist-auditor agent
+
+## [1.22.3] - 2026-03-03
+
+### Added
+- Verify-work auto-injects a cold-start smoke test for phases that modify server, database, seed, or startup files — catches warm-state blind spots
+
+### Changed
+- Renamed `depth` setting to `granularity` with values `coarse`/`standard`/`fine` to accurately reflect what it controls (phase count, not investigation depth). Backward-compatible migration auto-renames existing config.
+
+### Fixed
+- Installer now replaces `$HOME/.claude/` paths (not just `~/.claude/`) for non-Claude runtimes — fixes broken commands on local installs and Gemini/OpenCode/Codex installs (#905, #909)
+
+## [1.22.2] - 2026-03-03
+
+### Fixed
+- Codex installer no longer creates duplicate `[features]` and `[agents]` sections on re-install (#902, #882)
+- Context monitor hook is advisory instead of blocking non-SDD workflows
+- Hooks respect `CLAUDE_CONFIG_DIR` for custom config directories
+- Hooks include stdin timeout guard to prevent hanging on pipe errors
+- Statusline context scaling matches autocompact buffer thresholds
+- Gap closure plans compute wave numbers instead of hardcoding wave 1
+- `auto_advance` config flag no longer persists across sessions
+- Phase-complete scans ROADMAP.md as fallback for next-phase detection
+- `getMilestoneInfo()` prefers in-progress milestone marker instead of always returning first
+- State parsing supports both bold and plain field formats
+- Phase counting scoped to current milestone
+- Total phases derived from ROADMAP when phase directories don't exist yet
+- OpenCode detects runtime config directory instead of hardcoding `.claude`
+- Gemini hooks use `AfterTool` event instead of `PostToolUse`
+- Multi-word commit messages preserved in CLI router
+- Regex patterns in milestone/state helpers properly escaped
+- `isGitIgnored` uses `--no-index` for tracked file detection
+- AskUserQuestion freeform answer loop properly breaks on valid input
+- Agent spawn types standardized across all workflows
+
+### Changed
+- Anti-heredoc instruction extended to all file-writing agents
+- Agent definitions include skills frontmatter and hooks examples
+
+### Chores
+- Removed leftover `new-project.md.bak` file
+- Deduplicated `extractField` and phase filter helpers into shared modules
+- Added 47 agent frontmatter and spawn consistency tests
+
+## [1.22.1] - 2026-03-02
+
+### Added
+- Discuss phase now loads prior context (PROJECT.md, REQUIREMENTS.md, STATE.md, and all prior CONTEXT.md files) before identifying gray areas — prevents re-asking questions you've already answered in earlier phases
+
+### Fixed
+- Shell snippets in workflows use `printf` instead of `echo` to prevent jq parse errors with special characters
+
+## [1.22.0] - 2026-02-27
+
+### Added
+- Codex multi-agent support: `request_user_input` mapping, multi-agent config, and agent role generation for Codex runtime
+- Analysis paralysis guard in agents to prevent over-deliberation during planning
+- Exhaustive cross-check and task-level TDD patterns in agent workflows
+- Code-aware discuss phase with codebase scouting — `/sdd:discuss-phase` now analyzes relevant source files before asking questions
+
+### Fixed
+- Update checker clears both cache paths to prevent stale version notifications
+- Statusline migration regex no longer clobbers third-party statuslines
+- Subagent paths use `$HOME` instead of `~` to prevent `MODULE_NOT_FOUND` errors
+- Skill discovery supports both `.claude/skills/` and `.agents/skills/` paths
+- `resolve-model` variable names aligned with template placeholders
+- Regex metacharacters properly escaped in `stateExtractField`
+- `model_overrides` and `nyquist_validation` correctly loaded from config
+- `phase-plan-index` no longer returns null/empty for `files_modified`, `objective`, and `task_count`
+
+## [1.21.1] - 2026-02-27
+
+### Added
+- Comprehensive test suite: 428 tests across 13 test files covering core, commands, config, dispatcher, frontmatter, init, milestone, phase, roadmap, state, and verify modules
+- CI pipeline with GitHub Actions: 9-matrix (3 OS × 3 Node versions), c8 coverage enforcement at 70% line threshold
+- Cross-platform test runner (`scripts/run-tests.cjs`) for Windows compatibility
+
+### Fixed
+- `getMilestoneInfo()` returns wrong version when shipped milestones are collapsed in `<details>` blocks
+- Milestone completion stats and archive now scoped to current milestone phases only (previously counted all phases on disk including prior milestones)
+- MILESTONES.md entries now insert in reverse chronological order (newest first)
+- Cross-platform path separators: all user-facing file paths use forward slashes on Windows
+- JSON quoting and dollar sign handling in CLI arguments on Windows
+- `model_overrides` loaded from config and `resolveModelInternal` used in CLI
+
+## [1.21.0] - 2026-02-25
+
+### Added
+- YAML frontmatter sync to STATE.md for machine-readable status tracking
+- `/sdd:add-tests` command for post-phase test generation
+- Codex runtime support with skills-first installation
+- Standard `project_context` block in sdd-verifier output
+- Codex changelog and usage documentation
+
+### Changed
+- Improved onboarding UX: installer now suggests `/sdd:new-project` instead of `/sdd:help`
+- Updated Discord invite to vanity URL (discord.gg/sdd)
+- Compressed Nyquist validation layer to align with SDD meta-prompt conventions
+- Requirements propagation now includes `phase_req_ids` from ROADMAP to workflow agents
+- Debug sessions require human verification before resolution
+
+### Fixed
+- Multi-level decimal phase handling (e.g., 72.1.1) with proper regex escaping
+- `/sdd:update` always installs latest package version
+- STATE.md decision corruption and dollar sign handling
+- STATE.md frontmatter mapping for requirements-completed status
+- Progress bar percent clamping to prevent RangeError crashes
+- `--cwd` override support in state-snapshot command
+
+## [1.20.6] - 2025-02-23
+
+### Added
+- Context window monitor hook with WARNING/CRITICAL alerts when agent context usage exceeds thresholds
+- Nyquist validation layer in plan-phase pipeline to catch quality issues before execution
+- Option highlighting and gray area looping in discuss-phase for clearer preference capture
+
+### Changed
+- Refactored installer tools into 11 domain modules for maintainability
+
+### Fixed
+- Auto-advance chain no longer breaks when skills fail to resolve inside Task subagents
+- Gemini CLI workflows and templates no longer incorrectly convert to TOML format
+- Universal phase number parsing handles all formats consistently (decimal phases, plain numbers)
+
+## [1.20.5] - 2026-02-19
+
+### Fixed
+- `/sdd:health --repair` now creates timestamped backup before regenerating STATE.md (#657)
+
+### Changed
+- Subagents now discover and load project CLAUDE.md and skills at spawn time for better project context (#671, #672)
+- Improved context loading reliability in spawned agents
+
+## [1.20.4] - 2026-02-17
+
+### Fixed
+- Executor agents now update ROADMAP.md and REQUIREMENTS.md after each plan completes — previously both documents stayed unchecked throughout milestone execution
+- New `requirements mark-complete` CLI command enables per-plan requirement tracking instead of waiting for phase completion
+- Executor final commit includes ROADMAP.md and REQUIREMENTS.md
+
+## [1.20.3] - 2026-02-16
+
+### Fixed
+- Milestone audit now cross-references three independent sources (VERIFICATION.md + SUMMARY frontmatter + REQUIREMENTS.md traceability) instead of single-source phase status checks
+- Orphaned requirements (in traceability table but absent from all phase VERIFICATIONs) detected and forced to `unsatisfied`
+- Integration checker receives milestone requirement IDs and maps findings to affected requirements
+- `complete-milestone` gates on requirements completion before archival — surfaces unchecked requirements with proceed/audit/abort options
+- `plan-milestone-gaps` updates REQUIREMENTS.md traceability table (phase assignments, checkbox resets, coverage count) and includes it in commit
+- Gemini CLI: escape `${VAR}` shell variables in agent bodies to prevent template validation failures
+
+## [1.20.2] - 2026-02-16
+
+### Fixed
+- Requirements tracking chain now strips bracket syntax (`[REQ-01, REQ-02]` → `REQ-01, REQ-02`) across all agents
+- Verifier cross-references requirement IDs from PLAN frontmatter instead of only grepping REQUIREMENTS.md by phase number
+- Orphaned requirements (mapped to phase in REQUIREMENTS.md but unclaimed by any plan) are detected and flagged
+
+### Changed
+- All `requirements` references across planner, templates, and workflows enforce MUST/REQUIRED/CRITICAL language — no more passive suggestions
+- Plan checker now **fails** (blocking, not warning) when any roadmap requirement is absent from all plans
+- Researcher receives phase-specific requirement IDs and must output a `<phase_requirements>` mapping table
+- Phase requirement IDs extracted from ROADMAP and passed through full chain: researcher → planner → checker → executor → verifier
+- Verification report requirements table expanded with Source Plan, Description, and Evidence columns
+
+## [1.20.1] - 2026-02-16
+
+### Fixed
+- Auto-mode (`--auto`) now survives context compaction by persisting `workflow.auto_advance` to config.json on disk
+- Checkpoints no longer block auto-mode: human-verify auto-approves, decision auto-selects first option (human-action still stops for auth gates)
+- Plan-phase now passes `--auto` flag when spawning execute-phase
+- Auto-advance clears on milestone complete to prevent runaway chains
+
+## [1.20.0] - 2026-02-15
+
+### Added
+- `/sdd:health` command — validates `.planning/` directory integrity with `--repair` flag for auto-fixing config.json and STATE.md
+- `--full` flag for `/sdd:quick` — enables plan-checking (max 2 iterations) and post-execution verification on quick tasks
+- `--auto` flag wired from `/sdd:new-project` through the full phase chain (discuss → plan → execute)
+- Auto-advance chains phase execution across full milestones when `workflow.auto_advance` is enabled
+
+### Fixed
+- Plans created without user context — `/sdd:plan-phase` warns when no CONTEXT.md exists, `/sdd:discuss-phase` warns when plans already exist (#253)
+- OpenCode installer converts `general-purpose` subagent type to OpenCode's `general`
+- `/sdd:complete-milestone` respects `commit_docs` setting when merging branches
+- Phase directories tracked in git via `.gitkeep` files
+
+## [1.19.2] - 2026-02-15
+
+### Added
+- User-level default settings via `~/.sdd/defaults.json` — set SDD defaults across all projects
+- Per-agent model overrides — customize which Claude model each agent uses
+
+### Changed
+- Completed milestone phase directories are now archived for cleaner project structure
+- Wave execution diagram added to README for clearer parallelization visualization
+
+### Fixed
+- OpenCode local installs now write config to `./.opencode/` instead of overwriting global `~/.config/opencode/`
+- Large JSON payloads write to temp files to prevent truncation in tool calls
+- Phase heading matching now supports `####` depth
+- Phase padding normalized in insert command
+- ESM conflicts prevented by renaming sdd-tools.js to .cjs
+- Config directory paths quoted in hook templates for local installs
+- Settings file corruption prevented by using Write tool for file creation
+- Plan-phase autocomplete fixed by removing "execution" from description
+- Executor now has scope boundary and attempt limit to prevent runaway loops
+
+## [1.19.1] - 2026-02-15
+
+### Added
+- Auto-advance pipeline: `--auto` flag on `discuss-phase` and `plan-phase` chains discuss → plan → execute without stopping. Also available as `workflow.auto_advance` config setting
+
+### Fixed
+- Phase transition routing now routes to `discuss-phase` (not `plan-phase`) when no CONTEXT.md exists — consistent across all workflows (#530)
+- ROADMAP progress table plan counts are now computed from disk instead of LLM-edited — deterministic "X/Y Complete" values (#537)
+- Verifier uses ROADMAP Success Criteria directly instead of deriving verification truths from the Goal field (#538)
+- REQUIREMENTS.md traceability updates when a phase completes
+- STATE.md updates after discuss-phase completes (#556)
+- AskUserQuestion headers enforced to 12-char max to prevent UI truncation (#559)
+- Agent model resolution returns `inherit` instead of hardcoded `opus` (#558)
+
+## [1.19.0] - 2026-02-15
+
+### Added
+- Brave Search integration for researchers (requires BRAVE_API_KEY environment variable)
+- GitHub issue templates for bug reports and feature requests
+- Security policy for responsible disclosure
+- Auto-labeling workflow for new issues
+
+### Fixed
+- UAT gaps and debug sessions now auto-resolve after gap-closure phase execution (#580)
+- Fall back to ROADMAP.md when phase directory missing (#521)
+- Template hook paths for OpenCode/Gemini runtimes (#585)
+- Accept both `##` and `###` phase headers, detect malformed ROADMAPs (#598, #599)
+- Use `{phase_num}` instead of ambiguous `{phase}` for filenames (#601)
+- Add package.json to prevent ESM inheritance issues (#602)
+
+## [1.18.0] - 2026-02-08
+
+### Added
+- `--auto` flag for `/sdd:new-project` — runs research → requirements → roadmap automatically after config questions. Expects idea document via @ reference (e.g., `/sdd:new-project --auto @prd.md`)
+
+### Fixed
+- Windows: SessionStart hook now spawns detached process correctly
+- Windows: Replaced HEREDOC with literal newlines for git commit compatibility
+- Research decision from `/sdd:new-milestone` now persists to config.json
+
+## [1.17.0] - 2026-02-08
+
+### Added
+- **sdd-tools verification suite**: `verify plan-structure`, `verify phase-completeness`, `verify references`, `verify commits`, `verify artifacts`, `verify key-links` — deterministic structural checks
+- **sdd-tools frontmatter CRUD**: `frontmatter get/set/merge/validate` — safe YAML frontmatter operations with schema validation
+- **sdd-tools template fill**: `template fill summary/plan/verification` — pre-filled document skeletons
+- **sdd-tools state progression**: `state advance-plan`, `state update-progress`, `state record-metric`, `state add-decision`, `state add-blocker`, `state resolve-blocker`, `state record-session` — automates STATE.md updates
+- **Local patch preservation**: Installer now detects locally modified SDD files, backs them up to `sdd-local-patches/`, and creates a manifest for restoration
+- `/sdd:reapply-patches` command to merge local modifications back after SDD updates
+
+### Changed
+- Agents (executor, planner, plan-checker, verifier) now use sdd-tools for state updates and verification instead of manual markdown parsing
+- `/sdd:update` workflow now notifies about backed-up local patches and suggests `/sdd:reapply-patches`
+
+### Fixed
+- Added workaround for Claude Code `classifyHandoffIfNeeded` bug that causes false agent failures — execute-phase and quick workflows now spot-check actual output before reporting failure
+
+## [1.16.0] - 2026-02-08
+
+### Added
+- 10 new sdd-tools CLI commands that replace manual AI orchestration of mechanical operations:
+  - `phase add <desc>` — append phase to roadmap + create directory
+  - `phase insert <after> <desc>` — insert decimal phase
+  - `phase remove <N> [--force]` — remove phase with full renumbering
+  - `phase complete <N>` — mark done, update state + roadmap, detect milestone end
+  - `roadmap analyze` — unified roadmap parser with disk status
+  - `milestone complete <ver> [--name]` — archive roadmap/requirements/audit
+  - `validate consistency` — check phase numbering and disk/roadmap sync
+  - `progress [json|table|bar]` — render progress in various formats
+  - `todo complete <file>` — move todo from pending to completed
+  - `scaffold [context|uat|verification|phase-dir]` — template generation
+
+### Changed
+- Workflows now delegate deterministic operations to sdd-tools CLI, reducing token usage and errors:
+  - `remove-phase.md`: 13 manual steps → 1 CLI call + confirm + commit
+  - `add-phase.md`: 6 manual steps → 1 CLI call + state update
+  - `insert-phase.md`: 7 manual steps → 1 CLI call + state update
+  - `complete-milestone.md`: archival delegated to `milestone complete`
+  - `progress.md`: roadmap parsing delegated to `roadmap analyze`
+
+### Fixed
+- Execute-phase now correctly spawns `sdd-executor` subagents instead of generic task agents
+- `commit_docs=false` setting now respected in all `.planning/` commit paths (execute-plan, debugger, reference docs all route through sdd-tools CLI)
+- Execute-phase orchestrator no longer bloats context by embedding file content — passes paths instead, letting subagents read in their fresh context
+- Windows: Normalized backslash paths in sdd-tools invocations (contributed by @rmindel)
+
+## [1.15.0] - 2026-02-08
+
+### Changed
+- Optimized workflow context loading to eliminate redundant file reads, reducing token usage by ~5,000-10,000 tokens per workflow execution
+
+## [1.14.0] - 2026-02-08
+
+### Added
+- Context-optimizing parsing commands in sdd-tools (`phase-plan-index`, `state-snapshot`, `summary-extract`) — reduces agent context usage by returning structured JSON instead of raw file content
+
+### Fixed
+- Installer no longer deletes opencode.json on JSONC parse errors — now handles comments, trailing commas, and BOM correctly (#474)
+
+## [1.13.0] - 2026-02-08
+
+### Added
+- `sdd-tools history-digest` — Compiles phase summaries into structured JSON for faster context loading
+- `sdd-tools phases list` — Lists phase directories with filtering (replaces fragile `ls | sort -V` patterns)
+- `sdd-tools roadmap get-phase` — Extracts phase sections from ROADMAP.md
+- `sdd-tools phase next-decimal` — Calculates next decimal phase number for insert operations
+- `sdd-tools state get/patch` — Atomic STATE.md field operations
+- `sdd-tools template select` — Chooses summary template based on plan complexity
+- Summary template variants: minimal (~30 lines), standard (~60 lines), complex (~100 lines)
+- Test infrastructure with 22 tests covering new commands
+
+### Changed
+- Planner uses two-step context assembly: digest for selection, full SUMMARY for understanding
+- Agents migrated from bash patterns to structured sdd-tools commands
+- Nested YAML frontmatter parsing now handles `dependency-graph.provides`, `tech-stack.added` correctly
+
+## [1.12.1] - 2026-02-08
+
+### Changed
+- Consolidated workflow initialization into compound `init` commands, reducing token usage and improving startup performance
+- Updated 24 workflow and agent files to use single-call context gathering instead of multiple atomic calls
+
+## [1.12.0] - 2026-02-07
+
+### Changed
+- **Architecture: Thin orchestrator pattern** — Commands now delegate to workflows, reducing command file size by ~75% and improving maintainability
+- **Centralized utilities** — New `sdd-tools.cjs` (11 functions) replaces repetitive bash patterns across 50+ files
+- **Token reduction** — ~22k characters removed from affected command/workflow/agent files
+- **Condensed agent prompts** — Same behavior with fewer words (executor, planner, verifier, researcher agents)
+
+### Added
+- `sdd-tools.cjs` CLI utility with functions: state load/update, resolve-model, find-phase, commit, verify-summary, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section
+
+## [1.11.2] - 2026-02-05
+
+### Added
+- Security section in README with Claude Code deny rules for sensitive files
+
+### Changed
+- Install respects `attribution.commit` setting for OpenCode compatibility (#286)
+
+### Fixed
+- **CRITICAL:** Prevent API keys from being committed via `/sdd:map-codebase` (#429)
+- Enforce context fidelity in planning pipeline - agents now honor CONTEXT.md decisions (#326, #216, #206)
+- Executor verifies task completion to prevent hallucinated success (#315)
+- Auto-create `config.json` when missing during `/sdd:settings` (#264)
+- `/sdd:update` respects local vs global install location
+- Researcher writes RESEARCH.md regardless of `commit_docs` setting
+- Statusline crash handling, color validation, git staging rules
+- Statusline.js reference updated during install (#330)
+- Parallelization config setting now respected (#379)
+- ASCII box-drawing vs text content with diacritics (#289)
+- Removed broken sdd-gemini link (404)
+
+## [1.11.1] - 2026-01-31
+
+### Added
+- Git branching strategy configuration with three options:
+  - `none` (default): commit to current branch
+  - `phase`: create branch per phase (`sdd/phase-{N}-{slug}`)
+  - `milestone`: create branch per milestone (`sdd/{version}-{slug}`)
+- Squash merge option at milestone completion (recommended) with merge-with-history alternative
+- Context compliance verification dimension in plan checker — flags if plans contradict user decisions
+
+### Fixed
+- CONTEXT.md from `/sdd:discuss-phase` now properly flows to all downstream agents (researcher, planner, checker, revision loop)
+
+## [1.10.1] - 2025-01-30
+
+### Fixed
+- Gemini CLI agent loading errors that prevented commands from executing
+
+## [1.10.0] - 2026-01-29
+
+### Added
+- Native Gemini CLI support — install with `--gemini` flag or select from interactive menu
+- New `--all` flag to install for Claude Code, OpenCode, and Gemini simultaneously
+
+### Fixed
+- Context bar now shows 100% at actual 80% limit (was scaling incorrectly)
+
+## [1.9.12] - 2025-01-23
+
+### Removed
+- `/sdd:whats-new` command — use `/sdd:update` instead (shows changelog with cancel option)
+
+### Fixed
+- Restored auto-release GitHub Actions workflow
+
+## [1.9.11] - 2026-01-23
+
+### Changed
+- Switched to manual npm publish workflow (removed GitHub Actions CI/CD)
+
+### Fixed
+- Discord badge now uses static format for reliable rendering
+
+## [1.9.10] - 2026-01-23
+
+### Added
+- Discord community link shown in installer completion message
+
+## [1.9.9] - 2026-01-23
+
+### Added
+- `/sdd:join-discord` command to quickly access the SDD Discord community invite link
+
+## [1.9.8] - 2025-01-22
+
+### Added
+- Uninstall flag (`--uninstall`) to cleanly remove SDD from global or local installations
+
+### Fixed
+- Context file detection now matches filename variants (handles both `CONTEXT.md` and `{phase}-CONTEXT.md` patterns)
+
+## [1.9.7] - 2026-01-22
+
+### Fixed
+- OpenCode installer now uses correct XDG-compliant config path (`~/.config/opencode/`) instead of `~/.opencode/`
+- OpenCode commands use flat structure (`command/sdd-help.md`) matching OpenCode's expected format
+- OpenCode permissions written to `~/.config/opencode/opencode.json`
+
+## [1.9.6] - 2026-01-22
+
+### Added
+- Interactive runtime selection: installer now prompts to choose Claude Code, OpenCode, or both
+- Native OpenCode support: `--opencode` flag converts SDD to OpenCode format automatically
+- `--both` flag to install for both Claude Code and OpenCode in one command
+- Auto-configures `~/.opencode.json` permissions for seamless SDD doc access
+
+### Changed
+- Installation flow now asks for runtime first, then location
+- Updated README with new installation options
+
+## [1.9.5] - 2025-01-22
+
+### Fixed
+- Subagents can now access MCP tools (Context7, etc.) - workaround for Claude Code bug #13898
+- Installer: Escape/Ctrl+C now cancels instead of installing globally
+- Installer: Fixed hook paths on Windows
+- Removed stray backticks in `/sdd:new-project` output
+
+### Changed
+- Condensed verbose documentation in templates and workflows (-170 lines)
+- Added CI/CD automation for releases
+
+## [1.9.4] - 2026-01-21
+
+### Changed
+- Checkpoint automation now enforces automation-first principle: Claude starts servers, handles CLI installs, and fixes setup failures before presenting checkpoints to users
+- Added server lifecycle protocol (port conflict handling, background process management)
+- Added CLI auto-installation handling with safe-to-install matrix
+- Added pre-checkpoint failure recovery (fix broken environment before asking user to verify)
+- DRY refactor: checkpoints.md is now single source of truth for automation patterns
+
+## [1.9.2] - 2025-01-21
+
+### Removed
+- **Codebase Intelligence System** — Removed due to overengineering concerns
+  - Deleted `/sdd:analyze-codebase` command
+  - Deleted `/sdd:query-intel` command
+  - Removed SQLite graph database and sql.js dependency (21MB)
+  - Removed intel hooks (sdd-intel-index.js, sdd-intel-session.js, sdd-intel-prune.js)
+  - Removed entity file generation and templates
+
+### Fixed
+- new-project now properly includes model_profile in config
+
+## [1.9.0] - 2025-01-20
+
+### Added
+- **Model Profiles** — `/sdd:set-profile` for quality/balanced/budget agent configurations
+- **Workflow Settings** — `/sdd:settings` command for toggling workflow behaviors interactively
+
+### Fixed
+- Orchestrators now inline file contents in Task prompts (fixes context issues with @ references)
+- Tech debt from milestone audit addressed
+- All hooks now use `sdd-` prefix for consistency (statusline.js → sdd-statusline.js)
+
+## [1.8.0] - 2026-01-19
+
+### Added
+- Uncommitted planning mode: Keep `.planning/` local-only (not committed to git) via `planning.commit_docs: false` in config.json. Useful for OSS contributions, client work, or privacy preferences.
+- `/sdd:new-project` now asks about git tracking during initial setup, letting you opt out of committing planning docs from the start
+
+## [1.7.1] - 2026-01-19
+
+### Fixed
+- Quick task PLAN and SUMMARY files now use numbered prefix (`001-PLAN.md`, `001-SUMMARY.md`) matching regular phase naming convention
+
+## [1.7.0] - 2026-01-19
+
+### Added
+- **Quick Mode** (`/sdd:quick`) — Execute small, ad-hoc tasks with SDD guarantees but skip optional agents (researcher, checker, verifier). Quick tasks live in `.planning/quick/` with their own tracking in STATE.md.
+
+### Changed
+- Improved progress bar calculation to clamp values within 0-100 range
+- Updated documentation with comprehensive Quick Mode sections in help.md, README.md, and SDD-STYLE.md
+
+### Fixed
+- Console window flash on Windows when running hooks
+- Empty `--config-dir` value validation
+- Consistent `allowed-tools` YAML format across agents
+- Corrected agent name in research-phase heading
+- Removed hardcoded 2025 year from search query examples
+- Removed dead sdd-researcher agent references
+- Integrated unused reference files into documentation
+
+### Housekeeping
+- Added homepage and bugs fields to package.json
+
+## [1.6.4] - 2026-01-17
+
+### Fixed
+- Installation on WSL2/non-TTY terminals now works correctly - detects non-interactive stdin and falls back to global install automatically
+- Installation now verifies files were actually copied before showing success checkmarks
+- Orphaned `sdd-notify.sh` hook from previous versions is now automatically removed during install (both file and settings.json registration)
+
+## [1.6.3] - 2025-01-17
+
+### Added
+- `--gaps-only` flag for `/sdd:execute-phase` — executes only gap closure plans after verify-work finds issues, eliminating redundant state discovery
+
+## [1.6.2] - 2025-01-17
+
+### Changed
+- README restructured with clearer 6-step workflow: init → discuss → plan → execute → verify → complete
+- Discuss-phase and verify-work now emphasized as critical steps in core workflow documentation
+- "Subagent Execution" section replaced with "Multi-Agent Orchestration" explaining thin orchestrator pattern and 30-40% context efficiency
+- Brownfield instructions consolidated into callout at top of "How It Works" instead of separate section
+- Phase directories now created at discuss/plan-phase instead of during roadmap creation
+
+## [1.6.1] - 2025-01-17
+
+### Changed
+- Installer performs clean install of SDD folders, removing orphaned files from previous versions
+- `/sdd:update` shows changelog and asks for confirmation before updating, with clear warning about what gets replaced
+
+## [1.6.0] - 2026-01-17
+
+### Changed
+- **BREAKING:** Unified `/sdd:new-milestone` flow — now mirrors `/sdd:new-project` with questioning → research → requirements → roadmap in a single command
+- Roadmapper agent now references templates instead of inline structures for easier maintenance
+
+### Removed
+- **BREAKING:** `/sdd:discuss-milestone` — consolidated into `/sdd:new-milestone`
+- **BREAKING:** `/sdd:create-roadmap` — integrated into project/milestone flows
+- **BREAKING:** `/sdd:define-requirements` — integrated into project/milestone flows
+- **BREAKING:** `/sdd:research-project` — integrated into project/milestone flows
+
+### Added
+- `/sdd:verify-work` now includes next-step routing after verification completes
+
+## [1.5.30] - 2026-01-17
+
+### Fixed
+- Output templates in `plan-phase`, `execute-phase`, and `audit-milestone` now render markdown correctly instead of showing literal backticks
+- Next-step suggestions now consistently recommend `/sdd:discuss-phase` before `/sdd:plan-phase` across all routing paths
+
+## [1.5.29] - 2025-01-16
+
+### Changed
+- Discuss-phase now uses domain-aware questioning with deeper probing for gray areas
+
+### Fixed
+- Windows hooks now work via Node.js conversion (statusline, update-check)
+- Phase input normalization at command entry points
+- Removed blocking notification popups (sdd-notify) on all platforms
+
+## [1.5.28] - 2026-01-16
+
+### Changed
+- Consolidated milestone workflow into single command
+- Merged domain expertise skills into agent configurations
+- **BREAKING:** Removed `/sdd:execute-plan` command (use `/sdd:execute-phase` instead)
+
+### Fixed
+- Phase directory matching now handles both zero-padded (05-*) and unpadded (5-*) folder names
+- Map-codebase agent output collection
+
+## [1.5.27] - 2026-01-16
+
+### Fixed
+- Orchestrator corrections between executor completions are now committed (previously left uncommitted when orchestrator made small fixes between waves)
+
+## [1.5.26] - 2026-01-16
+
+### Fixed
+- Revised plans now get committed after checker feedback (previously only initial plans were committed, leaving revisions uncommitted)
+
+## [1.5.25] - 2026-01-16
+
+### Fixed
+- Stop notification hook no longer shows stale project state (now uses session-scoped todos only)
+- Researcher agent now reliably loads CONTEXT.md from discuss-phase
+
+## [1.5.24] - 2026-01-16
+
+### Fixed
+- Stop notification hook now correctly parses STATE.md fields (was always showing "Ready for input")
+- Planner agent now reliably loads CONTEXT.md and RESEARCH.md files
+
+## [1.5.23] - 2025-01-16
+
+### Added
+- Cross-platform completion notification hook (Mac/Linux/Windows alerts when Claude stops)
+- Phase researcher now loads CONTEXT.md from discuss-phase to focus research on user decisions
+
+### Fixed
+- Consistent zero-padding for phase directories (01-name, not 1-name)
+- Plan file naming: `{phase}-{plan}-PLAN.md` pattern restored across all agents
+- Double-path bug in researcher git add command
+- Removed `/sdd:research-phase` from next-step suggestions (use `/sdd:plan-phase` instead)
+
+## [1.5.22] - 2025-01-16
+
+### Added
+- Statusline update indicator — shows `⬆ /sdd:update` when a new version is available
+
+### Fixed
+- Planner now updates ROADMAP.md placeholders after planning completes
+
+## [1.5.21] - 2026-01-16
+
+### Added
+- SDD brand system for consistent UI (checkpoint boxes, stage banners, status symbols)
+- Research synthesizer agent that consolidates parallel research into SUMMARY.md
+
+### Changed
+- **Unified `/sdd:new-project` flow** — Single command now handles questions → research → requirements → roadmap (~10 min)
+- Simplified README to reflect streamlined workflow: new-project → plan-phase → execute-phase
+- Added optional `/sdd:discuss-phase` documentation for UI/UX/behavior decisions before planning
+
+### Fixed
+- verify-work now shows clear checkpoint box with action prompt ("Type 'pass' or describe what's wrong")
+- Planner uses correct `{phase}-{plan}-PLAN.md` naming convention
+- Planner no longer surfaces internal `user_setup` in output
+- Research synthesizer commits all research files together (not individually)
+- Project researcher agent can no longer commit (orchestrator handles commits)
+- Roadmap requires explicit user approval before committing
+
+## [1.5.20] - 2026-01-16
+
+### Fixed
+- Research no longer skipped based on premature "Research: Unlikely" predictions made during roadmap creation. The `--skip-research` flag provides explicit control when needed.
+
+### Removed
+- `Research: Likely/Unlikely` fields from roadmap phase template
+- `detect_research_needs` step from roadmap creation workflow
+- Roadmap-based research skip logic from planner agent
+
+## [1.5.19] - 2026-01-16
+
+### Changed
+- `/sdd:discuss-phase` redesigned with intelligent gray area analysis — analyzes phase to identify discussable areas (UI, UX, Behavior, etc.), presents multi-select for user control, deep-dives each area with focused questioning
+- Explicit scope guardrail prevents scope creep during discussion — captures deferred ideas without acting on them
+- CONTEXT.md template restructured for decisions (domain boundary, decisions by category, Claude's discretion, deferred ideas)
+- Downstream awareness: discuss-phase now explicitly documents that CONTEXT.md feeds researcher and planner agents
+- `/sdd:plan-phase` now integrates research — spawns `sdd-phase-researcher` before planning unless research exists or `--skip-research` flag used
+
+## [1.5.18] - 2026-01-16
+
+### Added
+- **Plan verification loop** — Plans are now verified before execution with a planner → checker → revise cycle
+  - New `sdd-plan-checker` agent (744 lines) validates plans will achieve phase goals
+  - Six verification dimensions: requirement coverage, task completeness, dependency correctness, key links, scope sanity, must_haves derivation
+  - Max 3 revision iterations before user escalation
+  - `--skip-verify` flag for experienced users who want to bypass verification
+- **Dedicated planner agent** — `sdd-planner` (1,319 lines) consolidates all planning expertise
+  - Complete methodology: discovery levels, task breakdown, dependency graphs, scope estimation, goal-backward analysis
+  - Revision mode for handling checker feedback
+  - TDD integration and checkpoint patterns
+- **Statusline integration** — Context usage, model, and current task display
+
+### Changed
+- `/sdd:plan-phase` refactored to thin orchestrator pattern (310 lines)
+  - Spawns `sdd-planner` for planning, `sdd-plan-checker` for verification
+  - User sees status between agent spawns (not a black box)
+- Planning references deprecated with redirects to `sdd-planner` agent sections
+  - `plan-format.md`, `scope-estimation.md`, `goal-backward.md`, `principles.md`
+  - `workflows/plan-phase.md`
+
+### Fixed
+- Removed zombie `sdd-milestone-auditor` agent (was accidentally re-added after correct deletion)
+
+### Removed
+- Phase 99 throwaway test files
+
+## [1.5.17] - 2026-01-15
+
+### Added
+- New `/sdd:update` command — check for updates, install, and display changelog of what changed (better UX than raw `npx @bhargavvc/sdd-cc`)
+
+## [1.5.16] - 2026-01-15
+
+### Added
+- New `sdd-researcher` agent (915 lines) with comprehensive research methodology, 4 research modes (ecosystem, feasibility, implementation, comparison), source hierarchy, and verification protocols
+- New `sdd-debugger` agent (990 lines) with scientific debugging methodology, hypothesis testing, and 7+ investigation techniques
+- New `sdd-codebase-mapper` agent for brownfield codebase analysis
+- Research subagent prompt template for context-only spawning
+
+### Changed
+- `/sdd:research-phase` refactored to thin orchestrator — now injects rich context (key insight framing, downstream consumer info, quality gates) to sdd-researcher agent
+- `/sdd:research-project` refactored to spawn 4 parallel sdd-researcher agents with milestone-aware context (greenfield vs v1.1+) and roadmap implications guidance
+- `/sdd:debug` refactored to thin orchestrator (149 lines) — spawns sdd-debugger agent with full debugging expertise
+- `/sdd:new-milestone` now explicitly references MILESTONE-CONTEXT.md
+
+### Deprecated
+- `workflows/research-phase.md` — consolidated into sdd-researcher agent
+- `workflows/research-project.md` — consolidated into sdd-researcher agent
+- `workflows/debug.md` — consolidated into sdd-debugger agent
+- `references/research-pitfalls.md` — consolidated into sdd-researcher agent
+- `references/debugging.md` — consolidated into sdd-debugger agent
+- `references/debug-investigation.md` — consolidated into sdd-debugger agent
+
+## [1.5.15] - 2025-01-15
+
+### Fixed
+- **Agents now install correctly** — The `agents/` folder (sdd-executor, sdd-verifier, sdd-integration-checker, sdd-milestone-auditor) was missing from npm package, now included
+
+### Changed
+- Consolidated `/sdd:plan-fix` into `/sdd:plan-phase --gaps` for simpler workflow
+- UAT file writes now batched instead of per-response for better performance
+
+## [1.5.14] - 2025-01-15
+
+### Fixed
+- Plan-phase now always routes to `/sdd:execute-phase` after planning, even for single-plan phases
+
+## [1.5.13] - 2026-01-15
+
+### Fixed
+- `/sdd:new-milestone` now presents research and requirements paths as equal options, matching `/sdd:new-project` format
+
+## [1.5.12] - 2025-01-15
+
+### Changed
+- **Milestone cycle reworked for proper requirements flow:**
+  - `complete-milestone` now archives AND deletes ROADMAP.md and REQUIREMENTS.md (fresh for next milestone)
+  - `new-milestone` is now a "brownfield new-project" — updates PROJECT.md with new goals, routes to define-requirements
+  - `discuss-milestone` is now required before `new-milestone` (creates context file)
+  - `research-project` is milestone-aware — focuses on new features, ignores already-validated requirements
+  - `create-roadmap` continues phase numbering from previous milestone
+  - Flow: complete → discuss → new-milestone → research → requirements → roadmap
+
+### Fixed
+- `MILESTONE-AUDIT.md` now versioned as `v{version}-MILESTONE-AUDIT.md` and archived on completion
+- `progress` now correctly routes to `/sdd:discuss-milestone` when between milestones (Route F)
+
+## [1.5.11] - 2025-01-15
+
+### Changed
+- Verifier reuses previous must-haves on re-verification instead of re-deriving, focuses deep verification on failed items with quick regression checks on passed items
+
+## [1.5.10] - 2025-01-15
+
+### Changed
+- Milestone audit now reads existing phase VERIFICATION.md files instead of re-verifying each phase, aggregates tech debt and deferred gaps, adds `tech_debt` status for non-blocking accumulated debt
+
+### Fixed
+- VERIFICATION.md now included in phase completion commit alongside ROADMAP.md, STATE.md, and REQUIREMENTS.md
+
+## [1.5.9] - 2025-01-15
+
+### Added
+- Milestone audit system (`/sdd:audit-milestone`) for verifying milestone completion with parallel verification agents
+
+### Changed
+- Checkpoint display format improved with box headers and unmissable "→ YOUR ACTION:" prompts
+- Subagent colors updated (executor: yellow, integration-checker: blue)
+- Execute-phase now recommends `/sdd:audit-milestone` when milestone completes
+
+### Fixed
+- Research-phase no longer gatekeeps by domain type
+
+### Removed
+- Domain expertise feature (`~/.claude/skills/expertise/`) - was personal tooling not available to other users
+
+## [1.5.8] - 2025-01-15
+
+### Added
+- Verification loop: When gaps are found, verifier generates fix plans that execute automatically before re-verifying
+
+### Changed
+- `sdd-executor` subagent color changed from red to blue
+
+## [1.5.7] - 2025-01-15
+
+### Added
+- `sdd-executor` subagent: Dedicated agent for plan execution with full workflow logic built-in
+- `sdd-verifier` subagent: Goal-backward verification that checks if phase goals are actually achieved (not just tasks completed)
+- Phase verification: Automatic verification runs when a phase completes to catch stubs and incomplete implementations
+- Goal-backward planning reference: Documentation for deriving must-haves from goals
+
+### Changed
+- execute-plan and execute-phase now spawn `sdd-executor` subagent instead of using inline workflow
+- Roadmap and planning workflows enhanced with goal-backward analysis
+
+### Removed
+- Obsolete templates (`checkpoint-resume.md`, `subagent-task-prompt.md`) — logic now lives in subagents
+
+### Fixed
+- Updated remaining `general-purpose` subagent references to use `sdd-executor`
+
+## [1.5.6] - 2025-01-15
+
+### Changed
+- README: Separated flow into distinct steps (1 → 1.5 → 2 → 3 → 4 → 5) making `research-project` clearly optional and `define-requirements` required
+- README: Research recommended for quality; skip only for speed
+
+### Fixed
+- execute-phase: Phase metadata (timing, wave info) now bundled into single commit instead of separate commits
+
+## [1.5.5] - 2025-01-15
+
+### Changed
+- README now documents the `research-project` → `define-requirements` flow (optional but recommended before `create-roadmap`)
+- Commands section reorganized into 7 grouped tables (Setup, Execution, Verification, Milestones, Phase Management, Session, Utilities) for easier scanning
+- Context Engineering table now includes `research/` and `REQUIREMENTS.md`
+
+## [1.5.4] - 2025-01-15
+
+### Changed
+- Research phase now loads REQUIREMENTS.md to focus research on concrete requirements (e.g., "email verification") rather than just high-level roadmap descriptions
+
+## [1.5.3] - 2025-01-15
+
+### Changed
+- **execute-phase narration**: Orchestrator now describes what each wave builds before spawning agents, and summarizes what was built after completion. No more staring at opaque status updates.
+- **new-project flow**: Now offers two paths — research first (recommended) or define requirements directly (fast path for familiar domains)
+- **define-requirements**: Works without prior research. Gathers requirements through conversation when FEATURES.md doesn't exist.
+
+### Removed
+- Dead `/sdd:status` command (referenced abandoned background agent model)
+- Unused `agent-history.md` template
+- `_archive/` directory with old execute-phase version
+
+## [1.5.2] - 2026-01-15
+
+### Added
+- Requirements traceability: roadmap phases now include `Requirements:` field listing which REQ-IDs they cover
+- plan-phase loads REQUIREMENTS.md and shows phase-specific requirements before planning
+- Requirements automatically marked Complete when phase finishes
+
+### Changed
+- Workflow preferences (mode, depth, parallelization) now asked in single prompt instead of 3 separate questions
+- define-requirements shows full requirements list inline before commit (not just counts)
+- Research-project and workflow aligned to both point to define-requirements as next step
+
+### Fixed
+- Requirements status now updated by orchestrator (commands) instead of subagent workflow, which couldn't determine phase completion
+
+## [1.5.1] - 2026-01-14
+
+### Changed
+- Research agents write their own files directly (STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md) instead of returning results to orchestrator
+- Slimmed principles.md and load it dynamically in core commands
+
+## [1.5.0] - 2026-01-14
+
+### Added
+- New `/sdd:research-project` command for pre-roadmap ecosystem research — spawns parallel agents to investigate stack, features, architecture, and pitfalls before you commit to a roadmap
+- New `/sdd:define-requirements` command for scoping v1 requirements from research findings — transforms "what exists in this domain" into "what we're building"
+- Requirements traceability: phases now map to specific requirement IDs with 100% coverage validation
+
+### Changed
+- **BREAKING:** New project flow is now: `new-project → research-project → define-requirements → create-roadmap`
+- Roadmap creation now requires REQUIREMENTS.md and validates all v1 requirements are mapped to phases
+- Simplified questioning in new-project to four essentials (vision, core priority, boundaries, constraints)
+
+## [1.4.29] - 2026-01-14
+
+### Removed
+- Deleted obsolete `_archive/execute-phase.md` and `status.md` commands
+
+## [1.4.28] - 2026-01-14
+
+### Fixed
+- Restored comprehensive checkpoint documentation with full examples for verification, decisions, and auth gates
+- Fixed execute-plan command to use fresh continuation agents instead of broken resume pattern
+- Rich checkpoint presentation formats now documented for all three checkpoint types
+
+### Changed
+- Slimmed execute-phase command to properly delegate checkpoint handling to workflow
+
+## [1.4.27] - 2025-01-14
+
+### Fixed
+- Restored "what to do next" commands after plan/phase execution completes — orchestrator pattern conversion had inadvertently removed the copy/paste-ready next-step routing
+
+## [1.4.26] - 2026-01-14
+
+### Added
+- Full changelog history backfilled from git (66 historical versions from 1.0.0 to 1.4.23)
+
+## [1.4.25] - 2026-01-14
+
+### Added
+- New `/sdd:whats-new` command shows changes since your installed version
+- VERSION file written during installation for version tracking
+- CHANGELOG.md now included in package installation
+
+## [1.4.24] - 2026-01-14
+
+### Added
+- USER-SETUP.md template for external service configuration
+
+### Removed
+- **BREAKING:** ISSUES.md system (replaced by phase-scoped UAT issues and TODOs)
+
+## [1.4.23] - 2026-01-14
+
+### Changed
+- Removed dead ISSUES.md system code
+
+## [1.4.22] - 2026-01-14
+
+### Added
+- Subagent isolation for debug investigations with checkpoint support
+
+### Fixed
+- DEBUG_DIR path constant to prevent typos in debug workflow
+
+## [1.4.21] - 2026-01-14
+
+### Fixed
+- SlashCommand tool added to plan-fix allowed-tools
+
+## [1.4.20] - 2026-01-14
+
+### Fixed
+- Standardized debug file naming convention
+- Debug workflow now invokes execute-plan correctly
+
+## [1.4.19] - 2026-01-14
+
+### Fixed
+- Auto-diagnose issues instead of offering choice in plan-fix
+
+## [1.4.18] - 2026-01-14
+
+### Added
+- Parallel diagnosis before plan-fix execution
+
+## [1.4.17] - 2026-01-14
+
+### Changed
+- Redesigned verify-work as conversational UAT with persistent state
+
+## [1.4.16] - 2026-01-13
+
+### Added
+- Pre-execution summary for interactive mode in execute-plan
+- Pre-computed wave numbers at plan time
+
+## [1.4.15] - 2026-01-13
+
+### Added
+- Context rot explanation to README header
+
+## [1.4.14] - 2026-01-13
+
+### Changed
+- YOLO mode is now recommended default in new-project
+
+## [1.4.13] - 2026-01-13
+
+### Fixed
+- Brownfield flow documentation
+- Removed deprecated resume-task references
+
+## [1.4.12] - 2026-01-13
+
+### Changed
+- execute-phase is now recommended as primary execution command
+
+## [1.4.11] - 2026-01-13
+
+### Fixed
+- Checkpoints now use fresh continuation agents instead of resume
+
+## [1.4.10] - 2026-01-13
+
+### Changed
+- execute-plan converted to orchestrator pattern for performance
+
+## [1.4.9] - 2026-01-13
+
+### Changed
+- Removed subagent-only context from execute-phase orchestrator
+
+### Fixed
+- Removed "what's out of scope" question from discuss-phase
+
+## [1.4.8] - 2026-01-13
+
+### Added
+- TDD reasoning explanation restored to plan-phase docs
+
+## [1.4.7] - 2026-01-13
+
+### Added
+- Project state loading before execution in execute-phase
+
+### Fixed
+- Parallel execution marked as recommended, not experimental
+
+## [1.4.6] - 2026-01-13
+
+### Added
+- Checkpoint pause/resume for spawned agents
+- Deviation rules, commit rules, and workflow references to execute-phase
+
+## [1.4.5] - 2026-01-13
+
+### Added
+- Parallel-first planning with dependency graphs
+- Checkpoint-resume capability for long-running phases
+- `.claude/rules/` directory for auto-loaded contribution rules
+
+### Changed
+- execute-phase uses wave-based blocking execution
+
+## [1.4.4] - 2026-01-13
+
+### Fixed
+- Inline listing for multiple active debug sessions
+
+## [1.4.3] - 2026-01-13
+
+### Added
+- `/sdd:debug` command for systematic debugging with persistent state
+
+## [1.4.2] - 2026-01-13
+
+### Fixed
+- Installation verification step clarification
+
+## [1.4.1] - 2026-01-13
+
+### Added
+- Parallel phase execution via `/sdd:execute-phase`
+- Parallel-aware planning in `/sdd:plan-phase`
+- `/sdd:status` command for parallel agent monitoring
+- Parallelization configuration in config.json
+- Wave-based parallel execution with dependency graphs
+
+### Changed
+- Renamed `execute-phase.md` workflow to `execute-plan.md` for clarity
+- Plan frontmatter now includes `wave`, `depends_on`, `files_modified`, `autonomous`
+
+## [1.4.0] - 2026-01-12
+
+### Added
+- Full parallel phase execution system
+- Parallelization frontmatter in plan templates
+- Dependency analysis for parallel task scheduling
+- Agent history schema v1.2 with parallel execution support
+
+### Changed
+- Plans can now specify wave numbers and dependencies
+- execute-phase orchestrates multiple subagents in waves
+
+## [1.3.34] - 2026-01-11
+
+### Added
+- `/sdd:add-todo` and `/sdd:check-todos` for mid-session idea capture
+
+## [1.3.33] - 2026-01-11
+
+### Fixed
+- Consistent zero-padding for decimal phase numbers (e.g., 01.1)
+
+### Changed
+- Removed obsolete .claude-plugin directory
+
+## [1.3.32] - 2026-01-10
+
+### Added
+- `/sdd:resume-task` for resuming interrupted subagent executions
+
+## [1.3.31] - 2026-01-08
+
+### Added
+- Planning principles for security, performance, and observability
+- Pro patterns section in README
+
+## [1.3.30] - 2026-01-08
+
+### Added
+- verify-work option surfaces after plan execution
+
+## [1.3.29] - 2026-01-08
+
+### Added
+- `/sdd:verify-work` for conversational UAT validation
+- `/sdd:plan-fix` for fixing UAT issues
+- UAT issues template
+
+## [1.3.28] - 2026-01-07
+
+### Added
+- `--config-dir` CLI argument for multi-account setups
+- `/sdd:remove-phase` command
+
+### Fixed
+- Validation for --config-dir edge cases
+
+## [1.3.27] - 2026-01-07
+
+### Added
+- Recommended permissions mode documentation
+
+### Fixed
+- Mandatory verification enforced before phase/milestone completion routing
+
+## [1.3.26] - 2026-01-06
+
+### Added
+- Claude Code marketplace plugin support
+
+### Fixed
+- Phase artifacts now committed when created
+
+## [1.3.25] - 2026-01-06
+
+### Fixed
+- Milestone discussion context persists across /clear
+
+## [1.3.24] - 2026-01-06
+
+### Added
+- `CLAUDE_CONFIG_DIR` environment variable support
+
+## [1.3.23] - 2026-01-06
+
+### Added
+- Non-interactive install flags (`--global`, `--local`) for Docker/CI
+
+## [1.3.22] - 2026-01-05
+
+### Changed
+- Removed unused auto.md command
+
+## [1.3.21] - 2026-01-05
+
+### Changed
+- TDD features use dedicated plans for full context quality
+
+## [1.3.20] - 2026-01-05
+
+### Added
+- Per-task atomic commits for better AI observability
+
+## [1.3.19] - 2026-01-05
+
+### Fixed
+- Clarified create-milestone.md file locations with explicit instructions
+
+## [1.3.18] - 2026-01-05
+
+### Added
+- YAML frontmatter schema with dependency graph metadata
+- Intelligent context assembly via frontmatter dependency graph
+
+## [1.3.17] - 2026-01-04
+
+### Fixed
+- Clarified depth controls compression, not inflation in planning
+
+## [1.3.16] - 2026-01-04
+
+### Added
+- Depth parameter for planning thoroughness (`--depth=1-5`)
+
+## [1.3.15] - 2026-01-01
+
+### Fixed
+- TDD reference loaded directly in commands
+
+## [1.3.14] - 2025-12-31
+
+### Added
+- TDD integration with detection, annotation, and execution flow
+
+## [1.3.13] - 2025-12-29
+
+### Fixed
+- Restored deterministic bash commands
+- Removed redundant decision_gate
+
+## [1.3.12] - 2025-12-29
+
+### Fixed
+- Restored plan-format.md as output template
+
+## [1.3.11] - 2025-12-29
+
+### Changed
+- 70% context reduction for plan-phase workflow
+- Merged CLI automation into checkpoints
+- Compressed scope-estimation (74% reduction) and plan-phase.md (66% reduction)
+
+## [1.3.10] - 2025-12-29
+
+### Fixed
+- Explicit plan count check in offer_next step
+
+## [1.3.9] - 2025-12-27
+
+### Added
+- Evolutionary PROJECT.md system with incremental updates
+
+## [1.3.8] - 2025-12-18
+
+### Added
+- Brownfield/existing projects section in README
+
+## [1.3.7] - 2025-12-18
+
+### Fixed
+- Improved incremental codebase map updates
+
+## [1.3.6] - 2025-12-18
+
+### Added
+- File paths included in codebase mapping output
+
+## [1.3.5] - 2025-12-17
+
+### Fixed
+- Removed arbitrary 100-line limit from codebase mapping
+
+## [1.3.4] - 2025-12-17
+
+### Fixed
+- Inline code for Next Up commands (avoids nesting ambiguity)
+
+## [1.3.3] - 2025-12-17
+
+### Fixed
+- Check PROJECT.md not .planning/ directory for existing project detection
+
+## [1.3.2] - 2025-12-17
+
+### Added
+- Git commit step to map-codebase workflow
+
+## [1.3.1] - 2025-12-17
+
+### Added
+- `/sdd:map-codebase` documentation in help and README
+
+## [1.3.0] - 2025-12-17
+
+### Added
+- `/sdd:map-codebase` command for brownfield project analysis
+- Codebase map templates (stack, architecture, structure, conventions, testing, integrations, concerns)
+- Parallel Explore agent orchestration for codebase analysis
+- Brownfield integration into SDD workflows
+
+### Changed
+- Improved continuation UI with context and visual hierarchy
+
+### Fixed
+- Permission errors for non-DSP users (removed shell context)
+- First question is now freeform, not AskUserQuestion
+
+## [1.2.13] - 2025-12-17
+
+### Added
+- Improved continuation UI with context and visual hierarchy
+
+## [1.2.12] - 2025-12-17
+
+### Fixed
+- First question should be freeform, not AskUserQuestion
+
+## [1.2.11] - 2025-12-17
+
+### Fixed
+- Permission errors for non-DSP users (removed shell context)
+
+## [1.2.10] - 2025-12-16
+
+### Fixed
+- Inline command invocation replaced with clear-then-paste pattern
+
+## [1.2.9] - 2025-12-16
+
+### Fixed
+- Git init runs in current directory
+
+## [1.2.8] - 2025-12-16
+
+### Changed
+- Phase count derived from work scope, not arbitrary limits
+
+## [1.2.7] - 2025-12-16
+
+### Fixed
+- AskUserQuestion mandated for all exploration questions
+
+## [1.2.6] - 2025-12-16
+
+### Changed
+- Internal refactoring
+
+## [1.2.5] - 2025-12-16
+
+### Changed
+- `<if mode>` tags for yolo/interactive branching
+
+## [1.2.4] - 2025-12-16
+
+### Fixed
+- Stale CONTEXT.md references updated to new vision structure
+
+## [1.2.3] - 2025-12-16
+
+### Fixed
+- Enterprise language removed from help and discuss-milestone
+
+## [1.2.2] - 2025-12-16
+
+### Fixed
+- new-project completion presented inline instead of as question
+
+## [1.2.1] - 2025-12-16
+
+### Fixed
+- AskUserQuestion restored for decision gate in questioning flow
+
+## [1.2.0] - 2025-12-15
+
+### Changed
+- Research workflow implemented as Claude Code context injection
+
+## [1.1.2] - 2025-12-15
+
+### Fixed
+- YOLO mode now skips confirmation gates in plan-phase
+
+## [1.1.1] - 2025-12-15
+
+### Added
+- README documentation for new research workflow
+
+## [1.1.0] - 2025-12-15
+
+### Added
+- Pre-roadmap research workflow
+- `/sdd:research-phase` for niche domain ecosystem discovery
+- `/sdd:research-project` command with workflow and templates
+- `/sdd:create-roadmap` command with research-aware workflow
+- Research subagent prompt templates
+
+### Changed
+- new-project split to only create PROJECT.md + config.json
+- Questioning rewritten as thinking partner, not interviewer
+
+## [1.0.11] - 2025-12-15
+
+### Added
+- `/sdd:research-phase` for niche domain ecosystem discovery
+
+## [1.0.10] - 2025-12-15
+
+### Fixed
+- Scope creep prevention in discuss-phase command
+
+## [1.0.9] - 2025-12-15
+
+### Added
+- Phase CONTEXT.md loaded in plan-phase command
+
+## [1.0.8] - 2025-12-15
+
+### Changed
+- PLAN.md included in phase completion commits
+
+## [1.0.7] - 2025-12-15
+
+### Added
+- Path replacement for local installs
+
+## [1.0.6] - 2025-12-15
+
+### Changed
+- Internal improvements
+
+## [1.0.5] - 2025-12-15
+
+### Added
+- Global/local install prompt during setup
+
+### Fixed
+- Bin path fixed (removed ./)
+- .DS_Store ignored
+
+## [1.0.4] - 2025-12-15
+
+### Fixed
+- Bin name and circular dependency removed
+
+## [1.0.3] - 2025-12-15
+
+### Added
+- TDD guidance in planning workflow
+
+## [1.0.2] - 2025-12-15
+
+### Added
+- Issue triage system to prevent deferred issue pile-up
+
+## [1.0.1] - 2025-12-15
+
+### Added
+- Initial npm package release
+
+## [1.0.0] - 2025-12-14
+
+### Added
+- Initial release of SDD (Spec-Driven Development) meta-prompting system
+- Core slash commands: `/sdd:new-project`, `/sdd:discuss-phase`, `/sdd:plan-phase`, `/sdd:execute-phase`
+- PROJECT.md and STATE.md templates
+- Phase-based development workflow
+- YOLO mode for autonomous execution
+- Interactive mode with checkpoints
+
+[Unreleased]: https://github.com/gsd-build/sdd/compare/v1.34.2...HEAD
+[1.34.2]: https://github.com/gsd-build/sdd/releases/tag/v1.34.2
+[1.34.1]: https://github.com/gsd-build/sdd/releases/tag/v1.34.1
+[1.34.0]: https://github.com/gsd-build/sdd/releases/tag/v1.34.0
+[1.33.0]: https://github.com/gsd-build/sdd/releases/tag/v1.33.0
+[1.30.0]: https://github.com/gsd-build/sdd/releases/tag/v1.30.0
+[1.29.0]: https://github.com/gsd-build/sdd/releases/tag/v1.29.0
+[1.28.0]: https://github.com/gsd-build/sdd/releases/tag/v1.28.0
+[1.27.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.27.0
+[1.26.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.26.0
+[1.25.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.25.0
+[1.24.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.24.0
+[1.23.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.23.0
+[1.22.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.22.4
+[1.22.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.22.3
+[1.22.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.22.2
+[1.22.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.22.1
+[1.22.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.22.0
+[1.21.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.21.1
+[1.21.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.21.0
+[1.20.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.6
+[1.20.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.5
+[1.20.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.4
+[1.20.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.3
+[1.20.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.2
+[1.20.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.1
+[1.20.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.20.0
+[1.19.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.19.2
+[1.19.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.19.1
+[1.19.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.19.0
+[1.18.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.18.0
+[1.17.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.17.0
+[1.16.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.16.0
+[1.15.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.15.0
+[1.14.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.14.0
+[1.13.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.13.0
+[1.12.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.12.1
+[1.12.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.12.0
+[1.11.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.11.2
+[1.11.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.11.0
+[1.10.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.10.1
+[1.10.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.10.0
+[1.9.12]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.12
+[1.9.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.11
+[1.9.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.10
+[1.9.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.9
+[1.9.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.8
+[1.9.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.7
+[1.9.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.6
+[1.9.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.5
+[1.9.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.4
+[1.9.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.2
+[1.9.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.9.0
+[1.8.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.8.0
+[1.7.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.7.1
+[1.7.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.7.0
+[1.6.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.6.4
+[1.6.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.6.3
+[1.6.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.6.2
+[1.6.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.6.1
+[1.6.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.6.0
+[1.5.30]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.30
+[1.5.29]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.29
+[1.5.28]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.28
+[1.5.27]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.27
+[1.5.26]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.26
+[1.5.25]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.25
+[1.5.24]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.24
+[1.5.23]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.23
+[1.5.22]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.22
+[1.5.21]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.21
+[1.5.20]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.20
+[1.5.19]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.19
+[1.5.18]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.18
+[1.5.17]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.17
+[1.5.16]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.16
+[1.5.15]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.15
+[1.5.14]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.14
+[1.5.13]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.13
+[1.5.12]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.12
+[1.5.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.11
+[1.5.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.10
+[1.5.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.9
+[1.5.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.8
+[1.5.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.7
+[1.5.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.6
+[1.5.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.5
+[1.5.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.4
+[1.5.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.3
+[1.5.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.2
+[1.5.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.1
+[1.5.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.5.0
+[1.4.29]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.29
+[1.4.28]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.28
+[1.4.27]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.27
+[1.4.26]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.26
+[1.4.25]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.25
+[1.4.24]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.24
+[1.4.23]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.23
+[1.4.22]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.22
+[1.4.21]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.21
+[1.4.20]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.20
+[1.4.19]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.19
+[1.4.18]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.18
+[1.4.17]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.17
+[1.4.16]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.16
+[1.4.15]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.15
+[1.4.14]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.14
+[1.4.13]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.13
+[1.4.12]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.12
+[1.4.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.11
+[1.4.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.10
+[1.4.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.9
+[1.4.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.8
+[1.4.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.7
+[1.4.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.6
+[1.4.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.5
+[1.4.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.4
+[1.4.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.3
+[1.4.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.2
+[1.4.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.1
+[1.4.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.4.0
+[1.3.34]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.34
+[1.3.33]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.33
+[1.3.32]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.32
+[1.3.31]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.31
+[1.3.30]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.30
+[1.3.29]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.29
+[1.3.28]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.28
+[1.3.27]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.27
+[1.3.26]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.26
+[1.3.25]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.25
+[1.3.24]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.24
+[1.3.23]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.23
+[1.3.22]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.22
+[1.3.21]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.21
+[1.3.20]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.20
+[1.3.19]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.19
+[1.3.18]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.18
+[1.3.17]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.17
+[1.3.16]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.16
+[1.3.15]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.15
+[1.3.14]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.14
+[1.3.13]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.13
+[1.3.12]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.12
+[1.3.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.11
+[1.3.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.10
+[1.3.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.9
+[1.3.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.8
+[1.3.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.7
+[1.3.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.6
+[1.3.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.5
+[1.3.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.4
+[1.3.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.3
+[1.3.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.2
+[1.3.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.1
+[1.3.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.3.0
+[1.2.13]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.13
+[1.2.12]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.12
+[1.2.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.11
+[1.2.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.10
+[1.2.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.9
+[1.2.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.8
+[1.2.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.7
+[1.2.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.6
+[1.2.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.5
+[1.2.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.4
+[1.2.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.3
+[1.2.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.2
+[1.2.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.1
+[1.2.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.2.0
+[1.1.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.1.2
+[1.1.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.1.1
+[1.1.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.1.0
+[1.0.11]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.11
+[1.0.10]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.10
+[1.0.9]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.9
+[1.0.8]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.8
+[1.0.7]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.7
+[1.0.6]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.6
+[1.0.5]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.5
+[1.0.4]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.4
+[1.0.3]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.3
+[1.0.2]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.2
+[1.0.1]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.1
+[1.0.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.0.0
