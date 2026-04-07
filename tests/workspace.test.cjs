@@ -1,8 +1,8 @@
 /**
  * SDD Workspace Tests
  *
- * Tests for /gsd-new-workspace, /gsd-list-workspaces, /gsd-remove-workspace
- * init functions and integration with gsd-tools routing.
+ * Tests for /sdd-new-workspace, /sdd-list-workspaces, /sdd-remove-workspace
+ * init functions and integration with sdd-tools routing.
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');

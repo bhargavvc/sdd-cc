@@ -8,13 +8,13 @@
 
 **Resolve context rot — a degradação de qualidade que acontece conforme o Claude enche a janela de contexto.**
 
-[![npm version](https://img.shields.io/npm/v/get-shit-done-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/get-shit-done-cc)
-[![npm downloads](https://img.shields.io/npm/dm/get-shit-done-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/get-shit-done-cc)
-[![Tests](https://img.shields.io/github/actions/workflow/status/gsd-build/get-shit-done/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/gsd-build/get-shit-done/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
+[![npm downloads](https://img.shields.io/npm/dm/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
+[![Tests](https://img.shields.io/github/actions/workflow/status/gsd-build/sdd/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/gsd-build/sdd/actions/workflows/test.yml)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mYgfVNfA2r)
-[![X (Twitter)](https://img.shields.io/badge/X-@gsd__foundation-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/gsd_foundation)
-[![$GSD Token](https://img.shields.io/badge/$GSD-Dexscreener-1C1C1C?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwRkYwMCIvPjwvc3ZnPg==&logoColor=00FF00)](https://dexscreener.com/solana/dwudwjvan7bzkw9zwlbyv6kspdlvhwzrqy6ebk8xzxkv)
-[![GitHub stars](https://img.shields.io/github/stars/gsd-build/get-shit-done?style=for-the-badge&logo=github&color=181717)](https://github.com/gsd-build/get-shit-done)
+[![X (Twitter)](https://img.shields.io/badge/X-@sdd__foundation-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/sdd_foundation)
+[![$SDD Token](https://img.shields.io/badge/$SDD-Dexscreener-1C1C1C?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwRkYwMCIvPjwvc3ZnPg==&logoColor=00FF00)](https://dexscreener.com/solana/dwudwjvan7bzkw9zwlbyv6kspdlvhwzrqy6ebk8xzxkv)
+[![GitHub stars](https://img.shields.io/github/stars/gsd-build/sdd?style=for-the-badge&logo=github&color=181717)](https://github.com/gsd-build/sdd)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
 
 <br>
@@ -96,13 +96,13 @@ O instalador pede:
 2. **Local** — Global (todos os projetos) ou local (apenas projeto atual)
 
 Verifique com:
-- Claude Code / Gemini / Copilot / Antigravity: `/gsd-help`
-- OpenCode / Kilo / Augment / Trae: `/gsd-help`
-- Codex: `$gsd-help`
-- Cline: GSD instala via `.clinerules` — verifique se `.clinerules` existe
+- Claude Code / Gemini / Copilot / Antigravity: `/sdd-help`
+- OpenCode / Kilo / Augment / Trae: `/sdd-help`
+- Codex: `$sdd-help`
+- Cline: SDD instala via `.clinerules` — verifique se `.clinerules` existe
 
 > [!NOTE]
-> Claude Code 2.1.88+ e Codex instalam como skills (`skills/gsd-*/SKILL.md`). Cline usa `.clinerules`. O instalador lida com todos os formatos automaticamente.
+> Claude Code 2.1.88+ e Codex instalam como skills (`skills/sdd-*/SKILL.md`). Cline usa `.clinerules`. O instalador lida com todos os formatos automaticamente.
 
 > [!TIP]
 > Para instalação a partir do código-fonte ou ambientes sem npm, consulte **[docs/manual-update.md](docs/manual-update.md)**.
@@ -128,8 +128,8 @@ npx @bhargavvc/sdd-cc --opencode --global
 npx @bhargavvc/sdd-cc --gemini --global
 
 # Kilo
-npx get-shit-done-cc --kilo --global
-npx get-shit-done-cc --kilo --local
+npx @bhargavvc/sdd-cc --kilo --global
+npx @bhargavvc/sdd-cc --kilo --local
 
 # Codex
 npx @bhargavvc/sdd-cc --codex --global
@@ -148,16 +148,16 @@ npx @bhargavvc/sdd-cc --antigravity --global
 npx @bhargavvc/sdd-cc --antigravity --local
 
 # Augment
-npx get-shit-done-cc --augment --global     # Install to ~/.augment/
-npx get-shit-done-cc --augment --local      # Install to ./.augment/
+npx @bhargavvc/sdd-cc --augment --global     # Install to ~/.augment/
+npx @bhargavvc/sdd-cc --augment --local      # Install to ./.augment/
 
 # Trae
-npx get-shit-done-cc --trae --global        # Install to ~/.trae/
-npx get-shit-done-cc --trae --local         # Install to ./.trae/
+npx @bhargavvc/sdd-cc --trae --global        # Install to ~/.trae/
+npx @bhargavvc/sdd-cc --trae --local         # Install to ./.trae/
 
 # Cline
-npx get-shit-done-cc --cline --global       # Install to ~/.cline/
-npx get-shit-done-cc --cline --local        # Install to ./.clinerules
+npx @bhargavvc/sdd-cc --cline --global       # Install to ~/.cline/
+npx @bhargavvc/sdd-cc --cline --local        # Install to ./.clinerules
 
 # Todos
 npx @bhargavvc/sdd-cc --all --global
@@ -181,12 +181,12 @@ claude --dangerously-skip-permissions
 
 ## Como funciona
 
-> **Já tem código?** Rode `/gsd-map-codebase` primeiro para analisar stack, arquitetura, convenções e riscos.
+> **Já tem código?** Rode `/sdd-map-codebase` primeiro para analisar stack, arquitetura, convenções e riscos.
 
 ### 1. Inicializar projeto
 
 ```
-/gsd-new-project
+/sdd-new-project
 ```
 
 O sistema:
@@ -200,7 +200,7 @@ O sistema:
 ### 2. Discutir fase
 
 ```
-/gsd-discuss-phase 1
+/sdd-discuss-phase 1
 ```
 
 Captura suas preferências de implementação antes do planejamento.
@@ -210,7 +210,7 @@ Captura suas preferências de implementação antes do planejamento.
 ### 3. Planejar fase
 
 ```
-/gsd-plan-phase 1
+/sdd-plan-phase 1
 ```
 
 1. Pesquisa abordagens
@@ -222,7 +222,7 @@ Captura suas preferências de implementação antes do planejamento.
 ### 4. Executar fase
 
 ```
-/gsd-execute-phase 1
+/sdd-execute-phase 1
 ```
 
 1. Executa planos em ondas
@@ -235,7 +235,7 @@ Captura suas preferências de implementação antes do planejamento.
 ### 5. Verificar trabalho
 
 ```
-/gsd-verify-work 1
+/sdd-verify-work 1
 ```
 
 Validação manual orientada para confirmar que a feature realmente funciona como esperado.
@@ -245,25 +245,25 @@ Validação manual orientada para confirmar que a feature realmente funciona com
 ### 6. Repetir -> Entregar -> Completar
 
 ```
-/gsd-discuss-phase 2
-/gsd-plan-phase 2
-/gsd-execute-phase 2
-/gsd-verify-work 2
-/gsd-ship 2
-/gsd-complete-milestone
-/gsd-new-milestone
+/sdd-discuss-phase 2
+/sdd-plan-phase 2
+/sdd-execute-phase 2
+/sdd-verify-work 2
+/sdd-ship 2
+/sdd-complete-milestone
+/sdd-new-milestone
 ```
 
 Ou deixe o SDD decidir:
 
 ```
-/gsd-next
+/sdd-next
 ```
 
 ### Modo rápido
 
 ```
-/gsd-quick
+/sdd-quick
 ```
 
 Para tarefas ad-hoc sem ciclo completo de planejamento.
@@ -319,36 +319,36 @@ Cada tarefa gera commit próprio, facilitando `git bisect`, rollback e rastreabi
 
 | Comando | O que faz |
 |---------|-----------|
-| `/gsd-new-project [--auto]` | Inicializa projeto completo |
-| `/gsd-discuss-phase [N] [--auto] [--analyze] [--chain]` | Captura decisões antes do plano (`--chain` encadeia automaticamente em plan+execute) |
-| `/gsd-plan-phase [N] [--auto] [--reviews]` | Pesquisa + plano + validação |
-| `/gsd-execute-phase <N>` | Executa planos em ondas paralelas |
-| `/gsd-verify-work [N]` | UAT manual |
-| `/gsd-ship [N] [--draft]` | Cria PR da fase validada |
-| `/gsd-next` | Avança automaticamente para o próximo passo |
-| `/gsd-fast <text>` | Tarefas triviais sem planejamento |
-| `/gsd-complete-milestone` | Fecha o marco e marca release |
-| `/gsd-new-milestone [name]` | Inicia próximo marco |
+| `/sdd-new-project [--auto]` | Inicializa projeto completo |
+| `/sdd-discuss-phase [N] [--auto] [--analyze] [--chain]` | Captura decisões antes do plano (`--chain` encadeia automaticamente em plan+execute) |
+| `/sdd-plan-phase [N] [--auto] [--reviews]` | Pesquisa + plano + validação |
+| `/sdd-execute-phase <N>` | Executa planos em ondas paralelas |
+| `/sdd-verify-work [N]` | UAT manual |
+| `/sdd-ship [N] [--draft]` | Cria PR da fase validada |
+| `/sdd-next` | Avança automaticamente para o próximo passo |
+| `/sdd-fast <text>` | Tarefas triviais sem planejamento |
+| `/sdd-complete-milestone` | Fecha o marco e marca release |
+| `/sdd-new-milestone [name]` | Inicia próximo marco |
 
 ### Qualidade e utilidades
 
 | Comando | O que faz |
 |---------|-----------|
-| `/gsd-review` | Peer review com múltiplas IAs |
-| `/gsd-pr-branch` | Cria branch limpa para PR |
-| `/gsd-settings` | Configura perfis e agentes |
-| `/gsd-set-profile <profile>` | Troca perfil (quality/balanced/budget/inherit) |
-| `/gsd-quick [--full] [--discuss] [--research]` | Execução rápida com garantias do GSD (`--full` ativa todas as etapas, `--validate` ativa apenas verificação) |
-| `/gsd-health [--repair]` | Verifica e repara `.planning/` |
+| `/sdd-review` | Peer review com múltiplas IAs |
+| `/sdd-pr-branch` | Cria branch limpa para PR |
+| `/sdd-settings` | Configura perfis e agentes |
+| `/sdd-set-profile <profile>` | Troca perfil (quality/balanced/budget/inherit) |
+| `/sdd-quick [--full] [--discuss] [--research]` | Execução rápida com garantias do SDD (`--full` ativa todas as etapas, `--validate` ativa apenas verificação) |
+| `/sdd-health [--repair]` | Verifica e repara `.planning/` |
 
-> Para a lista completa de comandos e opções, use `/gsd-help`.
+> Para a lista completa de comandos e opções, use `/sdd-help`.
 
 ---
 
 ## Configuração
 
 As configurações do projeto ficam em `.planning/config.json`.
-Você pode configurar no `/gsd-new-project` ou ajustar depois com `/gsd-settings`.
+Você pode configurar no `/sdd-new-project` ou ajustar depois com `/sdd-settings`.
 
 ### Ajustes principais
 
@@ -368,7 +368,7 @@ Você pode configurar no `/gsd-new-project` ou ajustar depois com `/gsd-settings
 
 Troca rápida:
 ```
-/gsd-set-profile budget
+/sdd-set-profile budget
 ```
 
 ---
@@ -412,8 +412,8 @@ Adicione padrões sensíveis ao deny list do Claude Code:
 - Verifique se os arquivos foram instalados no diretório correto
 
 **Comandos não funcionam como esperado?**
-- Rode `/gsd-help`
-- Reinstale com `npx get-shit-done-cc@latest`
+- Rode `/sdd-help`
+- Reinstale com `npx @bhargavvc/sdd-cc@latest`
 
 **Em Docker/container?**
 - Defina `CLAUDE_CONFIG_DIR` antes da instalação:
@@ -426,37 +426,37 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ```bash
 # Instalações globais
-npx get-shit-done-cc --claude --global --uninstall
-npx get-shit-done-cc --opencode --global --uninstall
-npx get-shit-done-cc --gemini --global --uninstall
-npx get-shit-done-cc --kilo --global --uninstall
-npx get-shit-done-cc --codex --global --uninstall
-npx get-shit-done-cc --copilot --global --uninstall
-npx get-shit-done-cc --cursor --global --uninstall
-npx get-shit-done-cc --antigravity --global --uninstall
-npx get-shit-done-cc --augment --global --uninstall
-npx get-shit-done-cc --trae --global --uninstall
-npx get-shit-done-cc --cline --global --uninstall
+npx @bhargavvc/sdd-cc --claude --global --uninstall
+npx @bhargavvc/sdd-cc --opencode --global --uninstall
+npx @bhargavvc/sdd-cc --gemini --global --uninstall
+npx @bhargavvc/sdd-cc --kilo --global --uninstall
+npx @bhargavvc/sdd-cc --codex --global --uninstall
+npx @bhargavvc/sdd-cc --copilot --global --uninstall
+npx @bhargavvc/sdd-cc --cursor --global --uninstall
+npx @bhargavvc/sdd-cc --antigravity --global --uninstall
+npx @bhargavvc/sdd-cc --augment --global --uninstall
+npx @bhargavvc/sdd-cc --trae --global --uninstall
+npx @bhargavvc/sdd-cc --cline --global --uninstall
 
 # Instalações locais (projeto atual)
-npx get-shit-done-cc --claude --local --uninstall
-npx get-shit-done-cc --opencode --local --uninstall
-npx get-shit-done-cc --gemini --local --uninstall
-npx get-shit-done-cc --kilo --local --uninstall
-npx get-shit-done-cc --codex --local --uninstall
-npx get-shit-done-cc --copilot --local --uninstall
-npx get-shit-done-cc --cursor --local --uninstall
-npx get-shit-done-cc --antigravity --local --uninstall
-npx get-shit-done-cc --augment --local --uninstall
-npx get-shit-done-cc --trae --local --uninstall
-npx get-shit-done-cc --cline --local --uninstall
+npx @bhargavvc/sdd-cc --claude --local --uninstall
+npx @bhargavvc/sdd-cc --opencode --local --uninstall
+npx @bhargavvc/sdd-cc --gemini --local --uninstall
+npx @bhargavvc/sdd-cc --kilo --local --uninstall
+npx @bhargavvc/sdd-cc --codex --local --uninstall
+npx @bhargavvc/sdd-cc --copilot --local --uninstall
+npx @bhargavvc/sdd-cc --cursor --local --uninstall
+npx @bhargavvc/sdd-cc --antigravity --local --uninstall
+npx @bhargavvc/sdd-cc --augment --local --uninstall
+npx @bhargavvc/sdd-cc --trae --local --uninstall
+npx @bhargavvc/sdd-cc --cline --local --uninstall
 ```
 
 ---
 
 ## Community Ports
 
-OpenCode, Gemini CLI, Kilo e Codex agora são suportados nativamente via `npx get-shit-done-cc`.
+OpenCode, Gemini CLI, Kilo e Codex agora são suportados nativamente via `npx @bhargavvc/sdd-cc`.
 
 | Projeto | Plataforma | Descrição |
 |---------|------------|-----------|

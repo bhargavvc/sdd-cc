@@ -28,7 +28,7 @@ AUDITOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-nyq
 NYQUIST_CFG=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.nyquist_validation --raw)
 ```
 
-If `NYQUIST_CFG` is `false`: exit with "Nyquist validation is disabled. Enable via /gsd-settings."
+If `NYQUIST_CFG` is `false`: exit with "Nyquist validation is disabled. Enable via /sdd-settings."
 
 Display banner: `SDD > VALIDATE PHASE {N}: {name}`
 
@@ -41,7 +41,7 @@ SUMMARY_FILES=$(ls "${PHASE_DIR}"/*-SUMMARY.md 2>/dev/null)
 
 - **State A** (`VALIDATION_FILE` non-empty): Audit existing
 - **State B** (`VALIDATION_FILE` empty, `SUMMARY_FILES` non-empty): Reconstruct from artifacts
-- **State C** (`SUMMARY_FILES` empty): Exit — "Phase {N} not executed. Run /gsd-execute-phase {N} ${GSD_WS} first."
+- **State C** (`SUMMARY_FILES` empty): Exit — "Phase {N} not executed. Run /sdd-execute-phase {N} ${SDD_WS} first."
 
 ## 2. Discovery
 
@@ -144,14 +144,14 @@ node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(phase-${PHASE}): add/upd
 ```
 SDD > PHASE {N} IS NYQUIST-COMPLIANT
 All requirements have automated verification.
-▶ Next: /gsd-audit-milestone ${GSD_WS}
+▶ Next: /sdd-audit-milestone ${SDD_WS}
 ```
 
 **Partial:**
 ```
 SDD > PHASE {N} VALIDATED (PARTIAL)
 {M} automated, {K} manual-only.
-▶ Retry: /gsd-validate-phase {N} ${GSD_WS}
+▶ Retry: /sdd-validate-phase {N} ${SDD_WS}
 ```
 
 Display `/clear` reminder.

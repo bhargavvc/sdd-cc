@@ -1,11 +1,11 @@
 /**
- * GSD Worktree Sequential Dispatch Tests
+ * SDD Worktree Sequential Dispatch Tests
  *
  * Validates that execute-phase workflow includes sequential dispatch
  * instructions to prevent git config.lock contention when multiple
  * agents create worktrees in parallel within the same wave.
  *
- * See: https://github.com/gsd-build/get-shit-done/issues/1511
+ * See: https://github.com/gsd-build/sdd/issues/1511
  */
 
 const { test, describe } = require('node:test');
@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-shit-done', 'workflows');
+const WORKFLOWS_DIR = path.join(__dirname, '..', 'sdd', 'workflows');
 
 describe('worktree sequential dispatch', () => {
   const executePhasePath = path.join(WORKFLOWS_DIR, 'execute-phase.md');

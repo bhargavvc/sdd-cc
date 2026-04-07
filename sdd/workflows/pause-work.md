@@ -1,5 +1,5 @@
 <purpose>
-Create structured `.planning/HANDOFF.json` and `.continue-here.md` handoff files to preserve complete work state across sessions. The JSON provides machine-readable state for `/gsd-resume-work`; the markdown provides human-readable context.
+Create structured `.planning/HANDOFF.json` and `.continue-here.md` handoff files to preserve complete work state across sessions. The JSON provides machine-readable state for `/sdd-resume-work`; the markdown provides human-readable context.
 </purpose>
 
 <required_reading>
@@ -203,7 +203,7 @@ timestamp=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" current-timestamp full --
 
 <step name="commit">
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "wip: [context-name] paused at [X]/[Y]" --files [handoff-path] .planning/HANDOFF.json
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "wip: [context-name] paused at [X]/[Y]" --files [handoff-path] .planning/HANDOFF.json
 ```
 </step>
 
@@ -222,7 +222,7 @@ Current state:
 - Blockers: [count] ({human_actions_pending count} need human action)
 - Committed as WIP
 
-To resume: /gsd-resume-work
+To resume: /sdd-resume-work
 
 ```
 </step>

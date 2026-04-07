@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Schema Drift Detection
+ * SDD Tools Tests - Schema Drift Detection
  *
  * Tests for schema-relevant file detection (plan-phase injection)
  * and post-execution schema drift gate (execute-phase verification).
@@ -14,7 +14,7 @@ const { createTempProject, createTempGitProject, cleanup, runGsdTools } = requir
 // ─── Unit: detectSchemaFiles ─────────────────────────────────────────────────
 
 const { detectSchemaFiles, detectSchemaOrm, checkSchemaDrift } = require(
-  path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'schema-detect.cjs')
+  path.join(__dirname, '..', 'sdd', 'bin', 'lib', 'schema-detect.cjs')
 );
 
 describe('detectSchemaFiles', () => {
@@ -221,7 +221,7 @@ describe('checkSchemaDrift', () => {
     assert.strictEqual(result.blocking, false);
   });
 
-  test('respects GSD_SKIP_SCHEMA_CHECK override', () => {
+  test('respects SDD_SKIP_SCHEMA_CHECK override', () => {
     const changedFiles = ['src/collections/Posts.ts'];
     const executionLog = 'npm run build';
     const result = checkSchemaDrift(changedFiles, executionLog, { skipCheck: true });
@@ -255,7 +255,7 @@ describe('verify schema-drift CLI command', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempGitProject('gsd-schema-drift-');
+    tmpDir = createTempGitProject('sdd-schema-drift-');
   });
 
   afterEach(() => {

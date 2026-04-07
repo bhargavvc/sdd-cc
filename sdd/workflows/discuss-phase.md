@@ -5,9 +5,9 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 </purpose>
 
 <required_reading>
-@~/.claude/get-shit-done/references/domain-probes.md
-@~/.claude/get-shit-done/references/gate-prompts.md
-@~/.claude/get-shit-done/references/universal-anti-patterns.md
+@~/.claude/sdd/references/domain-probes.md
+@~/.claude/sdd/references/gate-prompts.md
+@~/.claude/sdd/references/universal-anti-patterns.md
 </required_reading>
 
 <downstream_awareness>
@@ -124,15 +124,15 @@ This is required for Claude Code remote sessions (`/rc` mode) where the Claude A
 cannot forward TUI menu selections back to the host.
 
 Enable text mode:
-- Per-session: pass `--text` flag to any command (e.g., `/gsd-discuss-phase --text`)
-- Per-project: `gsd-tools config-set workflow.text_mode true`
+- Per-session: pass `--text` flag to any command (e.g., `/sdd-discuss-phase --text`)
+- Per-project: `sdd-tools config-set workflow.text_mode true`
 
 Text mode applies to ALL workflows in the session, not just discuss-phase.
 </answer_validation>
 
 <process>
 
-**Express path available:** If you already have a PRD or acceptance criteria document, use `/gsd-plan-phase {phase} --prd path/to/prd.md` to skip this discussion and go straight to planning.
+**Express path available:** If you already have a PRD or acceptance criteria document, use `/sdd-plan-phase {phase} --prd path/to/prd.md` to skip this discussion and go straight to planning.
 
 <step name="initialize" priority="first">
 Phase number from argument (required).
@@ -151,7 +151,7 @@ Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phas
 ```
 Phase [X] not found in roadmap.
 
-Use /gsd-progress ${GSD_WS} to see available phases.
+Use /sdd-progress ${SDD_WS} to see available phases.
 ```
 Exit workflow.
 
@@ -159,7 +159,7 @@ Exit workflow.
 
 **Power mode** — If `--power` is present in ARGUMENTS:
 - Skip interactive questioning entirely
-- Read and execute @~/.claude/get-shit-done/workflows/discuss-phase-power.md end-to-end
+- Read and execute @~/.claude/sdd/workflows/discuss-phase-power.md end-to-end
 - Do not continue with the steps below
 
 **Auto mode** — If `--auto` is present in ARGUMENTS:
@@ -252,7 +252,7 @@ Check `has_plans` and `plan_count` from init. **If `has_plans` is true:**
 - header: "Plans exist"
 - question: "Phase [X] already has {plan_count} plan(s) created without user context. Your decisions here won't affect existing plans unless you replan."
 - options:
-  - "Continue and replan after" — Capture context, then run /gsd-plan-phase {X} ${GSD_WS} to replan
+  - "Continue and replan after" — Capture context, then run /sdd-plan-phase {X} ${SDD_WS} to replan
   - "View existing plans" — Show plans before deciding
   - "Cancel" — Skip discuss-phase
 
@@ -721,7 +721,7 @@ In `--auto` mode, the discuss step MUST complete in a **single pass**. After wri
 
 Check the pass cap from config:
 ```bash
-MAX_PASSES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.max_discuss_passes 2>/dev/null || echo "3")
+MAX_PASSES=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.max_discuss_passes 2>/dev/null || echo "3")
 ```
 
 If you have already written and committed CONTEXT.md, the discuss step is complete. Move on.
@@ -833,7 +833,7 @@ Write after each area:
 }
 ```
 
-This is a structured checkpoint, not the final CONTEXT.md — the `write_context` step still produces the canonical output. But if the session dies, the next `/gsd-discuss-phase` invocation can detect this checkpoint and offer to resume from it instead of starting from scratch.
+This is a structured checkpoint, not the final CONTEXT.md — the `write_context` step still produces the canonical output. But if the session dies, the next `/sdd-discuss-phase` invocation can detect this checkpoint and offer to resume from it instead of starting from scratch.
 
 **On session resume:** In the `check_existing` step, also check for `*-DISCUSS-CHECKPOINT.json`. If found and no CONTEXT.md exists:
 - Display: "Found interrupted discussion checkpoint ({N} areas completed). Resume from checkpoint?"
@@ -999,14 +999,14 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 `/clear` then:
 
-`/gsd-plan-phase ${PHASE} ${GSD_WS}`
+`/sdd-plan-phase ${PHASE} ${SDD_WS}`
 
 ---
 
 **Also available:**
-- `/gsd-discuss-phase ${PHASE} --chain ${GSD_WS}` — re-run with auto plan+execute after
-- `/gsd-plan-phase ${PHASE} --skip-research ${GSD_WS}` — plan without research
-- `/gsd-ui-phase ${PHASE} ${GSD_WS}` — generate UI design contract before planning (if phase has frontend work)
+- `/sdd-discuss-phase ${PHASE} --chain ${SDD_WS}` — re-run with auto plan+execute after
+- `/sdd-plan-phase ${PHASE} --skip-research ${SDD_WS}` — plan without research
+- `/sdd-ui-phase ${PHASE} ${SDD_WS}` — generate UI design contract before planning (if phase has frontend work)
 - Review/edit CONTEXT.md before continuing
 
 ---
@@ -1096,7 +1096,7 @@ Check for auto-advance trigger:
 2. **Sync chain flag with intent** — if user invoked manually (no `--auto` and no `--chain`), clear the ephemeral chain flag from any previous interrupted `--auto` chain. This does NOT touch `workflow.auto_advance` (the user's persistent settings preference):
    ```bash
    if [[ ! "$ARGUMENTS" =~ --auto ]] && [[ ! "$ARGUMENTS" =~ --chain ]]; then
-     node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-set workflow._auto_chain_active false 2>/dev/null
+     node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-set workflow._auto_chain_active false 2>/dev/null
    fi
    ```
 3. Read both the chain flag and user preference:
@@ -1123,7 +1123,7 @@ Context captured. Launching plan-phase...
 
 Launch plan-phase using the Skill tool to avoid nested Task sessions (which cause runtime freezes due to deep agent nesting — see #686):
 ```
-Skill(skill="gsd-plan-phase", args="${PHASE} --auto ${GSD_WS}")
+Skill(skill="sdd-plan-phase", args="${PHASE} --auto ${SDD_WS}")
 ```
 
 This keeps the auto-advance chain flat — discuss, plan, and execute all run at the same nesting level rather than spawning increasingly deep Task agents.
@@ -1139,22 +1139,22 @@ This keeps the auto-advance chain flat — discuss, plan, and execute all run at
 
   /clear then:
 
-  Next: /gsd-discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${GSD_WS}
+  Next: /sdd-discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${SDD_WS}
   ```
 - **PLANNING COMPLETE** → Planning done, execution didn't complete:
   ```
   Auto-advance partial: Planning complete, execution did not finish.
-  Continue: /gsd-execute-phase ${PHASE} ${GSD_WS}
+  Continue: /sdd-execute-phase ${PHASE} ${SDD_WS}
   ```
 - **PLANNING INCONCLUSIVE / CHECKPOINT** → Stop chain:
   ```
   Auto-advance stopped: Planning needs input.
-  Continue: /gsd-plan-phase ${PHASE} ${GSD_WS}
+  Continue: /sdd-plan-phase ${PHASE} ${SDD_WS}
   ```
 - **GAPS FOUND** → Stop chain:
   ```
   Auto-advance stopped: Gaps found during execution.
-  Continue: /gsd-plan-phase ${PHASE} --gaps ${GSD_WS}
+  Continue: /sdd-plan-phase ${PHASE} --gaps ${SDD_WS}
   ```
 
 **If none of `--auto`, `--chain`, nor config enabled:**
@@ -1168,7 +1168,7 @@ When `--power` flag is present in ARGUMENTS, skip interactive questioning and ex
 
 The power user mode generates ALL questions upfront into machine-readable and human-friendly files, then waits for the user to answer at their own pace before processing all answers in a single pass.
 
-**Full step-by-step instructions:** @~/.claude/get-shit-done/workflows/discuss-phase-power.md
+**Full step-by-step instructions:** @~/.claude/sdd/workflows/discuss-phase-power.md
 
 **Summary of flow:**
 1. Run the same phase analysis (gray area identification) as standard mode

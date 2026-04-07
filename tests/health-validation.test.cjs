@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Health Validation
+ * SDD Tools Tests - Health Validation
  *
  * Tests for fix/health-validation-1473c:
  *   - W011: STATE/ROADMAP cross-validation (phase divergence detection)
@@ -167,7 +167,7 @@ describe('config field validation', () => {
     writeMinimalProjectMd(tmpDir);
     writeMinimalRoadmap(tmpDir, ['1']);
     writeMinimalStateMd(tmpDir, '# Session State\n\nPhase 1 in progress.\n');
-    writeValidConfigJson(tmpDir, { phase_branch_template: 'gsd/no-placeholder-{slug}' });
+    writeValidConfigJson(tmpDir, { phase_branch_template: 'sdd/no-placeholder-{slug}' });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
     const result = runGsdTools('validate health', tmpDir);

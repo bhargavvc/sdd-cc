@@ -1,9 +1,9 @@
 /**
- * GSD Tools Tests - docs-update
+ * SDD Tools Tests - docs-update
  *
- * Integration tests for the docs-init gsd-tools subcommand.
+ * Integration tests for the docs-init sdd-tools subcommand.
  * Covers: JSON output shape, project type detection, existing doc scanning,
- * GSD marker detection, and doc tooling detection.
+ * SDD marker detection, and doc tooling detection.
  *
  * Requirements: VERF-03
  */
@@ -203,10 +203,10 @@ describe('existing doc scanning', () => {
     assert.ok(paths.includes('ARCHITECTURE.md'), 'existing_docs should contain ARCHITECTURE.md');
   });
 
-  test('detects GSD marker in existing docs', () => {
+  test('detects SDD marker in existing docs', () => {
     fs.writeFileSync(
       path.join(tmpDir, 'README.md'),
-      '<!-- generated-by: gsd-doc-writer -->\n# README\n',
+      '<!-- generated-by: sdd-doc-writer -->\n# README\n',
       'utf-8'
     );
     fs.writeFileSync(path.join(tmpDir, 'NOTES.md'), '# Notes\n', 'utf-8');
@@ -218,11 +218,11 @@ describe('existing doc scanning', () => {
 
     const readmeEntry = data.existing_docs.find(d => d.path === 'README.md');
     assert.ok(readmeEntry, 'README.md should appear in existing_docs');
-    assert.strictEqual(readmeEntry.has_gsd_marker, true, 'README.md should have GSD marker');
+    assert.strictEqual(readmeEntry.has_sdd_marker, true, 'README.md should have SDD marker');
 
     const notesEntry = data.existing_docs.find(d => d.path === 'NOTES.md');
     assert.ok(notesEntry, 'NOTES.md should appear in existing_docs');
-    assert.strictEqual(notesEntry.has_gsd_marker, false, 'NOTES.md should not have GSD marker');
+    assert.strictEqual(notesEntry.has_sdd_marker, false, 'NOTES.md should not have SDD marker');
   });
 });
 

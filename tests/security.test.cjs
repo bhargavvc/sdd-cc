@@ -22,7 +22,7 @@ const {
   validateShellArg,
   validatePromptStructure,
   scanEntropyAnomalies,
-} = require('../get-shit-done/bin/lib/security.cjs');
+} = require('../sdd/bin/lib/security.cjs');
 
 // ─── Path Traversal Prevention ──────────────────────────────────────────────
 
@@ -419,7 +419,7 @@ describe('validateFieldName', () => {
 });
 
 // ─── Hook session_id path traversal (#1533) ────────────────────────────────
-// Verify that gsd-context-monitor and gsd-statusline reject session_id values
+// Verify that sdd-context-monitor and sdd-statusline reject session_id values
 // containing path traversal sequences before constructing temp file paths.
 
 const { execFileSync } = require('child_process');
@@ -438,8 +438,8 @@ function runHook(hookPath, inputJson) {
   }
 }
 
-describe('gsd-context-monitor session_id path traversal', () => {
-  const monitorPath = path.join(__dirname, '..', 'hooks', 'gsd-context-monitor.js');
+describe('sdd-context-monitor session_id path traversal', () => {
+  const monitorPath = path.join(__dirname, '..', 'hooks', 'sdd-context-monitor.js');
   const tmpDir = os.tmpdir();
 
   test('exits silently for session_id with ../ traversal', () => {
@@ -466,8 +466,8 @@ describe('gsd-context-monitor session_id path traversal', () => {
   });
 });
 
-describe('gsd-statusline session_id path traversal', () => {
-  const statuslinePath = path.join(__dirname, '..', 'hooks', 'gsd-statusline.js');
+describe('sdd-statusline session_id path traversal', () => {
+  const statuslinePath = path.join(__dirname, '..', 'hooks', 'sdd-statusline.js');
   const tmpDir = os.tmpdir();
 
   const baseInput = {
@@ -477,7 +477,7 @@ describe('gsd-statusline session_id path traversal', () => {
   };
 
   test('does not write bridge file for session_id with ../ traversal', () => {
-    const maliciousId = '../../../etc/gsd-test';
+    const maliciousId = '../../../etc/sdd-test';
     const bridgePath = path.join(tmpDir, 'claude-ctx-' + maliciousId + '.json');
     try { fs.unlinkSync(bridgePath); } catch { /* intentionally empty */ }
 
@@ -673,7 +673,7 @@ describe('validatePromptStructure', () => {
     const text = [
       '<purpose>Act as a planner</purpose>',
       '<required_reading>PLAN.md</required_reading>',
-      '<available_agent_types>gsd-executor</available_agent_types>',
+      '<available_agent_types>sdd-executor</available_agent_types>',
     ].join('\n');
     const result = validatePromptStructure(text, 'agent');
     assert.ok(result.valid);

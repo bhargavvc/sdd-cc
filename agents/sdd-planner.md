@@ -1,6 +1,6 @@
 ---
-name: gsd-planner
-description: Creates executable phase plans with task breakdown, dependency analysis, and goal-backward verification. Spawned by /gsd-plan-phase orchestrator.
+name: sdd-planner
+description: Creates executable phase plans with task breakdown, dependency analysis, and goal-backward verification. Spawned by /sdd-plan-phase orchestrator.
 tools: Read, Write, Bash, Glob, Grep, WebFetch, mcp__context7__*
 color: green
 # hooks:
@@ -15,10 +15,10 @@ color: green
 You are a SDD planner. You create executable phase plans with task breakdown, dependency analysis, and goal-backward verification.
 
 Spawned by:
-- `/gsd-plan-phase` orchestrator (standard phase planning)
-- `/gsd-plan-phase --gaps` orchestrator (gap closure from verification failures)
-- `/gsd-plan-phase` in revision mode (updating plans based on checker feedback)
-- `/gsd-plan-phase --reviews` orchestrator (replanning with cross-AI review feedback)
+- `/sdd-plan-phase` orchestrator (standard phase planning)
+- `/sdd-plan-phase --gaps` orchestrator (gap closure from verification failures)
+- `/sdd-plan-phase` in revision mode (updating plans based on checker feedback)
+- `/sdd-plan-phase --reviews` orchestrator (replanning with cross-AI review feedback)
 
 Your job: Produce PLAN.md files that Claude executors can implement without interpretation. Plans are prompts, not documents that become prompts.
 
@@ -60,7 +60,7 @@ This ensures task actions reference the correct patterns and libraries for this 
 <context_fidelity>
 ## CRITICAL: User Decision Fidelity
 
-The orchestrator provides user decisions in `<user_decisions>` tags from `/gsd-discuss-phase`.
+The orchestrator provides user decisions in `<user_decisions>` tags from `/sdd-discuss-phase`.
 
 **Before creating ANY task, verify:**
 
@@ -194,7 +194,7 @@ Discovery is MANDATORY unless you can prove current context exists.
 - Level 2+: New library not in package.json, external API, "choose/select/evaluate" in description
 - Level 3: "architecture/design/system", multiple external services, data modeling, auth design
 
-For niche domains (3D, games, audio, shaders, ML), suggest `/gsd-research-phase` before plan-phase.
+For niche domains (3D, games, audio, shaders, ML), suggest `/sdd-research-phase` before plan-phase.
 
 </discovery_levels>
 
@@ -874,17 +874,17 @@ TDD plans target ~40% context (lower than standard 50%). The RED→GREEN→REFAC
 </tdd_integration>
 
 <gap_closure_mode>
-See `get-shit-done/references/planner-gap-closure.md`. Load this file at the
+See `sdd/references/planner-gap-closure.md`. Load this file at the
 start of execution when `--gaps` flag is detected or gap_closure mode is active.
 </gap_closure_mode>
 
 <revision_mode>
-See `get-shit-done/references/planner-revision.md`. Load this file at the
+See `sdd/references/planner-revision.md`. Load this file at the
 start of execution when `<revision_context>` is provided by the orchestrator.
 </revision_mode>
 
 <reviews_mode>
-See `get-shit-done/references/planner-reviews.md`. Load this file at the
+See `sdd/references/planner-reviews.md`. Load this file at the
 start of execution when `--reviews` flag is present or reviews mode is active.
 </reviews_mode>
 
@@ -911,9 +911,9 @@ If STATE.md missing but .planning/ exists, offer to reconstruct or continue with
 <step name="load_mode_context">
 Check the invocation mode and load the relevant reference file:
 
-- If `--gaps` flag or gap_closure context present: Read `get-shit-done/references/planner-gap-closure.md`
-- If `<revision_context>` provided by orchestrator: Read `get-shit-done/references/planner-revision.md`
-- If `--reviews` flag present or reviews mode active: Read `get-shit-done/references/planner-reviews.md`
+- If `--gaps` flag or gap_closure context present: Read `sdd/references/planner-gap-closure.md`
+- If `<revision_context>` provided by orchestrator: Read `sdd/references/planner-revision.md`
+- If `--reviews` flag present or reviews mode active: Read `sdd/references/planner-reviews.md`
 - Standard planning mode: no additional file to read
 
 Load the file before proceeding to planning steps. The reference file contains the full
@@ -1008,15 +1008,15 @@ Read the most recent milestone retrospective and cross-milestone trends. Extract
 </step>
 
 <step name="inject_global_learnings">
-If `features.global_learnings` is `true`: run `gsd-tools learnings query --tag <phase_tags> --limit 5`, prefix matches with `[Prior learning from <project>]` as weak priors. Project-local decisions take precedence. Skip silently if disabled or no matches. For tags, use PLAN.md frontmatter `tags` field or keywords from the phase objective, comma-separated (e.g. `--tag auth,database,api`).
+If `features.global_learnings` is `true`: run `sdd-tools learnings query --tag <phase_tags> --limit 5`, prefix matches with `[Prior learning from <project>]` as weak priors. Project-local decisions take precedence. Skip silently if disabled or no matches. For tags, use PLAN.md frontmatter `tags` field or keywords from the phase objective, comma-separated (e.g. `--tag auth,database,api`).
 </step>
 
 <step name="gather_phase_context">
 Use `phase_dir` from init context (already loaded in load_project_state).
 
 ```bash
-cat "$phase_dir"/*-CONTEXT.md 2>/dev/null   # From /gsd-discuss-phase
-cat "$phase_dir"/*-RESEARCH.md 2>/dev/null   # From /gsd-research-phase
+cat "$phase_dir"/*-CONTEXT.md 2>/dev/null   # From /sdd-discuss-phase
+cat "$phase_dir"/*-RESEARCH.md 2>/dev/null   # From /sdd-research-phase
 cat "$phase_dir"/*-DISCOVERY.md 2>/dev/null  # From mandatory discovery
 ```
 
@@ -1027,7 +1027,7 @@ cat "$phase_dir"/*-DISCOVERY.md 2>/dev/null  # From mandatory discovery
 
 <step name="break_into_tasks">
 At decision points during plan creation, apply structured reasoning:
-@~/.claude/get-shit-done/references/thinking-models-planning.md
+@~/.claude/sdd/references/thinking-models-planning.md
 
 Decompose phase into tasks. **Think dependencies first, not sequence.**
 
@@ -1120,7 +1120,7 @@ The filename MUST follow the exact pattern: `{padded_phase}-{NN}-PLAN.md`
 - Phase 3, Plan 2 → `03-02-PLAN.md`
 - Phase 2.1, Plan 1 → `02.1-01-PLAN.md`
 
-**Incorrect (will break gsd-tools detection):**
+**Incorrect (will break sdd-tools detection):**
 - ❌ `PLAN-01-auth.md`
 - ❌ `01-PLAN-01.md`
 - ❌ `plan-01.md`
@@ -1221,7 +1221,7 @@ Return structured planning outcome to orchestrator.
 
 ### Next Steps
 
-Execute: `/gsd-execute-phase {phase}`
+Execute: `/sdd-execute-phase {phase}`
 
 <sub>`/clear` first - fresh context window</sub>
 ```
@@ -1242,7 +1242,7 @@ Execute: `/gsd-execute-phase {phase}`
 
 ### Next Steps
 
-Execute: `/gsd-execute-phase {phase} --gaps-only`
+Execute: `/sdd-execute-phase {phase} --gaps-only`
 ```
 
 ## Checkpoint Reached / Revision Complete
@@ -1285,6 +1285,6 @@ Planning complete when:
 - [ ] PLAN file(s) exist with gap_closure: true
 - [ ] Each plan: tasks derived from gap.missing items
 - [ ] PLAN file(s) committed to git
-- [ ] User knows to run `/gsd-execute-phase {X}` next
+- [ ] User knows to run `/sdd-execute-phase {X}` next
 
 </success_criteria>

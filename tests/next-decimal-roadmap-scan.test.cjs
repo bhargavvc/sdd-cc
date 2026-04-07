@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests — phase next-decimal ROADMAP.md scanning
+ * SDD Tools Tests — phase next-decimal ROADMAP.md scanning
  *
  * Covers issue #1865: next-decimal only scanned directory names in
  * .planning/phases/ to determine the next available decimal number.

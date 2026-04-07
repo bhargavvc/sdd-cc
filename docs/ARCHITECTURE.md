@@ -21,7 +21,7 @@
 
 ## System Overview
 
-GSD is a **meta-prompting framework** that sits between the user and AI coding agents (Claude Code, Gemini CLI, OpenCode, Kilo, Codex, Copilot, Antigravity, Trae, Cline, Augment Code). It provides:
+SDD is a **meta-prompting framework** that sits between the user and AI coding agents (Claude Code, Gemini CLI, OpenCode, Kilo, Codex, Copilot, Antigravity, Trae, Cline, Augment Code). It provides:
 
 1. **Context engineering** — Structured artifacts that give the AI everything it needs per task
 2. **Multi-agent orchestration** — Thin orchestrators that spawn specialized agents with fresh context windows
@@ -31,7 +31,7 @@ GSD is a **meta-prompting framework** that sits between the user and AI coding a
 ```
 ┌──────────────────────────────────────────────────────┐
 │                      USER                            │
-│            /gsd-command [args]                        │
+│            /sdd-command [args]                        │
 └─────────────────────┬────────────────────────────────┘
                       │
 ┌─────────────────────▼────────────────────────────────┐
@@ -107,10 +107,10 @@ Multiple layers prevent common failure modes:
 ### Commands (`commands/sdd/*.md`)
 
 User-facing entry points. Each file contains YAML frontmatter (name, description, allowed-tools) and a prompt body that bootstraps the workflow. Commands are installed as:
-- **Claude Code:** Custom slash commands (`/gsd-command-name`)
-- **OpenCode / Kilo:** Slash commands (`/gsd-command-name`)
-- **Codex:** Skills (`$gsd-command-name`)
-- **Copilot:** Slash commands (`/gsd-command-name`)
+- **Claude Code:** Custom slash commands (`/sdd-command-name`)
+- **OpenCode / Kilo:** Slash commands (`/sdd-command-name`)
+- **Codex:** Skills (`$sdd-command-name`)
+- **Copilot:** Slash commands (`/sdd-command-name`)
 - **Antigravity:** Skills
 
 **Total commands:** 69
@@ -172,7 +172,7 @@ Shared knowledge documents that workflows and agents `@-reference` (35 total):
 
 **Thinking model references:**
 
-References for integrating thinking-class models (o3, o4-mini, Gemini 2.5 Pro) into GSD workflows:
+References for integrating thinking-class models (o3, o4-mini, Gemini 2.5 Pro) into SDD workflows:
 
 - `thinking-models-debug.md` — Thinking model patterns for debugging workflows
 - `thinking-models-execution.md` — Thinking model patterns for execution agents
@@ -182,10 +182,10 @@ References for integrating thinking-class models (o3, o4-mini, Gemini 2.5 Pro) i
 
 **Modular planner decomposition:**
 
-The planner agent (`agents/gsd-planner.md`) was decomposed from a single monolithic file into a core agent plus reference modules to stay under the 50K character limit imposed by some runtimes:
+The planner agent (`agents/sdd-planner.md`) was decomposed from a single monolithic file into a core agent plus reference modules to stay under the 50K character limit imposed by some runtimes:
 
 - `planner-gap-closure.md` — Gap closure mode behavior (reads VERIFICATION.md, targeted replanning)
-- `planner-reviews.md` — Cross-AI review integration (reads REVIEWS.md from `/gsd-review`)
+- `planner-reviews.md` — Cross-AI review integration (reads REVIEWS.md from `/sdd-review`)
 - `planner-revision.md` — Plan revision patterns for iterative refinement
 
 ### Templates (`sdd/templates/`)
@@ -206,19 +206,19 @@ Runtime hooks that integrate with the host AI agent:
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `gsd-statusline.js` | `statusLine` | Displays model, task, directory, and context usage bar |
-| `gsd-context-monitor.js` | `PostToolUse` / `AfterTool` | Injects agent-facing context warnings at 35%/25% remaining |
-| `gsd-check-update.js` | `SessionStart` | Background check for new GSD versions |
-| `gsd-prompt-guard.js` | `PreToolUse` | Scans `.planning/` writes for prompt injection patterns (advisory) |
-| `gsd-workflow-guard.js` | `PreToolUse` | Detects file edits outside GSD workflow context (advisory, opt-in via `hooks.workflow_guard`) |
-| `gsd-read-guard.js` | `PreToolUse` | Advisory guard preventing Edit/Write on files not yet read in the session |
-| `gsd-session-state.sh` | `PostToolUse` | Session state tracking for shell-based runtimes |
-| `gsd-validate-commit.sh` | `PostToolUse` | Commit validation for conventional commit enforcement |
-| `gsd-phase-boundary.sh` | `PostToolUse` | Phase boundary detection for workflow transitions |
+| `sdd-statusline.js` | `statusLine` | Displays model, task, directory, and context usage bar |
+| `sdd-context-monitor.js` | `PostToolUse` / `AfterTool` | Injects agent-facing context warnings at 35%/25% remaining |
+| `sdd-check-update.js` | `SessionStart` | Background check for new SDD versions |
+| `sdd-prompt-guard.js` | `PreToolUse` | Scans `.planning/` writes for prompt injection patterns (advisory) |
+| `sdd-workflow-guard.js` | `PreToolUse` | Detects file edits outside SDD workflow context (advisory, opt-in via `hooks.workflow_guard`) |
+| `sdd-read-guard.js` | `PreToolUse` | Advisory guard preventing Edit/Write on files not yet read in the session |
+| `sdd-session-state.sh` | `PostToolUse` | Session state tracking for shell-based runtimes |
+| `sdd-validate-commit.sh` | `PostToolUse` | Commit validation for conventional commit enforcement |
+| `sdd-phase-boundary.sh` | `PostToolUse` | Phase boundary detection for workflow transitions |
 
 ### CLI Tools (`sdd/bin/`)
 
-Node.js CLI utility (`gsd-tools.cjs`) with 19 domain modules:
+Node.js CLI utility (`sdd-tools.cjs`) with 19 domain modules:
 
 | Module | Responsibility |
 |--------|---------------|
@@ -272,18 +272,18 @@ Orchestrator (workflow .md)
 
 | Category | Agents | Parallelism |
 |----------|--------|-------------|
-| **Researchers** | gsd-project-researcher, gsd-phase-researcher, gsd-ui-researcher, gsd-advisor-researcher | 4 parallel (stack, features, architecture, pitfalls); advisor spawns during discuss-phase |
-| **Synthesizers** | gsd-research-synthesizer | Sequential (after researchers complete) |
-| **Planners** | gsd-planner, gsd-roadmapper | Sequential |
-| **Checkers** | gsd-plan-checker, gsd-integration-checker, gsd-ui-checker, gsd-nyquist-auditor | Sequential (verification loop, max 3 iterations) |
-| **Executors** | gsd-executor | Parallel within waves, sequential across waves |
-| **Verifiers** | gsd-verifier | Sequential (after all executors complete) |
-| **Mappers** | gsd-codebase-mapper | 4 parallel (tech, arch, quality, concerns) |
-| **Debuggers** | gsd-debugger | Sequential (interactive) |
-| **Auditors** | gsd-ui-auditor, gsd-security-auditor | Sequential |
-| **Doc Writers** | gsd-doc-writer, gsd-doc-verifier | Sequential (writer then verifier) |
-| **Profilers** | gsd-user-profiler | Sequential |
-| **Analyzers** | gsd-assumptions-analyzer | Sequential (during discuss-phase) |
+| **Researchers** | sdd-project-researcher, sdd-phase-researcher, sdd-ui-researcher, sdd-advisor-researcher | 4 parallel (stack, features, architecture, pitfalls); advisor spawns during discuss-phase |
+| **Synthesizers** | sdd-research-synthesizer | Sequential (after researchers complete) |
+| **Planners** | sdd-planner, sdd-roadmapper | Sequential |
+| **Checkers** | sdd-plan-checker, sdd-integration-checker, sdd-ui-checker, sdd-nyquist-auditor | Sequential (verification loop, max 3 iterations) |
+| **Executors** | sdd-executor | Parallel within waves, sequential across waves |
+| **Verifiers** | sdd-verifier | Sequential (after all executors complete) |
+| **Mappers** | sdd-codebase-mapper | 4 parallel (tech, arch, quality, concerns) |
+| **Debuggers** | sdd-debugger | Sequential (interactive) |
+| **Auditors** | sdd-ui-auditor, sdd-security-auditor | Sequential |
+| **Doc Writers** | sdd-doc-writer, sdd-doc-verifier | Sequential (writer then verifier) |
+| **Profilers** | sdd-user-profiler | Sequential |
+| **Analyzers** | sdd-assumptions-analyzer | Sequential (during discuss-phase) |
 
 ### Wave Execution Model
 
@@ -311,7 +311,7 @@ When the context window is 500K+ tokens (1M-class models like Opus 4.6, Sonnet 4
 - **Executor agents** receive prior wave SUMMARY.md files and the phase CONTEXT.md/RESEARCH.md, enabling cross-plan awareness within a phase
 - **Verifier agents** receive all PLAN.md, SUMMARY.md, CONTEXT.md files plus REQUIREMENTS.md, enabling history-aware verification
 
-The orchestrator reads `context_window` from config (`gsd-tools.cjs config-get context_window`) and conditionally includes richer context when the value is >= 500,000. For standard 200K windows, prompts use truncated versions with cache-friendly ordering to maximize context efficiency.
+The orchestrator reads `context_window` from config (`sdd-tools.cjs config-get context_window`) and conditionally includes richer context when the value is >= 500,000. For standard 200K windows, prompts use truncated versions with cache-friendly ordering to maximize context efficiency.
 
 #### Parallel Commit Safety
 
@@ -409,9 +409,9 @@ UI-SPEC.md (per phase) ───────────────────
 
 ```
 ~/.claude/                          # Claude Code (global install)
-├── commands/gsd/*.md               # 69 slash commands
-├── get-shit-done/
-│   ├── bin/gsd-tools.cjs           # CLI utility
+├── commands/sdd/*.md               # 69 slash commands
+├── sdd/
+│   ├── bin/sdd-tools.cjs           # CLI utility
 │   ├── bin/lib/*.cjs               # 19 domain modules
 │   ├── workflows/*.md              # 68 workflow definitions
 │   ├── references/*.md             # 35 shared reference docs
@@ -443,13 +443,13 @@ Equivalent paths for other runtimes:
 ├── STATE.md                # Living memory: position, decisions, blockers, metrics
 ├── config.json             # Workflow configuration
 ├── MILESTONES.md           # Completed milestone archive
-├── research/               # Domain research from /gsd-new-project
+├── research/               # Domain research from /sdd-new-project
 │   ├── SUMMARY.md
 │   ├── STACK.md
 │   ├── FEATURES.md
 │   ├── ARCHITECTURE.md
 │   └── PITFALLS.md
-├── codebase/               # Brownfield mapping (from /gsd-map-codebase)
+├── codebase/               # Brownfield mapping (from /sdd-map-codebase)
 │   ├── STACK.md
 │   ├── ARCHITECTURE.md
 │   ├── CONVENTIONS.md
@@ -475,13 +475,13 @@ Equivalent paths for other runtimes:
 ├── todos/
 │   ├── pending/            # Captured ideas
 │   └── done/               # Completed todos
-├── threads/               # Persistent context threads (from /gsd-thread)
-├── seeds/                 # Forward-looking ideas (from /gsd-plant-seed)
+├── threads/               # Persistent context threads (from /sdd-thread)
+├── seeds/                 # Forward-looking ideas (from /sdd-plant-seed)
 ├── debug/                  # Active debug sessions
 │   ├── *.md                # Active sessions
 │   ├── resolved/           # Archived sessions
 │   └── knowledge-base.md   # Persistent debug learnings
-├── ui-reviews/             # Screenshots from /gsd-ui-review (gitignored)
+├── ui-reviews/             # Screenshots from /sdd-ui-review (gitignored)
 └── continue-here.md        # Context handoff (from pause-work)
 ```
 
@@ -507,9 +507,9 @@ The installer (`bin/install.js`, ~3,000 lines) handles:
    - Augment Code: Skills-first with full skill conversion and config management
 5. **Path normalization** — Replaces `~/.claude/` paths with runtime-specific paths
 6. **Settings integration** — Registers hooks in runtime's `settings.json`
-7. **Patch backup** — Since v1.17, backs up locally modified files to `gsd-local-patches/` for `/gsd-reapply-patches`
-8. **Manifest tracking** — Writes `gsd-file-manifest.json` for clean uninstall
-9. **Uninstall mode** — `--uninstall` removes all GSD files, hooks, and settings
+7. **Patch backup** — Since v1.17, backs up locally modified files to `sdd-local-patches/` for `/sdd-reapply-patches`
+8. **Manifest tracking** — Writes `sdd-file-manifest.json` for clean uninstall
+9. **Uninstall mode** — `--uninstall` removes all SDD files, hooks, and settings
 
 ### Platform Handling
 
@@ -567,24 +567,24 @@ Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→
 
 **Workflow Guard** (`sdd-workflow-guard.js`):
 - Triggers on Write/Edit to non-`.planning/` files
-- Detects edits outside GSD workflow context (no active `/gsd-` command or Task subagent)
-- Advises using `/gsd-quick` or `/gsd-fast` for state-tracked changes
+- Detects edits outside SDD workflow context (no active `/sdd-` command or Task subagent)
+- Advises using `/sdd-quick` or `/sdd-fast` for state-tracked changes
 - Opt-in via `hooks.workflow_guard: true` (default: false)
 
 ---
 
 ## Runtime Abstraction
 
-GSD supports multiple AI coding runtimes through a unified command/workflow architecture:
+SDD supports multiple AI coding runtimes through a unified command/workflow architecture:
 
 | Runtime | Command Format | Agent System | Config Location |
 |---------|---------------|--------------|-----------------|
-| Claude Code | `/gsd-command` | Task spawning | `~/.claude/` |
-| OpenCode | `/gsd-command` | Subagent mode | `~/.config/opencode/` |
-| Kilo | `/gsd-command` | Subagent mode | `~/.config/kilo/` |
-| Gemini CLI | `/gsd-command` | Task spawning | `~/.gemini/` |
-| Codex | `$gsd-command` | Skills | `~/.codex/` |
-| Copilot | `/gsd-command` | Agent delegation | `~/.github/` |
+| Claude Code | `/sdd-command` | Task spawning | `~/.claude/` |
+| OpenCode | `/sdd-command` | Subagent mode | `~/.config/opencode/` |
+| Kilo | `/sdd-command` | Subagent mode | `~/.config/kilo/` |
+| Gemini CLI | `/sdd-command` | Task spawning | `~/.gemini/` |
+| Codex | `$sdd-command` | Skills | `~/.codex/` |
+| Copilot | `/sdd-command` | Agent delegation | `~/.github/` |
 | Antigravity | Skills | Skills | `~/.gemini/antigravity/` |
 | Trae | Skills | Skills | `~/.trae/` |
 | Cline | Rules | Rules | `.clinerules` |

@@ -15,16 +15,16 @@ const DIST_DIR = path.join(HOOKS_DIR, 'dist');
 
 // Hooks to copy (pure Node.js, no bundling needed)
 const HOOKS_TO_COPY = [
-  'gsd-check-update.js',
-  'gsd-context-monitor.js',
-  'gsd-prompt-guard.js',
-  'gsd-read-guard.js',
-  'gsd-statusline.js',
-  'gsd-workflow-guard.js',
+  'sdd-check-update.js',
+  'sdd-context-monitor.js',
+  'sdd-prompt-guard.js',
+  'sdd-read-guard.js',
+  'sdd-statusline.js',
+  'sdd-workflow-guard.js',
   // Community hooks (bash, opt-in via .planning/config.json hooks.community)
-  'gsd-session-state.sh',
-  'gsd-validate-commit.sh',
-  'gsd-phase-boundary.sh'
+  'sdd-session-state.sh',
+  'sdd-validate-commit.sh',
+  'sdd-phase-boundary.sh'
 ];
 
 /**

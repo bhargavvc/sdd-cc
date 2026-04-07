@@ -44,7 +44,7 @@ ls "$phase_dir"/*-SUMMARY.md "$phase_dir"/*-PLAN.md 2>/dev/null || true
 
 Load full milestone phases for deferred-item filtering (Step 9b):
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap analyze
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap analyze
 ```
 
 Extract **phase goal** from ROADMAP.md (the outcome to verify, not tasks), **requirements** from REQUIREMENTS.md if it exists, and **all milestone phases** from roadmap analyze (for cross-referencing gaps against later phases).

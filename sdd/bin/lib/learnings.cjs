@@ -1,7 +1,7 @@
 /**
  * Learnings — Global knowledge store with CRUD operations
  *
- * Provides a cross-project learnings store at ~/.gsd/knowledge/.
+ * Provides a cross-project learnings store at ~/.sdd/knowledge/.
  * Each learning is stored as an individual JSON file with content-hash
  * deduplication. Supports write, read, list, query, delete, copy-from-project,
  * and prune operations.
@@ -21,7 +21,7 @@ const { output, error: coreError } = require('./core.cjs');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const DEFAULT_STORE_DIR = path.join(os.homedir(), '.gsd', 'knowledge');
+const DEFAULT_STORE_DIR = path.join(os.homedir(), '.sdd', 'knowledge');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -303,7 +303,7 @@ function learningsPrune(olderThan, opts) {
 // ─── CLI Command Handlers ────────────────────────────────────────────────────
 
 /**
- * Handle `gsd-tools learnings list`
+ * Handle `sdd-tools learnings list`
  * @param {boolean} raw - Raw output flag
  */
 function cmdLearningsList(raw) {
@@ -312,7 +312,7 @@ function cmdLearningsList(raw) {
 }
 
 /**
- * Handle `gsd-tools learnings query --tag <tag>`
+ * Handle `sdd-tools learnings query --tag <tag>`
  * @param {string} tag
  * @param {boolean} raw - Raw output flag
  */
@@ -322,7 +322,7 @@ function cmdLearningsQuery(tag, raw) {
 }
 
 /**
- * Handle `gsd-tools learnings copy`
+ * Handle `sdd-tools learnings copy`
  * @param {string} cwd - Current working directory
  * @param {boolean} raw - Raw output flag
  */
@@ -333,7 +333,7 @@ function cmdLearningsCopy(cwd, raw) {
 }
 
 /**
- * Handle `gsd-tools learnings prune --older-than <duration>`
+ * Handle `sdd-tools learnings prune --older-than <duration>`
  * @param {string} olderThan - Duration string like "90d"
  * @param {boolean} raw - Raw output flag
  */
@@ -347,7 +347,7 @@ function cmdLearningsPrune(olderThan, raw) {
 }
 
 /**
- * Handle `gsd-tools learnings delete <id>`
+ * Handle `sdd-tools learnings delete <id>`
  * @param {string} id
  * @param {boolean} raw - Raw output flag
  */

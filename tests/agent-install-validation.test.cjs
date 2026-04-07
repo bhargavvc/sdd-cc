@@ -170,8 +170,8 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
   });
 
   test('agents_installed=true when agents exist as .agent.md (Copilot format)', () => {
-    // Simulate a Copilot install: agents are named gsd-*.agent.md, not gsd-*.md
-    // Use GSD_AGENTS_DIR to point at an isolated dir with ONLY .agent.md files,
+    // Simulate a Copilot install: agents are named sdd-*.agent.md, not sdd-*.md
+    // Use SDD_AGENTS_DIR to point at an isolated dir with ONLY .agent.md files,
     // so the test does not accidentally pass via the repo's own agents/ dir.
     const agentsDir = path.join(tmpDir, 'copilot-agents');
     fs.mkdirSync(agentsDir, { recursive: true });
@@ -182,13 +182,13 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     // Must report the custom dir, not the default repo agents dir
     assert.strictEqual(output.agents_dir, agentsDir,
-      'agents_dir must be the GSD_AGENTS_DIR override, not the repo default');
+      'agents_dir must be the SDD_AGENTS_DIR override, not the repo default');
     assert.strictEqual(output.agents_found, true,
       'agents_found must be true when agents exist as .agent.md (Copilot format)');
     assert.deepStrictEqual(output.missing, [],
@@ -205,7 +205,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${firstAgent}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -225,7 +225,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('init new-workspace --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGsdTools('init new-workspace --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -235,7 +235,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       'missing_agents must be empty when all .agent.md files are present');
   });
 
-  test('GSD_AGENTS_DIR env var overrides default agents directory', () => {
+  test('SDD_AGENTS_DIR env var overrides default agents directory', () => {
     // Create a custom agents dir in a subdirectory
     const customAgentsDir = path.join(tmpDir, 'custom-agents');
     fs.mkdirSync(customAgentsDir, { recursive: true });
@@ -245,13 +245,13 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${EXPECTED_AGENTS[0]}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: customAgentsDir });
+    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: customAgentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     // The custom dir path should be reported
     assert.strictEqual(output.agents_dir, customAgentsDir,
-      'agents_dir must reflect GSD_AGENTS_DIR override');
+      'agents_dir must reflect SDD_AGENTS_DIR override');
   });
 });
 

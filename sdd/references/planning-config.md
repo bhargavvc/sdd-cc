@@ -11,8 +11,8 @@ Configuration options for `.planning/` directory behavior.
 "git": {
   "branching_strategy": "none",
   "base_branch": null,
-  "phase_branch_template": "gsd/phase-{phase}-{slug}",
-  "milestone_branch_template": "gsd/{milestone}-{slug}",
+  "phase_branch_template": "sdd/phase-{phase}-{slug}",
+  "milestone_branch_template": "sdd/{milestone}-{slug}",
   "quick_branch_template": null
 },
 "manager": {
@@ -30,12 +30,12 @@ Configuration options for `.planning/` directory behavior.
 | `search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
 | `git.branching_strategy` | `"none"` | Git branching approach: `"none"`, `"phase"`, or `"milestone"` |
 | `git.base_branch` | `null` (auto-detect) | Target branch for PRs and merges (e.g. `"master"`, `"develop"`). When `null`, auto-detects from `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `"main"`. |
-| `git.phase_branch_template` | `"gsd/phase-{phase}-{slug}"` | Branch template for phase strategy |
-| `git.milestone_branch_template` | `"gsd/{milestone}-{slug}"` | Branch template for milestone strategy |
+| `git.phase_branch_template` | `"sdd/phase-{phase}-{slug}"` | Branch template for phase strategy |
+| `git.milestone_branch_template` | `"sdd/{milestone}-{slug}"` | Branch template for milestone strategy |
 | `git.quick_branch_template` | `null` | Optional branch template for quick-task runs |
 | `workflow.use_worktrees` | `true` | Whether executor agents run in isolated git worktrees. Set to `false` to disable worktrees — agents execute sequentially on the main working tree instead. Recommended for solo developers or when worktree merges cause issues. |
 | `workflow.subagent_timeout` | `300000` | Timeout in milliseconds for parallel subagent tasks (e.g. codebase mapping). Increase for large codebases or slower models. Default: 300000 (5 minutes). |
-| `manager.flags.discuss` | `""` | Flags passed to `/gsd-discuss-phase` when dispatched from manager (e.g. `"--auto --analyze"`) |
+| `manager.flags.discuss` | `""` | Flags passed to `/sdd-discuss-phase` when dispatched from manager (e.g. `"--auto --analyze"`) |
 | `manager.flags.plan` | `""` | Flags passed to plan workflow when dispatched from manager |
 | `manager.flags.execute` | `""` | Flags passed to execute workflow when dispatched from manager |
 | `response_language` | `null` | Language for user-facing questions and prompts across all phases/subagents (e.g. `"Portuguese"`, `"Japanese"`, `"Spanish"`). When set, all spawned agents include a directive to respond in this language. |
@@ -266,8 +266,8 @@ Set via `git.*` namespace (e.g., `"git": { "branching_strategy": "phase" }`).
 |-----|------|---------|----------------|-------------|
 | `git.branching_strategy` | string | `"none"` | `"none"`, `"phase"`, `"milestone"` | Git branching approach for phase/milestone isolation |
 | `git.base_branch` | string\|null | `null` (auto-detect) | Any branch name | Target branch for PRs and merges; auto-detects from `origin/HEAD` when `null` |
-| `git.phase_branch_template` | string | `"gsd/phase-{phase}-{slug}"` | Template with `{phase}`, `{slug}` | Branch naming template for `phase` strategy |
-| `git.milestone_branch_template` | string | `"gsd/{milestone}-{slug}"` | Template with `{milestone}`, `{slug}` | Branch naming template for `milestone` strategy |
+| `git.phase_branch_template` | string | `"sdd/phase-{phase}-{slug}"` | Template with `{phase}`, `{slug}` | Branch naming template for `phase` strategy |
+| `git.milestone_branch_template` | string | `"sdd/{milestone}-{slug}"` | Template with `{milestone}`, `{slug}` | Branch naming template for `milestone` strategy |
 | `git.quick_branch_template` | string\|null | `null` | Template with `{slug}` | Optional branch template for quick-task runs |
 
 ### Search & API Fields
@@ -302,7 +302,7 @@ Set via `manager.*` namespace (e.g., `"manager": { "flags": { "discuss": "--auto
 
 | Key | Type | Default | Allowed Values | Description |
 |-----|------|---------|----------------|-------------|
-| `manager.flags.discuss` | string | `""` | Any CLI flags string | Flags passed to `/gsd-discuss-phase` from manager (e.g., `"--auto --analyze"`) |
+| `manager.flags.discuss` | string | `""` | Any CLI flags string | Flags passed to `/sdd-discuss-phase` from manager (e.g., `"--auto --analyze"`) |
 | `manager.flags.plan` | string | `""` | Any CLI flags string | Flags passed to plan workflow from manager |
 | `manager.flags.execute` | string | `""` | Any CLI flags string | Flags passed to execute workflow from manager |
 
@@ -338,13 +338,13 @@ Several config fields affect each other or trigger special behavior:
 
 4. **`parallelization` polymorphism** -- Accepts both a simple boolean and an object with an `enabled` field. `loadConfig()` normalizes either form to a boolean. `{ "enabled": true }` is equivalent to `true`.
 
-5. **Search API keys and flags** -- `brave_search`, `firecrawl`, and `exa_search` are auto-set to `true` during project creation if the corresponding API key is detected (environment variable or `~/.gsd/<name>_api_key` file). Setting them to `true` without the API key has no effect.
+5. **Search API keys and flags** -- `brave_search`, `firecrawl`, and `exa_search` are auto-set to `true` during project creation if the corresponding API key is detected (environment variable or `~/.sdd/<name>_api_key` file). Setting them to `true` without the API key has no effect.
 
 6. **`planning.*` and top-level equivalence** -- `planning.commit_docs` and `commit_docs` are equivalent; `planning.search_gitignored` and `search_gitignored` are equivalent. If both are set, the top-level value takes precedence.
 
 7. **`depth` to `granularity` migration** -- The deprecated `depth` key (`quick`/`standard`/`comprehensive`) is automatically migrated to `granularity` (`coarse`/`standard`/`fine`) on config load and persisted back to disk.
 
-8. **`sub_repos` auto-sync** -- On every config load, GSD scans for child directories with `.git` and updates the `sub_repos` array if the filesystem has changed. Legacy `multiRepo: true` is automatically migrated to a detected `sub_repos` array.
+8. **`sub_repos` auto-sync** -- On every config load, SDD scans for child directories with `.git` and updates the `sub_repos` array if the filesystem has changed. Legacy `multiRepo: true` is automatically migrated to a detected `sub_repos` array.
 
 ---
 
@@ -375,7 +375,7 @@ Several config fields affect each other or trigger special behavior:
   "git": {
     "branching_strategy": "phase",
     "base_branch": "develop",
-    "phase_branch_template": "gsd/phase-{phase}-{slug}"
+    "phase_branch_template": "sdd/phase-{phase}-{slug}"
   },
   "workflow": {
     "research": true,
@@ -407,7 +407,7 @@ Several config fields affect each other or trigger special behavior:
   "phase_naming": "sequential",
   "git": {
     "branching_strategy": "milestone",
-    "milestone_branch_template": "gsd/{milestone}-{slug}"
+    "milestone_branch_template": "sdd/{milestone}-{slug}"
   },
   "workflow": {
     "research": true,

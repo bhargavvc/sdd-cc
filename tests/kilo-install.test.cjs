@@ -1,11 +1,11 @@
 /**
- * GSD Tools Tests - Kilo Install Plumbing
+ * SDD Tools Tests - Kilo Install Plumbing
  *
  * Tests for Kilo runtime directory resolution, config paths,
  * permission config, and installer source integration.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.SDD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -109,7 +109,7 @@ describe('Kilo config file helpers', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-kilo-');
+    tmpDir = createTempProject('sdd-kilo-');
   });
 
   afterEach(() => {
@@ -138,7 +138,7 @@ describe('configureKiloPermissions', () => {
   let savedEnv;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-kilo-perms-');
+    tmpDir = createTempProject('sdd-kilo-perms-');
     configDir = path.join(tmpDir, '.config', 'kilo');
     savedEnv = {
       KILO_CONFIG_DIR: process.env.KILO_CONFIG_DIR,
@@ -164,12 +164,12 @@ describe('configureKiloPermissions', () => {
     cleanup(tmpDir);
   });
 
-  test('writes GSD permissions to kilo.json when config is missing', () => {
+  test('writes SDD permissions to kilo.json when config is missing', () => {
     configureKiloPermissions(true);
 
     const configPath = path.join(configDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gsdPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
 
     assert.strictEqual(config.permission.read[gsdPath], 'allow');
     assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
@@ -183,7 +183,7 @@ describe('configureKiloPermissions', () => {
     configureKiloPermissions(true);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gsdPath = `${configDir.replace(/\\/g, '/')}/sdd/*`;
 
     assert.strictEqual(config.permission.bash, 'ask');
     assert.strictEqual(config.permission.read[gsdPath], 'allow');
@@ -197,7 +197,7 @@ describe('configureKiloPermissions', () => {
 
     const configPath = path.join(explicitDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${explicitDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gsdPath = `${explicitDir.replace(/\\/g, '/')}/sdd/*`;
 
     assert.strictEqual(config.permission.read[gsdPath], 'allow');
     assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
@@ -206,8 +206,8 @@ describe('configureKiloPermissions', () => {
 
 describe('Source code integration (Kilo)', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'bin', 'install.js'), 'utf8');
-  const updateWorkflowSrc = fs.readFileSync(path.join(__dirname, '..', 'get-shit-done', 'workflows', 'update.md'), 'utf8');
-  const reapplyPatchesSrc = fs.readFileSync(path.join(__dirname, '..', 'commands', 'gsd', 'reapply-patches.md'), 'utf8');
+  const updateWorkflowSrc = fs.readFileSync(path.join(__dirname, '..', 'sdd', 'workflows', 'update.md'), 'utf8');
+  const reapplyPatchesSrc = fs.readFileSync(path.join(__dirname, '..', 'commands', 'sdd', 'reapply-patches.md'), 'utf8');
 
   test('--kilo flag parsing exists', () => {
     assert.ok(src.includes("args.includes('--kilo')"), '--kilo flag parsed');

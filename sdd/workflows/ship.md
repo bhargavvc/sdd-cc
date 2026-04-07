@@ -27,7 +27,7 @@ Extract: `branching_strategy`, `branch_name`.
 
 Detect base branch for PRs and merges:
 ```bash
-BASE_BRANCH=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get git.base_branch 2>/dev/null || echo "")
+BASE_BRANCH=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get git.base_branch 2>/dev/null || echo "")
 if [ -z "$BASE_BRANCH" ] || [ "$BASE_BRANCH" = "null" ]; then
   BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')
   BASE_BRANCH="${BASE_BRANCH:-main}"
@@ -211,8 +211,8 @@ Requirements: {N} REQ-IDs addressed
 Next steps:
 - Review/approve PR
 - Merge when CI passes
-- /gsd-complete-milestone (if last phase in milestone)
-- /gsd-progress (to see what's next)
+- /sdd-complete-milestone (if last phase in milestone)
+- /sdd-progress (to see what's next)
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -223,9 +223,9 @@ Next steps:
 <offer_next>
 After shipping:
 
-- /gsd-complete-milestone — if all phases in milestone are done
-- /gsd-progress — see overall project state
-- /gsd-execute-phase {next} — continue to next phase
+- /sdd-complete-milestone — if all phases in milestone are done
+- /sdd-progress — see overall project state
+- /sdd-execute-phase {next} — continue to next phase
 </offer_next>
 
 <success_criteria>

@@ -94,21 +94,21 @@ process.stdin.on('end', () => {
       }
     }
 
-    // GSD update available?
+    // SDD update available?
     // Check shared cache first (#1421), fall back to runtime-specific cache for
-    // backward compatibility with older gsd-check-update.js versions.
+    // backward compatibility with older sdd-check-update.js versions.
     let gsdUpdate = '';
-    const sharedCacheFile = path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json');
-    const legacyCacheFile = path.join(claudeDir, 'cache', 'gsd-update-check.json');
+    const sharedCacheFile = path.join(homeDir, '.cache', 'sdd', 'sdd-update-check.json');
+    const legacyCacheFile = path.join(claudeDir, 'cache', 'sdd-update-check.json');
     const cacheFile = fs.existsSync(sharedCacheFile) ? sharedCacheFile : legacyCacheFile;
     if (fs.existsSync(cacheFile)) {
       try {
         const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
         if (cache.update_available) {
-          gsdUpdate = '\x1b[33m⬆ /gsd-update\x1b[0m │ ';
+          gsdUpdate = '\x1b[33m⬆ /sdd-update\x1b[0m │ ';
         }
         if (cache.stale_hooks && cache.stale_hooks.length > 0) {
-          gsdUpdate += '\x1b[31m⚠ stale hooks — run /gsd-update\x1b[0m │ ';
+          gsdUpdate += '\x1b[31m⚠ stale hooks — run /sdd-update\x1b[0m │ ';
         }
       } catch (e) {}
     }

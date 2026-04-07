@@ -12,7 +12,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 Detect whether SDD is installed locally or globally by checking both locations and validating install integrity.
 
 First, derive `PREFERRED_CONFIG_DIR` and `PREFERRED_RUNTIME` from the invoking prompt's `execution_context` path:
-- If the path contains `/get-shit-done/workflows/update.md`, strip that suffix and store the remainder as `PREFERRED_CONFIG_DIR`
+- If the path contains `/sdd/workflows/update.md`, strip that suffix and store the remainder as `PREFERRED_CONFIG_DIR`
 - Path contains `/.codex/` -> `codex`
 - Path contains `/.gemini/` -> `gemini`
 - Path contains `/.config/kilo/` or `/.kilo/`, or `PREFERRED_CONFIG_DIR` contains `kilo.json` / `kilo.jsonc` -> `kilo`
@@ -20,7 +20,7 @@ First, derive `PREFERRED_CONFIG_DIR` and `PREFERRED_RUNTIME` from the invoking p
 - Otherwise -> `claude`
 
 Use `PREFERRED_CONFIG_DIR` when available so custom `--config-dir` installs are checked before default locations.
-Use `PREFERRED_RUNTIME` as the first runtime checked so `/gsd-update` targets the runtime that invoked it.
+Use `PREFERRED_RUNTIME` as the first runtime checked so `/sdd-update` targets the runtime that invoked it.
 
 Kilo config precedence must match the installer: `KILO_CONFIG_DIR` -> `dirname(KILO_CONFIG)` -> `XDG_CONFIG_HOME/kilo` -> `~/.config/kilo`.
 
@@ -76,7 +76,7 @@ fi
 # If execution_context already points at an installed config dir, trust it first.
 # This covers custom --config-dir installs that do not live under the default
 # runtime directories.
-if [ -n "$PREFERRED_CONFIG_DIR" ] && { [ -f "$PREFERRED_CONFIG_DIR/get-shit-done/VERSION" ] || [ -f "$PREFERRED_CONFIG_DIR/get-shit-done/workflows/update.md" ]; }; then
+if [ -n "$PREFERRED_CONFIG_DIR" ] && { [ -f "$PREFERRED_CONFIG_DIR/sdd/VERSION" ] || [ -f "$PREFERRED_CONFIG_DIR/sdd/workflows/update.md" ]; }; then
   INSTALL_SCOPE="GLOBAL"
   for dir in .claude .config/opencode .opencode .gemini .config/kilo .kilo .codex; do
     resolved_local="$(cd "./$dir" 2>/dev/null && pwd)"
@@ -86,8 +86,8 @@ if [ -n "$PREFERRED_CONFIG_DIR" ] && { [ -f "$PREFERRED_CONFIG_DIR/get-shit-done
     fi
   done
 
-  if [ -f "$PREFERRED_CONFIG_DIR/get-shit-done/VERSION" ] && grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' "$PREFERRED_CONFIG_DIR/get-shit-done/VERSION"; then
-    INSTALLED_VERSION="$(cat "$PREFERRED_CONFIG_DIR/get-shit-done/VERSION")"
+  if [ -f "$PREFERRED_CONFIG_DIR/sdd/VERSION" ] && grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' "$PREFERRED_CONFIG_DIR/sdd/VERSION"; then
+    INSTALLED_VERSION="$(cat "$PREFERRED_CONFIG_DIR/sdd/VERSION")"
   else
     INSTALLED_VERSION="0.0.0"
   fi
@@ -169,10 +169,10 @@ GLOBAL_VERSION_FILE="" GLOBAL_MARKER_FILE="" GLOBAL_DIR="" GLOBAL_RUNTIME=""
 for entry in "${ORDERED_ENV_RUNTIME_DIRS[@]}"; do
   runtime="${entry%%:*}"
   dir="${entry#*:}"
-  if [ -f "$dir/get-shit-done/VERSION" ] || [ -f "$dir/get-shit-done/workflows/update.md" ]; then
+  if [ -f "$dir/sdd/VERSION" ] || [ -f "$dir/sdd/workflows/update.md" ]; then
     GLOBAL_RUNTIME="$runtime"
-    GLOBAL_VERSION_FILE="$dir/get-shit-done/VERSION"
-    GLOBAL_MARKER_FILE="$dir/get-shit-done/workflows/update.md"
+    GLOBAL_VERSION_FILE="$dir/sdd/VERSION"
+    GLOBAL_MARKER_FILE="$dir/sdd/workflows/update.md"
     GLOBAL_DIR="$(cd "$dir" 2>/dev/null && pwd)"
     break
   fi
@@ -182,10 +182,10 @@ if [ -z "$GLOBAL_RUNTIME" ]; then
   for entry in "${ORDERED_RUNTIME_DIRS[@]}"; do
     runtime="${entry%%:*}"
     dir="${entry#*:}"
-    if [ -f "$HOME/$dir/get-shit-done/VERSION" ] || [ -f "$HOME/$dir/get-shit-done/workflows/update.md" ]; then
+    if [ -f "$HOME/$dir/sdd/VERSION" ] || [ -f "$HOME/$dir/sdd/workflows/update.md" ]; then
       GLOBAL_RUNTIME="$runtime"
-      GLOBAL_VERSION_FILE="$HOME/$dir/get-shit-done/VERSION"
-      GLOBAL_MARKER_FILE="$HOME/$dir/get-shit-done/workflows/update.md"
+      GLOBAL_VERSION_FILE="$HOME/$dir/sdd/VERSION"
+      GLOBAL_MARKER_FILE="$HOME/$dir/sdd/workflows/update.md"
       GLOBAL_DIR="$(cd "$HOME/$dir" 2>/dev/null && pwd)"
       break
     fi
@@ -338,7 +338,7 @@ Your custom files in other locations are preserved:
 - Custom hooks ✓
 - Your CLAUDE.md files ✓
 
-If you've modified any GSD files directly, they'll be automatically backed up to `gsd-local-patches/` and can be reapplied with `/gsd-reapply-patches` after the update.
+If you've modified any SDD files directly, they'll be automatically backed up to `sdd-local-patches/` and can be reapplied with `/sdd-reapply-patches` after the update.
 ```
 
 Use AskUserQuestion:
@@ -416,17 +416,17 @@ fi
 
 for dir in "${CACHE_DIRS[@]}"; do
   if [ -n "$dir" ]; then
-    rm -f "$dir/cache/gsd-update-check.json"
+    rm -f "$dir/cache/sdd-update-check.json"
   fi
 done
 
 for dir in .claude .config/opencode .opencode .gemini .config/kilo .kilo .codex; do
-  rm -f "./$dir/cache/gsd-update-check.json"
-  rm -f "$HOME/$dir/cache/gsd-update-check.json"
+  rm -f "./$dir/cache/sdd-update-check.json"
+  rm -f "$HOME/$dir/cache/sdd-update-check.json"
 done
 ```
 
-The SessionStart hook (`gsd-check-update.js`) writes to the detected runtime's cache directory, so preferred/env-derived paths and default paths must all be cleared to prevent stale update indicators.
+The SessionStart hook (`sdd-check-update.js`) writes to the detected runtime's cache directory, so preferred/env-derived paths and default paths must all be cleared to prevent stale update indicators.
 </step>
 
 <step name="display_result">
@@ -453,7 +453,7 @@ Check for sdd-local-patches/backup-meta.json in the config directory.
 
 ```
 Local patches were backed up before the update.
-Run /gsd-reapply-patches to merge your modifications into the new version.
+Run /sdd-reapply-patches to merge your modifications into the new version.
 ```
 
 **If no patches:** Continue normally.

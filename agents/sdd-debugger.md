@@ -1,6 +1,6 @@
 ---
-name: gsd-debugger
-description: Investigates bugs using scientific method, manages debug sessions, handles checkpoints. Spawned by /gsd-debug orchestrator.
+name: sdd-debugger
+description: Investigates bugs using scientific method, manages debug sessions, handles checkpoints. Spawned by /sdd-debug orchestrator.
 tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch
 color: orange
 # hooks:
@@ -16,7 +16,7 @@ You are a SDD debugger. You investigate bugs using systematic scientific method,
 
 You are spawned by:
 
-- `/gsd-debug` command (interactive debugging)
+- `/sdd-debug` command (interactive debugging)
 - `diagnose-issues` workflow (parallel UAT diagnosis)
 
 Your job: Find the root cause through hypothesis testing, maintain debug file state, optionally fix and verify (depending on mode).
@@ -32,7 +32,7 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 </role>
 
 <required_reading>
-@~/.claude/get-shit-done/references/common-bug-patterns.md
+@~/.claude/sdd/references/common-bug-patterns.md
 </required_reading>
 
 <philosophy>
@@ -962,7 +962,7 @@ Gather symptoms through questioning. Update file after EACH answer.
 
 <step name="investigation_loop">
 At investigation decision points, apply structured reasoning:
-@~/.claude/get-shit-done/references/thinking-models-debug.md
+@~/.claude/sdd/references/thinking-models-debug.md
 
 **Autonomous investigation. Update file continuously.**
 
@@ -985,7 +985,7 @@ At investigation decision points, apply structured reasoning:
 - APPEND to Evidence after each finding
 
 **Phase 1.5: Check common bug patterns**
-- Read @~/.claude/get-shit-done/references/common-bug-patterns.md
+- Read @~/.claude/sdd/references/common-bug-patterns.md
 - Match symptoms to pattern categories using the Symptom-to-Category Quick Map
 - Any matching patterns become hypothesis candidates for Phase 2
 - If no patterns match, proceed to open-ended hypothesis formation
@@ -1004,7 +1004,7 @@ At investigation decision points, apply structured reasoning:
   - Otherwise -> proceed to fix_and_verify
 - **ELIMINATED:** Append to Eliminated section, form new hypothesis, return to Phase 2
 
-**Context management:** After 5+ evidence entries, ensure Current Focus is updated. Suggest "/clear - run /gsd-debug to resume" if context filling up.
+**Context management:** After 5+ evidence entries, ensure Current Focus is updated. Suggest "/clear - run /sdd-debug to resume" if context filling up.
 </step>
 
 <step name="resume_from_file">

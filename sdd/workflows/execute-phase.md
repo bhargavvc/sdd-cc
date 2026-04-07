@@ -26,9 +26,9 @@ via filesystem and git state.
 <required_reading>
 Read STATE.md before any operation to load project context.
 
-@~/.claude/get-shit-done/references/agent-contracts.md
-@~/.claude/get-shit-done/references/context-budget.md
-@~/.claude/get-shit-done/references/gates.md
+@~/.claude/sdd/references/agent-contracts.md
+@~/.claude/sdd/references/context-budget.md
+@~/.claude/sdd/references/gates.md
 </required_reading>
 
 <available_agent_types>
@@ -77,7 +77,7 @@ Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `parallelizat
 Read worktree config:
 
 ```bash
-USE_WORKTREES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.use_worktrees 2>/dev/null || echo "true")
+USE_WORKTREES=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.use_worktrees 2>/dev/null || echo "true")
 ```
 
 When `USE_WORKTREES` is `false`, all executor agents run without `isolation="worktree"` — they execute sequentially on the main working tree instead of in parallel worktrees.
@@ -85,7 +85,7 @@ When `USE_WORKTREES` is `false`, all executor agents run without `isolation="wor
 Read context window size for adaptive prompt enrichment:
 
 ```bash
-CONTEXT_WINDOW=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get context_window 2>/dev/null || echo "200000")
+CONTEXT_WINDOW=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get context_window 2>/dev/null || echo "200000")
 ```
 
 When `CONTEXT_WINDOW >= 500000` (1M-class models), subagent prompts include richer context:
@@ -331,7 +331,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
 
    ```
    Task(
-     subagent_type="gsd-executor",
+     subagent_type="sdd-executor",
      description="Execute plan {plan_number} of phase {phase_number}",
      model="{executor_model}",
      isolation="worktree",
@@ -528,7 +528,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
        if ! git diff --quiet .planning/STATE.md .planning/ROADMAP.md 2>/dev/null || \
           [ -n "$DELETED_FILES" ]; then
          # Only amend the commit with .planning/ files if commit_docs is enabled (#1783)
-         COMMIT_DOCS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get commit_docs 2>/dev/null || echo "true")
+         COMMIT_DOCS=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get commit_docs 2>/dev/null || echo "true")
          if [ "$COMMIT_DOCS" != "false" ]; then
            git add .planning/STATE.md .planning/ROADMAP.md 2>/dev/null || true
            git commit --amend --no-edit 2>/dev/null || true
@@ -555,7 +555,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
    ```bash
    # Update ROADMAP.md for each completed plan in this wave
    for PLAN_ID in ${WAVE_PLAN_IDS}; do
-     node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE_NUMBER}" "${PLAN_ID}" completed
+     node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap update-plan-progress "${PHASE_NUMBER}" "${PLAN_ID}" completed
    done
 
    ```
@@ -591,7 +591,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
 
 7. **Handle failures:**
 
-   **Known Claude Code bug (classifyHandoffIfNeeded):** If an agent reports "failed" with error containing `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a GSD or agent issue. The error fires in the completion handler AFTER all tool calls finish. In this case: run the same spot-checks as step 5 (SUMMARY.md exists, git commits present, no Self-Check: FAILED). If spot-checks PASS → treat as **successful**. If spot-checks FAIL → treat as real failure below.
+   **Known Claude Code bug (classifyHandoffIfNeeded):** If an agent reports "failed" with error containing `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a SDD or agent issue. The error fires in the completion handler AFTER all tool calls finish. In this case: run the same spot-checks as step 5 (SUMMARY.md exists, git commits present, no Self-Check: FAILED). If spot-checks PASS → treat as **successful**. If spot-checks FAIL → treat as real failure below.
 
    For real failures: report which plan failed → ask "Continue?" or "Stop?" → if continue, dependent plans may also fail. If stop, partial completion report.
 
@@ -690,7 +690,7 @@ After all waves:
 
 **Security gate check:**
 ```bash
-SECURITY_CFG=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
+SECURITY_CFG=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 SECURITY_FILE=$(ls "${PHASE_DIR}"/*-SECURITY.md 2>/dev/null | head -1)
 ```
 
@@ -700,13 +700,13 @@ If `SECURITY_CFG` is `true` AND `SECURITY_FILE` is empty (no SECURITY.md yet):
 Include in the next-steps routing output:
 ```
 ⚠ Security enforcement enabled — run before advancing:
-  /gsd-secure-phase {PHASE} ${GSD_WS}
+  /sdd-secure-phase {PHASE} ${SDD_WS}
 ```
 
 If `SECURITY_CFG` is `true` AND SECURITY.md exists: check frontmatter `threats_open`. If > 0:
 ```
 ⚠ Security gate: {threats_open} threats open
-  /gsd-secure-phase {PHASE} — resolve before advancing
+  /sdd-secure-phase {PHASE} — resolve before advancing
 ```
 </step>
 
@@ -732,8 +732,8 @@ Apply the same "incomplete" filtering rules as earlier:
 
 Selected wave finished successfully. This phase still has incomplete plans, so phase-level verification and completion were intentionally skipped.
 
-/gsd-execute-phase {phase} ${GSD_WS}                # Continue remaining waves
-/gsd-execute-phase {phase} --wave {next} ${GSD_WS}  # Run the next wave explicitly
+/sdd-execute-phase {phase} ${SDD_WS}                # Continue remaining waves
+/sdd-execute-phase {phase} --wave {next} ${SDD_WS}  # Run the next wave explicitly
 ```
 
 **If no incomplete plans remain after the selected wave finishes:**
@@ -746,14 +746,14 @@ Selected wave finished successfully. This phase still has incomplete plans, so p
 
 **Config gate:**
 ```bash
-CODE_REVIEW_ENABLED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.code_review 2>/dev/null || echo "true")
+CODE_REVIEW_ENABLED=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.code_review 2>/dev/null || echo "true")
 ```
 
 If `CODE_REVIEW_ENABLED` is `"false"`: display "Code review skipped (workflow.code_review=false)" and proceed to next step.
 
 **Invoke review:**
 ```
-Skill(skill="gsd:code-review", args="${PHASE_NUMBER}")
+Skill(skill="sdd:code-review", args="${PHASE_NUMBER}")
 ```
 
 **Check results using deterministic path (not glob):**
@@ -766,7 +766,7 @@ REVIEW_STATUS=$(sed -n '/^---$/,/^---$/p' "$REVIEW_FILE" | grep "^status:" | hea
 If REVIEW_STATUS is not "clean" and not "skipped" and not empty, display:
 ```
 Code review found issues. Consider running:
-/gsd-code-review-fix ${PHASE_NUMBER}
+/sdd-code-review-fix ${PHASE_NUMBER}
 ```
 
 **Error handling:** If the Skill invocation fails or throws, catch the error, display "Code review encountered an error (non-blocking): {error}" and proceed to next step. Review failures must never block execution.
@@ -892,7 +892,7 @@ build/types pass because TypeScript types come from config, not the live databas
 **Run after execution completes but BEFORE verification marks success.**
 
 ```bash
-SCHEMA_DRIFT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" verify schema-drift "${PHASE_NUMBER}" 2>/dev/null)
+SCHEMA_DRIFT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" verify schema-drift "${PHASE_NUMBER}" 2>/dev/null)
 ```
 
 Parse JSON result for: `drift_detected`, `blocking`, `schema_files`, `orms`, `unpushed_orms`, `message`.
@@ -903,14 +903,14 @@ Parse JSON result for: `drift_detected`, `blocking`, `schema_files`, `orms`, `un
 
 Check for override:
 ```bash
-SKIP_SCHEMA=$(echo "${GSD_SKIP_SCHEMA_CHECK:-false}")
+SKIP_SCHEMA=$(echo "${SDD_SKIP_SCHEMA_CHECK:-false}")
 ```
 
 **If `SKIP_SCHEMA` is `true`:**
 
 Display:
 ```
-⚠ Schema drift detected but GSD_SKIP_SCHEMA_CHECK=true — bypassing gate.
+⚠ Schema drift detected but SDD_SKIP_SCHEMA_CHECK=true — bypassing gate.
 
 Schema files changed: {schema_files}
 ORMs requiring push: {unpushed_orms}
@@ -938,7 +938,7 @@ Required push commands:
 
 Options:
 1. Run push command now (recommended) — execute the push, then re-verify
-2. Skip schema check (GSD_SKIP_SCHEMA_CHECK=true) — bypass this gate
+2. Skip schema check (SDD_SKIP_SCHEMA_CHECK=true) — bypass this gate
 3. Abort — stop execution and investigate
 ```
 
@@ -995,7 +995,7 @@ grep "^status:" "$PHASE_DIR"/*-VERIFICATION.md | cut -d: -f2 | tr -d ' '
 |--------|--------|
 | `passed` | → update_roadmap |
 | `human_needed` | Present items for human testing, get approval or feedback |
-| `gaps_found` | Present gap summary, offer `/gsd-plan-phase {phase} --gaps ${GSD_WS}` |
+| `gaps_found` | Present gap summary, offer `/sdd-plan-phase {phase} --gaps ${SDD_WS}` |
 
 **If human_needed:**
 
@@ -1050,12 +1050,12 @@ All automated checks passed. {N} items need human testing:
 
 {From VERIFICATION.md human_verification section}
 
-Items saved to `{phase_num}-HUMAN-UAT.md` — they will appear in `/gsd-progress` and `/gsd-audit-uat`.
+Items saved to `{phase_num}-HUMAN-UAT.md` — they will appear in `/sdd-progress` and `/sdd-audit-uat`.
 
 "approved" → continue | Report issues → gap closure
 ```
 
-**If user says "approved":** Proceed to `update_roadmap`. The HUMAN-UAT.md file persists with `status: partial` and will surface in future progress checks until the user runs `/gsd-verify-work` on it.
+**If user says "approved":** Proceed to `update_roadmap`. The HUMAN-UAT.md file persists with `status: partial` and will surface in future progress checks until the user runs `/sdd-verify-work` on it.
 
 **If user reports issues:** Proceed to gap closure as currently implemented.
 
@@ -1074,13 +1074,13 @@ Items saved to `{phase_num}-HUMAN-UAT.md` — they will appear in `/gsd-progress
 
 `/clear` then:
 
-`/gsd-plan-phase {X} --gaps ${GSD_WS}`
+`/sdd-plan-phase {X} --gaps ${SDD_WS}`
 
 Also: `cat {phase_dir}/{phase_num}-VERIFICATION.md` — full report
-Also: `/gsd-verify-work {X} ${GSD_WS}` — manual testing first
+Also: `/sdd-verify-work {X} ${SDD_WS}` — manual testing first
 ```
 
-Gap closure cycle: `/gsd-plan-phase {X} --gaps ${GSD_WS}` reads VERIFICATION.md → creates gap plans with `gap_closure: true` → user runs `/gsd-execute-phase {X} --gaps-only ${GSD_WS}` → verifier re-runs.
+Gap closure cycle: `/sdd-plan-phase {X} --gaps ${SDD_WS}` reads VERIFICATION.md → creates gap plans with `gap_closure: true` → user runs `/sdd-execute-phase {X} --gaps-only ${SDD_WS}` → verifier re-runs.
 </step>
 
 <step name="update_roadmap">
@@ -1106,7 +1106,7 @@ Extract from result: `next_phase`, `next_phase_name`, `is_last_phase`, `warnings
 
 {list each warning}
 
-These items are tracked and will appear in `/gsd-progress` and `/gsd-audit-uat`.
+These items are tracked and will appear in `/sdd-progress` and `/sdd-audit-uat`.
 ```
 
 ```bash
@@ -1118,11 +1118,11 @@ node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(phase-{X}): complete pha
 **Auto-copy phase learnings to global store (when enabled).**
 
 This step runs AFTER phase completion and SUMMARY.md is written. It copies any LEARNINGS.md
-entries from the completed phase to the global learnings store at `~/.gsd/knowledge/`.
+entries from the completed phase to the global learnings store at `~/.sdd/knowledge/`.
 
 **Check config gate:**
 ```bash
-GL_ENABLED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get features.global_learnings --raw 2>/dev/null || echo "false")
+GL_ENABLED=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get features.global_learnings --raw 2>/dev/null || echo "false")
 ```
 
 **If `GL_ENABLED` is not `true`:** Skip this step entirely (feature disabled by default).
@@ -1132,7 +1132,7 @@ GL_ENABLED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get fea
 1. Check if LEARNINGS.md exists in the phase directory (use the `phase_dir` value from init context)
 2. If found, copy to global store:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" learnings copy 2>/dev/null || echo "⚠ Learnings copy failed — continuing"
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" learnings copy 2>/dev/null || echo "⚠ Learnings copy failed — continuing"
 ```
 Copy failure must NOT block phase completion.
 </step>
@@ -1161,7 +1161,7 @@ node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(phase-{X}): evolve PROJE
 
 <step name="offer_next">
 
-**Exception:** If `gaps_found`, the `verify_phase_goal` step already presents the gap-closure path (`/gsd-plan-phase {X} --gaps`). No additional routing needed — skip auto-advance.
+**Exception:** If `gaps_found`, the `verify_phase_goal` step already presents the gap-closure path (`/sdd-plan-phase {X} --gaps`). No additional routing needed — skip auto-advance.
 
 **No-transition check (spawned by auto-advance chain):**
 
@@ -1212,15 +1212,15 @@ Read and follow `~/.claude/sdd/workflows/transition.md`, passing through the `--
 
 **STOP. Do not auto-advance. Do not execute transition. Do not plan next phase. Present options to the user and wait.**
 
-**IMPORTANT: There is NO `/gsd-transition` command. Never suggest it. The transition workflow is internal only.**
+**IMPORTANT: There is NO `/sdd-transition` command. Never suggest it. The transition workflow is internal only.**
 
 ```
 ## ✓ Phase {X}: {Name} Complete
 
-/gsd-progress ${GSD_WS} — see updated roadmap
-/gsd-discuss-phase {next} ${GSD_WS} — discuss next phase before planning
-/gsd-plan-phase {next} ${GSD_WS} — plan next phase
-/gsd-execute-phase {next} ${GSD_WS} — execute next phase
+/sdd-progress ${SDD_WS} — see updated roadmap
+/sdd-discuss-phase {next} ${SDD_WS} — discuss next phase before planning
+/sdd-plan-phase {next} ${SDD_WS} — plan next phase
+/sdd-execute-phase {next} ${SDD_WS} — execute next phase
 ```
 
 Only suggest the commands listed above. Do not invent or hallucinate command names.
@@ -1247,7 +1247,7 @@ For 1M+ context models, consider:
 </failure_handling>
 
 <resumption>
-Re-run `/gsd-execute-phase {phase}` → discover_plans finds completed SUMMARYs → skips them → resumes from first incomplete plan → continues wave execution.
+Re-run `/sdd-execute-phase {phase}` → discover_plans finds completed SUMMARYs → skips them → resumes from first incomplete plan → continues wave execution.
 
 STATE.md tracks: last completed plan, current wave, pending checkpoints.
 </resumption>

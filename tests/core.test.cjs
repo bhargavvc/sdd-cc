@@ -31,7 +31,7 @@ const {
   findProjectRoot,
   detectSubRepos,
   planningDir,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../sdd/bin/lib/core.cjs');
 
 // ─── loadConfig ────────────────────────────────────────────────────────────────
 
@@ -158,7 +158,7 @@ describe('loadConfig', () => {
     // Verify that loadConfig's unknown-key check uses config-set's VALID_CONFIG_KEYS
     // as its source of truth. If a new key is added to config-set, it should
     // automatically be recognized by loadConfig without a separate update.
-    const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config.cjs');
+    const { VALID_CONFIG_KEYS } = require('../sdd/bin/lib/config.cjs');
     // Every top-level key from VALID_CONFIG_KEYS should be recognized
     const topLevelKeys = [...VALID_CONFIG_KEYS].map(k => k.split('.')[0]);
     for (const key of topLevelKeys) {
@@ -1069,12 +1069,12 @@ describe('stale hook filter', () => {
 // ─── stale hook path regression (#1249) ──────────────────────────────────────
 
 describe('stale hook path', () => {
-  test('gsd-check-update.js checks configDir/hooks/ where hooks are actually installed (#1421)', () => {
+  test('sdd-check-update.js checks configDir/hooks/ where hooks are actually installed (#1421)', () => {
     const content = fs.readFileSync(
       path.join(__dirname, '..', 'hooks', 'sdd-check-update.js'), 'utf-8'
     );
     // Hooks are installed at configDir/hooks/ (e.g. ~/.claude/hooks/),
-    // not configDir/get-shit-done/hooks/ which doesn't exist (#1421)
+    // not configDir/sdd/hooks/ which doesn't exist (#1421)
     assert.ok(
       content.includes("path.join(configDir, 'hooks')"),
       'stale hook check must look in configDir/hooks/ where hooks are actually installed'
@@ -1085,31 +1085,31 @@ describe('stale hook path', () => {
 // ─── shared cache directory regression (#1421) ─────────────────────────────────
 
 describe('shared cache directory (#1421)', () => {
-  test('gsd-check-update.js writes cache to shared ~/.cache/gsd/ directory', () => {
+  test('sdd-check-update.js writes cache to shared ~/.cache/sdd/ directory', () => {
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'gsd-check-update.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'sdd-check-update.js'), 'utf-8'
     );
     // Cache must use a tool-agnostic path so statusline can find it
     // regardless of which runtime (Claude, Gemini, OpenCode) ran the check
     assert.ok(
-      content.includes("path.join(homeDir, '.cache', 'gsd')"),
-      'check-update must write cache to ~/.cache/gsd/ (shared, tool-agnostic)'
+      content.includes("path.join(homeDir, '.cache', 'sdd')"),
+      'check-update must write cache to ~/.cache/sdd/ (shared, tool-agnostic)'
     );
   });
 
-  test('gsd-statusline.js checks shared cache first, falls back to legacy (#1421)', () => {
+  test('sdd-statusline.js checks shared cache first, falls back to legacy (#1421)', () => {
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'gsd-statusline.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'sdd-statusline.js'), 'utf-8'
     );
     // Statusline must check the shared cache path first
     assert.ok(
-      content.includes("path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json')"),
-      'statusline must check shared cache at ~/.cache/gsd/gsd-update-check.json'
+      content.includes("path.join(homeDir, '.cache', 'sdd', 'sdd-update-check.json')"),
+      'statusline must check shared cache at ~/.cache/sdd/sdd-update-check.json'
     );
     // Must fall back to legacy runtime-specific cache for backward compat
     assert.ok(
-      content.includes("path.join(claudeDir, 'cache', 'gsd-update-check.json')"),
-      'statusline must fall back to legacy cache at claudeDir/cache/gsd-update-check.json'
+      content.includes("path.join(claudeDir, 'cache', 'sdd-update-check.json')"),
+      'statusline must fall back to legacy cache at claudeDir/cache/sdd-update-check.json'
     );
     // Shared cache must be checked before legacy (existsSync order matters)
     const sharedIdx = content.indexOf('sharedCacheFile');
@@ -1681,17 +1681,17 @@ describe('planningDir', () => {
   let savedProject, savedWorkstream;
 
   beforeEach(() => {
-    savedProject = process.env.GSD_PROJECT;
-    savedWorkstream = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_PROJECT;
-    delete process.env.GSD_WORKSTREAM;
+    savedProject = process.env.SDD_PROJECT;
+    savedWorkstream = process.env.SDD_WORKSTREAM;
+    delete process.env.SDD_PROJECT;
+    delete process.env.SDD_WORKSTREAM;
   });
 
   afterEach(() => {
-    if (savedProject !== undefined) process.env.GSD_PROJECT = savedProject;
-    else delete process.env.GSD_PROJECT;
-    if (savedWorkstream !== undefined) process.env.GSD_WORKSTREAM = savedWorkstream;
-    else delete process.env.GSD_WORKSTREAM;
+    if (savedProject !== undefined) process.env.SDD_PROJECT = savedProject;
+    else delete process.env.SDD_PROJECT;
+    if (savedWorkstream !== undefined) process.env.SDD_WORKSTREAM = savedWorkstream;
+    else delete process.env.SDD_WORKSTREAM;
   });
 
   test('returns .planning/ when neither project nor workstream is set', () => {
@@ -1714,8 +1714,8 @@ describe('planningDir', () => {
     assert.strictEqual(result, path.join(cwd, '.planning', 'my-app', 'workstreams', 'feature-x'));
   });
 
-  test('reads GSD_PROJECT from env when project param is undefined', () => {
-    process.env.GSD_PROJECT = 'env-project';
+  test('reads SDD_PROJECT from env when project param is undefined', () => {
+    process.env.SDD_PROJECT = 'env-project';
     const result = planningDir(cwd);
     assert.strictEqual(result, path.join(cwd, '.planning', 'env-project'));
   });

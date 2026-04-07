@@ -1,6 +1,6 @@
 ---
 type: prompt
-name: gsd:audit-fix
+name: sdd:audit-fix
 description: Autonomous audit-to-fix pipeline — find issues, classify, fix, test, commit
 argument-hint: "--source <audit-uat> [--severity <medium|high|all>] [--max N] [--dry-run]"
 allowed-tools:
@@ -25,9 +25,9 @@ Flags:
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/audit-fix.md
+@~/.claude/sdd/workflows/audit-fix.md
 </execution_context>
 
 <process>
-Execute the audit-fix workflow from @~/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
+Execute the audit-fix workflow from @~/.claude/sdd/workflows/audit-fix.md end-to-end.
 </process>

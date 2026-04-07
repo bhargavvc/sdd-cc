@@ -860,10 +860,10 @@ function cmdInitManager(cwd, raw) {
 
   // Validate prerequisites
   if (!fs.existsSync(paths.roadmap)) {
-    error('No ROADMAP.md found. Run /gsd-new-milestone first.');
+    error('No ROADMAP.md found. Run /sdd-new-milestone first.');
   }
   if (!fs.existsSync(paths.state)) {
-    error('No STATE.md found. Run /gsd-new-milestone first.');
+    error('No STATE.md found. Run /sdd-new-milestone first.');
   }
   const rawContent = fs.readFileSync(paths.roadmap, 'utf-8');
   const content = extractCurrentMilestone(rawContent, cwd);
@@ -1022,7 +1022,7 @@ function cmdInitManager(cwd, raw) {
         phase_name: phase.name,
         action: 'execute',
         reason: `${phase.plan_count} plans ready, dependencies met`,
-        command: `/gsd-execute-phase ${phase.number}`,
+        command: `/sdd-execute-phase ${phase.number}`,
       });
     } else if (phase.disk_status === 'discussed' || phase.disk_status === 'researched') {
       recommendedActions.push({
@@ -1030,7 +1030,7 @@ function cmdInitManager(cwd, raw) {
         phase_name: phase.name,
         action: 'plan',
         reason: 'Context gathered, ready for planning',
-        command: `/gsd-plan-phase ${phase.number}`,
+        command: `/sdd-plan-phase ${phase.number}`,
       });
     } else if ((phase.disk_status === 'empty' || phase.disk_status === 'no_directory') && phase.is_next_to_discuss) {
       recommendedActions.push({
@@ -1038,7 +1038,7 @@ function cmdInitManager(cwd, raw) {
         phase_name: phase.name,
         action: 'discuss',
         reason: 'Unblocked, ready to gather context',
-        command: `/gsd-discuss-phase ${phase.number}`,
+        command: `/sdd-discuss-phase ${phase.number}`,
       });
     }
   }
@@ -1092,7 +1092,7 @@ function cmdInitManager(cwd, raw) {
     const tokens = val.split(/\s+/).filter(Boolean);
     const safe = tokens.every(t => /^--[a-zA-Z0-9][-a-zA-Z0-9]*$/.test(t) || /^[a-zA-Z0-9][-a-zA-Z0-9_.]*$/.test(t));
     if (!safe) {
-      process.stderr.write(`gsd-tools: warning: manager.flags contains invalid tokens, ignoring: ${val}\n`);
+      process.stderr.write(`sdd-tools: warning: manager.flags contains invalid tokens, ignoring: ${val}\n`);
       return '';
     }
     return val;

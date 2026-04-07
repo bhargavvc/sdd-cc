@@ -20,11 +20,11 @@ Documentação abrangente do framework Spec-Driven Development (SDD) — um sist
 
 ## Novidades v1.32
 
-STATE.md consistency gates, `--to N` para execução autônoma parcial, research gate, verifier milestone scope filtering, read-before-edit guard, context reduction, novos runtimes (Trae, Cline, Augment Code), `response_language`, `--power`/`--diagnose` flags, `/gsd-analyze-dependencies`.
+STATE.md consistency gates, `--to N` para execução autônoma parcial, research gate, verifier milestone scope filtering, read-before-edit guard, context reduction, novos runtimes (Trae, Cline, Augment Code), `response_language`, `--power`/`--diagnose` flags, `/sdd-analyze-dependencies`.
 
 ## Links rápidos
 
-- **Começar rápido:** [README principal](../../README.pt-BR.md) -> instalação -> `/gsd-new-project`
+- **Começar rápido:** [README principal](../../README.pt-BR.md) -> instalação -> `/sdd-new-project`
 - **Fluxo completo:** [Guia do usuário](USER-GUIDE.md)
 - **Comandos:** [Referência de comandos](COMMANDS.md)
 - **Configuração:** [Referência de configuração](CONFIGURATION.md)

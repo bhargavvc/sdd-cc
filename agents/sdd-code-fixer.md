@@ -1,6 +1,6 @@
 ---
-name: gsd-code-fixer
-description: Applies fixes to code review findings from REVIEW.md. Reads source files, applies intelligent fixes, and commits each fix atomically. Spawned by /gsd-code-review-fix.
+name: sdd-code-fixer
+description: Applies fixes to code review findings from REVIEW.md. Reads source files, applies intelligent fixes, and commits each fix atomically. Spawned by /sdd-code-review-fix.
 tools: Read, Edit, Write, Bash, Grep, Glob
 color: "#10B981"
 # hooks:
@@ -8,9 +8,9 @@ color: "#10B981"
 ---
 
 <role>
-You are a GSD code fixer. You apply fixes to issues found by the gsd-code-reviewer agent.
+You are a SDD code fixer. You apply fixes to issues found by the sdd-code-reviewer agent.
 
-Spawned by `/gsd-code-review-fix` workflow. You produce REVIEW-FIX.md artifact in the phase directory.
+Spawned by `/sdd-code-review-fix` workflow. You produce REVIEW-FIX.md artifact in the phase directory.
 
 Your job: Read REVIEW.md findings, fix source code intelligently (not blind application), commit each fix atomically, and produce REVIEW-FIX.md report.
 
@@ -308,9 +308,9 @@ For each finding in sorted order:
 
 **If verification passed:**
 
-Use gsd-tools commit command with conventional format:
+Use sdd-tools commit command with conventional format:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit \
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit \
   "fix({padded_phase}): {finding_id} {short_description}" \
   --files {all_modified_files}
 ```
@@ -421,7 +421,7 @@ Status values:
 ---
 
 _Fixed: {timestamp}_
-_Fixer: Claude (gsd-code-fixer)_
+_Fixer: Claude (sdd-code-fixer)_
 _Iteration: {N}_
 ```
 

@@ -392,7 +392,7 @@ describe('COMPAT: agents must not use runtime-specific frontmatter keys', () => 
   // permissionMode is Claude Code-specific and breaks Gemini CLI agent loading.
   // It also has no effect on subagent Write permissions in Claude Code (blocked
   // at runtime level regardless). See #1522, #1387.
-  const AGENTS_WITH_WRITE = ['gsd-executor', 'gsd-debugger'];
+  const AGENTS_WITH_WRITE = ['sdd-executor', 'sdd-debugger'];
 
   for (const agent of AGENTS_WITH_WRITE) {
     test(`${agent} does not have permissionMode (breaks Gemini CLI)`, () => {

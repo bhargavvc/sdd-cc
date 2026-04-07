@@ -1,9 +1,9 @@
 /**
  * Regression test for #1750: orphaned hook files from removed features
- * (e.g., gsd-intel-*.js) should NOT be flagged as stale by gsd-check-update.js.
+ * (e.g., sdd-intel-*.js) should NOT be flagged as stale by sdd-check-update.js.
  *
  * The stale hooks scanner should only check hooks that are part of the current
- * distribution, not every gsd-*.js file in the hooks directory.
+ * distribution, not every sdd-*.js file in the hooks directory.
  */
 
 const { test, describe } = require('node:test');
@@ -11,15 +11,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const CHECK_UPDATE_PATH = path.join(__dirname, '..', 'hooks', 'gsd-check-update.js');
+const CHECK_UPDATE_PATH = path.join(__dirname, '..', 'hooks', 'sdd-check-update.js');
 const BUILD_HOOKS_PATH = path.join(__dirname, '..', 'scripts', 'build-hooks.js');
 
 describe('orphaned hooks stale detection (#1750)', () => {
   test('stale hook scanner uses an allowlist of managed hooks, not a wildcard', () => {
     const content = fs.readFileSync(CHECK_UPDATE_PATH, 'utf8');
 
-    // The scanner MUST NOT use a broad `startsWith('gsd-')` filter that catches
-    // orphaned files from removed features (gsd-intel-index.js, gsd-intel-prune.js, etc.)
+    // The scanner MUST NOT use a broad `startsWith('sdd-')` filter that catches
+    // orphaned files from removed features (sdd-intel-index.js, sdd-intel-prune.js, etc.)
     // Instead, it should reference a known set of managed hook filenames.
 
     // Extract the spawned child script (everything between the template literal backticks)
@@ -27,11 +27,11 @@ describe('orphaned hooks stale detection (#1750)', () => {
     assert.ok(childScriptMatch, 'should find the spawned child script');
     const childScript = childScriptMatch[1];
 
-    // The child script must NOT have a broad gsd-*.js wildcard filter
-    const hasBroadFilter = /readdirSync\([^)]+\)\.filter\([^)]*startsWith\('gsd-'\)\s*&&[^)]*endsWith\('\.js'\)/s.test(childScript);
+    // The child script must NOT have a broad sdd-*.js wildcard filter
+    const hasBroadFilter = /readdirSync\([^)]+\)\.filter\([^)]*startsWith\('sdd-'\)\s*&&[^)]*endsWith\('\.js'\)/s.test(childScript);
     assert.ok(!hasBroadFilter,
-      'scanner must NOT use broad startsWith("gsd-") && endsWith(".js") filter — ' +
-      'this catches orphaned hooks from removed features (e.g., gsd-intel-index.js). ' +
+      'scanner must NOT use broad startsWith("sdd-") && endsWith(".js") filter — ' +
+      'this catches orphaned hooks from removed features (e.g., sdd-intel-index.js). ' +
       'Use a MANAGED_HOOKS allowlist instead.');
   });
 
@@ -70,9 +70,9 @@ describe('orphaned hooks stale detection (#1750)', () => {
 
     // These are real orphaned hooks from the removed intel feature
     const orphanedHooks = [
-      'gsd-intel-index.js',
-      'gsd-intel-prune.js',
-      'gsd-intel-session.js',
+      'sdd-intel-index.js',
+      'sdd-intel-prune.js',
+      'sdd-intel-session.js',
     ];
 
     for (const orphan of orphanedHooks) {

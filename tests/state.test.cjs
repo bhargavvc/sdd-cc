@@ -1722,7 +1722,7 @@ describe('progress counters correct after plan execution (#1589)', () => {
     // Write STATE.md with stale frontmatter matching the bug report exactly
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
-      `---\ngsd_state_version: '1.0'\nstatus: executing\nprogress:\n  total_phases: 4\n  completed_phases: 0\n  total_plans: 0\n  completed_plans: 4\n  percent: 0\n---\n\n# Project State\n\n**Current Phase:** 04\n**Status:** Ready to execute\n**Progress:** [░░░░░░░░░░] 0%\n`
+      `---\nsdd_state_version: '1.0'\nstatus: executing\nprogress:\n  total_phases: 4\n  completed_phases: 0\n  total_plans: 0\n  completed_plans: 4\n  percent: 0\n---\n\n# Project State\n\n**Current Phase:** 04\n**Status:** Ready to execute\n**Progress:** [░░░░░░░░░░] 0%\n`
     );
 
     // state json must return fresh progress derived from disk (all 6 plans complete across 4 phases)

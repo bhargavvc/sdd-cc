@@ -1,7 +1,7 @@
 /**
  * Tests for verifier deferred-items filtering (#1624)
  *
- * Verifies that the gsd-verifier agent filters gaps addressed in later
+ * Verifies that the sdd-verifier agent filters gaps addressed in later
  * milestone phases, preventing false-positive gap reports.
  */
 
@@ -14,14 +14,14 @@ const ROOT = path.resolve(__dirname, '..');
 
 describe('verifier deferred-items filtering (#1624)', () => {
 
-  // ── gsd-verifier.md ────────────────────────────────────────────────────────
+  // ── sdd-verifier.md ────────────────────────────────────────────────────────
 
-  describe('agents/gsd-verifier.md', () => {
-    const verifierPath = path.join(ROOT, 'agents', 'gsd-verifier.md');
+  describe('agents/sdd-verifier.md', () => {
+    const verifierPath = path.join(ROOT, 'agents', 'sdd-verifier.md');
     let verifierContent;
 
     test('file exists', () => {
-      assert.ok(fs.existsSync(verifierPath), 'gsd-verifier.md should exist');
+      assert.ok(fs.existsSync(verifierPath), 'sdd-verifier.md should exist');
       verifierContent = fs.readFileSync(verifierPath, 'utf-8');
     });
 
@@ -29,7 +29,7 @@ describe('verifier deferred-items filtering (#1624)', () => {
       verifierContent = verifierContent || fs.readFileSync(verifierPath, 'utf-8');
       assert.ok(
         verifierContent.includes('Step 9b') || verifierContent.includes('Filter Deferred'),
-        'gsd-verifier.md should contain Step 9b or "Filter Deferred" section'
+        'sdd-verifier.md should contain Step 9b or "Filter Deferred" section'
       );
     });
 
@@ -114,8 +114,8 @@ describe('verifier deferred-items filtering (#1624)', () => {
 
   // ── verify-phase.md (workflow) ─────────────────────────────────────────────
 
-  describe('get-shit-done/workflows/verify-phase.md', () => {
-    const workflowPath = path.join(ROOT, 'get-shit-done', 'workflows', 'verify-phase.md');
+  describe('sdd/workflows/verify-phase.md', () => {
+    const workflowPath = path.join(ROOT, 'sdd', 'workflows', 'verify-phase.md');
     let workflowContent;
 
     test('file exists', () => {
@@ -181,8 +181,8 @@ describe('verifier deferred-items filtering (#1624)', () => {
 
   // ── planner-gap-closure.md ─────────────────────────────────────────────────
 
-  describe('get-shit-done/references/planner-gap-closure.md', () => {
-    const closurePath = path.join(ROOT, 'get-shit-done', 'references', 'planner-gap-closure.md');
+  describe('sdd/references/planner-gap-closure.md', () => {
+    const closurePath = path.join(ROOT, 'sdd', 'references', 'planner-gap-closure.md');
     let closureContent;
 
     test('file exists', () => {

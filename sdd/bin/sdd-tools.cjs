@@ -253,7 +253,7 @@ async function main() {
   }
 
   // Optional workstream override for parallel milestone work.
-  // Priority: --ws flag > GSD_WORKSTREAM env var > session-scoped pointer > shared legacy pointer > null
+  // Priority: --ws flag > SDD_WORKSTREAM env var > session-scoped pointer > shared legacy pointer > null
   const wsEqArg = args.find(arg => arg.startsWith('--ws='));
   const wsIdx = args.indexOf('--ws');
   let ws = null;
@@ -297,16 +297,16 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--pick <field>] [--cwd <path>] [--ws <name>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, config-new-project, init, workstream, docs-init');
+    error('Usage: sdd-tools <command> [args] [--raw] [--pick <field>] [--cwd <path>] [--ws <name>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, config-new-project, init, workstream, docs-init');
   }
 
-  // Reject flags that are never valid for any gsd-tools command. AI agents
+  // Reject flags that are never valid for any sdd-tools command. AI agents
   // sometimes hallucinate --help or --version on tool invocations; silently
   // ignoring them can cause destructive operations to proceed unchecked.
   const NEVER_VALID_FLAGS = new Set(['-h', '--help', '-?', '--h', '--version', '-v', '--usage']);
   for (const arg of args) {
     if (NEVER_VALID_FLAGS.has(arg)) {
-      error(`Unknown flag: ${arg}\ngsd-tools does not accept help or version flags. Run "gsd-tools" with no arguments for usage.`);
+      error(`Unknown flag: ${arg}\nsdd-tools does not accept help or version flags. Run "sdd-tools" with no arguments for usage.`);
     }
   }
 
@@ -972,7 +972,7 @@ async function runCommand(command, args, cwd, raw) {
       const subcommand = args[1];
       if (subcommand === 'query') {
         const term = args[2];
-        if (!term) error('Usage: gsd-tools intel query <term>');
+        if (!term) error('Usage: sdd-tools intel query <term>');
         const planningDir = path.join(cwd, '.planning');
         core.output(intel.intelQuery(term, planningDir), raw);
       } else if (subcommand === 'status') {
@@ -986,14 +986,14 @@ async function runCommand(command, args, cwd, raw) {
         core.output(intel.intelSnapshot(planningDir), raw);
       } else if (subcommand === 'patch-meta') {
         const filePath = args[2];
-        if (!filePath) error('Usage: gsd-tools intel patch-meta <file-path>');
+        if (!filePath) error('Usage: sdd-tools intel patch-meta <file-path>');
         core.output(intel.intelPatchMeta(path.resolve(cwd, filePath)), raw);
       } else if (subcommand === 'validate') {
         const planningDir = path.join(cwd, '.planning');
         core.output(intel.intelValidate(planningDir), raw);
       } else if (subcommand === 'extract-exports') {
         const filePath = args[2];
-        if (!filePath) error('Usage: gsd-tools intel extract-exports <file-path>');
+        if (!filePath) error('Usage: sdd-tools intel extract-exports <file-path>');
         core.output(intel.intelExtractExports(path.resolve(cwd, filePath)), raw);
       } else if (subcommand === 'update') {
         const planningDir = path.join(cwd, '.planning');
@@ -1020,18 +1020,18 @@ async function runCommand(command, args, cwd, raw) {
       } else if (subcommand === 'query') {
         const tagIdx = args.indexOf('--tag');
         const tag = tagIdx !== -1 ? args[tagIdx + 1] : null;
-        if (!tag) error('Usage: gsd-tools learnings query --tag <tag>');
+        if (!tag) error('Usage: sdd-tools learnings query --tag <tag>');
         learnings.cmdLearningsQuery(tag, raw);
       } else if (subcommand === 'copy') {
         learnings.cmdLearningsCopy(cwd, raw);
       } else if (subcommand === 'prune') {
         const olderIdx = args.indexOf('--older-than');
         const olderThan = olderIdx !== -1 ? args[olderIdx + 1] : null;
-        if (!olderThan) error('Usage: gsd-tools learnings prune --older-than <duration>');
+        if (!olderThan) error('Usage: sdd-tools learnings prune --older-than <duration>');
         learnings.cmdLearningsPrune(olderThan, raw);
       } else if (subcommand === 'delete') {
         const id = args[2];
-        if (!id) error('Usage: gsd-tools learnings delete <id>');
+        if (!id) error('Usage: sdd-tools learnings delete <id>');
         learnings.cmdLearningsDelete(id, raw);
       } else {
         error('Unknown learnings subcommand. Available: list, query, copy, prune, delete');

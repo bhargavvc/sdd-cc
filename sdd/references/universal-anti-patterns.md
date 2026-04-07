@@ -21,7 +21,7 @@ Rules that apply to ALL workflows and agents. Individual workflows may have addi
 
 ## Subagent Rules
 
-10. **NEVER** use non-GSD agent types (`general-purpose`, `Explore`, `Plan`, `Bash`, `feature-dev`, etc.) -- ALWAYS use `subagent_type: "gsd-{agent}"` (e.g., `gsd-phase-researcher`, `gsd-executor`, `gsd-planner`). GSD agents have project-aware prompts, audit logging, and workflow context. Generic agents bypass all of this.
+10. **NEVER** use non-SDD agent types (`general-purpose`, `Explore`, `Plan`, `Bash`, `feature-dev`, etc.) -- ALWAYS use `subagent_type: "sdd-{agent}"` (e.g., `sdd-phase-researcher`, `sdd-executor`, `sdd-planner`). SDD agents have project-aware prompts, audit logging, and workflow context. Generic agents bypass all of this.
 11. **Do not** re-litigate decisions that are already locked in CONTEXT.md (or PROJECT.md ## Context section) -- respect locked decisions unconditionally.
 
 ## Questioning Anti-Patterns
@@ -34,7 +34,7 @@ Reference: `references/questioning.md` for the full anti-pattern list.
 
 ## State Management Anti-Patterns
 
-15. **No direct Write/Edit to STATE.md or ROADMAP.md for mutations.** Always use `gsd-tools.cjs` CLI commands (`state update`, `state advance-plan`, `roadmap update-status`) for mutations. Direct Write tool usage bypasses safe update logic and is unsafe in multi-session environments. Exception: first-time creation of STATE.md from template is allowed.
+15. **No direct Write/Edit to STATE.md or ROADMAP.md for mutations.** Always use `sdd-tools.cjs` CLI commands (`state update`, `state advance-plan`, `roadmap update-status`) for mutations. Direct Write tool usage bypasses safe update logic and is unsafe in multi-session environments. Exception: first-time creation of STATE.md from template is allowed.
 
 ## Behavioral Rules
 
@@ -50,9 +50,9 @@ Reference: `references/questioning.md` for the full anti-pattern list.
 22. **Config fallback awareness**: Config loading returns `null` silently on invalid JSON. If your workflow depends on config values, check for null and warn the user: "config.json is invalid or missing -- running with defaults."
 23. **Partial state recovery**: If STATE.md references a phase directory that doesn't exist, do not proceed silently. Warn the user and suggest diagnosing the mismatch.
 
-## GSD-Specific Rules
+## SDD-Specific Rules
 
-24. **Do not** check for `mode === 'auto'` or `mode === 'autonomous'` -- GSD uses `yolo` config flag. Check `yolo: true` for autonomous mode, absence or `false` for interactive mode.
-25. **Always use `gsd-tools.cjs`** (not `gsd-tools.js` or any other variant) -- GSD uses CommonJS for Node.js CLI compatibility.
-26. **Plan files MUST follow `{padded_phase}-{NN}-PLAN.md` pattern** (e.g., `01-01-PLAN.md`). Never use `PLAN-01.md`, `plan-01.md`, or any other variation -- gsd-tools detection depends on this exact pattern.
+24. **Do not** check for `mode === 'auto'` or `mode === 'autonomous'` -- SDD uses `yolo` config flag. Check `yolo: true` for autonomous mode, absence or `false` for interactive mode.
+25. **Always use `sdd-tools.cjs`** (not `sdd-tools.js` or any other variant) -- SDD uses CommonJS for Node.js CLI compatibility.
+26. **Plan files MUST follow `{padded_phase}-{NN}-PLAN.md` pattern** (e.g., `01-01-PLAN.md`). Never use `PLAN-01.md`, `plan-01.md`, or any other variation -- sdd-tools detection depends on this exact pattern.
 27. **Do not start executing the next plan before writing the SUMMARY.md for the current plan** -- downstream plans may reference it via `@` includes.

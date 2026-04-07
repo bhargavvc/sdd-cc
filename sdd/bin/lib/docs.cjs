@@ -2,7 +2,7 @@
  * Docs — Commands for the docs-update workflow
  *
  * Provides `cmdDocsInit` which returns project signals, existing doc inventory
- * with GSD marker detection, doc tooling detection, monorepo awareness, and
+ * with SDD marker detection, doc tooling detection, monorepo awareness, and
  * model resolution. Used by Phase 2 to route doc generation appropriately.
  */
 
@@ -12,7 +12,7 @@ const { output, loadConfig, resolveModelInternal, pathExistsInternal, toPosixPat
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const GSD_MARKER = '<!-- generated-by: gsd-doc-writer -->';
+const SDD_MARKER = '<!-- generated-by: sdd-doc-writer -->';
 
 const SKIP_DIRS = new Set([
   'node_modules', '.git', '.planning', '.claude', '__pycache__',
@@ -23,7 +23,7 @@ const SKIP_DIRS = new Set([
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
 /**
- * Check whether a file begins with the GSD doc writer marker.
+ * Check whether a file begins with the SDD doc writer marker.
  * Reads the first 500 bytes only — avoids loading large files.
  *
  * @param {string} filePath - Absolute path to the file
@@ -35,7 +35,7 @@ function hasGsdMarker(filePath) {
     const fd = fs.openSync(filePath, 'r');
     const bytesRead = fs.readSync(fd, buf, 0, 500, 0);
     fs.closeSync(fd);
-    return buf.slice(0, bytesRead).toString('utf-8').includes(GSD_MARKER);
+    return buf.slice(0, bytesRead).toString('utf-8').includes(SDD_MARKER);
   } catch {
     return false;
   }
@@ -46,7 +46,7 @@ function hasGsdMarker(filePath) {
  * (up to 4 levels deep) for Markdown files, excluding dirs in SKIP_DIRS.
  *
  * @param {string} cwd - Project root
- * @returns {Array<{path: string, has_gsd_marker: boolean}>}
+ * @returns {Array<{path: string, has_sdd_marker: boolean}>}
  */
 function scanExistingDocs(cwd) {
   const MAX_DEPTH = 4;
@@ -68,7 +68,7 @@ function scanExistingDocs(cwd) {
           walkDir(abs, depth + 1);
         } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
           const rel = toPosixPath(path.relative(cwd, abs));
-          results.push({ path: rel, has_gsd_marker: hasGsdMarker(abs) });
+          results.push({ path: rel, has_sdd_marker: hasGsdMarker(abs) });
         }
       }
     } catch { /* directory may not exist — best-effort */ }
@@ -81,7 +81,7 @@ function scanExistingDocs(cwd) {
       if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
         const abs = path.join(cwd, entry.name);
         const rel = toPosixPath(path.relative(cwd, abs));
-        results.push({ path: rel, has_gsd_marker: hasGsdMarker(abs) });
+        results.push({ path: rel, has_sdd_marker: hasGsdMarker(abs) });
       }
     }
   } catch { /* best-effort */ }
@@ -240,7 +240,7 @@ function detectMonorepoWorkspaces(cwd) {
  * resolution. Follows the cmdInitMapCodebase pattern.
  *
  * @example
- * node gsd-tools.cjs docs-init --raw
+ * node sdd-tools.cjs docs-init --raw
  *
  * @param {string} cwd - Project root directory
  * @param {boolean} raw - Pass raw JSON flag through to output()
@@ -248,7 +248,7 @@ function detectMonorepoWorkspaces(cwd) {
 function cmdDocsInit(cwd, raw) {
   const config = loadConfig(cwd);
   const result = {
-    doc_writer_model: resolveModelInternal(cwd, 'gsd-doc-writer'),
+    doc_writer_model: resolveModelInternal(cwd, 'sdd-doc-writer'),
     commit_docs: config.commit_docs,
     existing_docs: scanExistingDocs(cwd),
     project_type: detectProjectType(cwd),

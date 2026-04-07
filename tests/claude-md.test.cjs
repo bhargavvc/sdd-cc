@@ -35,11 +35,11 @@ describe('generate-claude-md', () => {
 
     const claudePath = path.join(tmpDir, 'CLAUDE.md');
     const content = fs.readFileSync(claudePath, 'utf-8');
-    assert.ok(content.includes('## GSD Workflow Enforcement'));
-    assert.ok(content.includes('/gsd-quick'));
-    assert.ok(content.includes('/gsd-debug'));
-    assert.ok(content.includes('/gsd-execute-phase'));
-    assert.ok(content.includes('Do not make direct repo edits outside a GSD workflow'));
+    assert.ok(content.includes('## SDD Workflow Enforcement'));
+    assert.ok(content.includes('/sdd-quick'));
+    assert.ok(content.includes('/sdd-debug'));
+    assert.ok(content.includes('/sdd-execute-phase'));
+    assert.ok(content.includes('Do not make direct repo edits outside a SDD workflow'));
   });
 
   test('adds workflow enforcement section when updating an existing CLAUDE.md', () => {
@@ -106,8 +106,8 @@ describe('generate-claude-md skills section', () => {
     assert.ok(output.sections_fallback.includes('skills'));
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(content.includes('<!-- GSD:skills-start'));
-    assert.ok(content.includes('<!-- GSD:skills-end -->'));
+    assert.ok(content.includes('<!-- SDD:skills-start'));
+    assert.ok(content.includes('<!-- SDD:skills-end -->'));
     assert.ok(content.includes('No project skills found. Add skills to any of'));
   });
 
@@ -148,14 +148,14 @@ describe('generate-claude-md skills section', () => {
     assert.ok(content.includes('ERP synchronization flows'));
   });
 
-  test('skips gsd- prefixed skill directories', () => {
-    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'gsd-plan-phase');
+  test('skips sdd- prefixed skill directories', () => {
+    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'sdd-plan-phase');
     const userSkillDir = path.join(tmpDir, '.claude', 'skills', 'my-feature');
     fs.mkdirSync(gsdSkillDir, { recursive: true });
     fs.mkdirSync(userSkillDir, { recursive: true });
     fs.writeFileSync(
       path.join(gsdSkillDir, 'SKILL.md'),
-      '---\nname: gsd-plan-phase\ndescription: GSD internal skill.\n---\n'
+      '---\nname: sdd-plan-phase\ndescription: SDD internal skill.\n---\n'
     );
     fs.writeFileSync(
       path.join(userSkillDir, 'SKILL.md'),
@@ -166,7 +166,7 @@ describe('generate-claude-md skills section', () => {
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(!content.includes('gsd-plan-phase'));
+    assert.ok(!content.includes('sdd-plan-phase'));
     assert.ok(content.includes('my-feature'));
     assert.ok(content.includes('Custom project skill'));
   });
@@ -244,7 +244,7 @@ describe('generate-claude-md skills section', () => {
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     const archIdx = content.indexOf('## Architecture');
     const skillsIdx = content.indexOf('## Project Skills');
-    const workflowIdx = content.indexOf('## GSD Workflow Enforcement');
+    const workflowIdx = content.indexOf('## SDD Workflow Enforcement');
     assert.ok(archIdx < skillsIdx, 'Skills section should come after Architecture');
     assert.ok(skillsIdx < workflowIdx, 'Skills section should come before Workflow Enforcement');
   });

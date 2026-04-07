@@ -10,7 +10,7 @@ Spec-Driven Development（GSD）フレームワークの包括的なドキュメ
 | [機能リファレンス](FEATURES.md) | 全ユーザー | 全機能の詳細ドキュメントと要件 |
 | [コマンドリファレンス](COMMANDS.md) | 全ユーザー | 全コマンドの構文、フラグ、オプション、使用例 |
 | [設定リファレンス](CONFIGURATION.md) | 全ユーザー | 設定スキーマ、ワークフロートグル、モデルプロファイル、Git ブランチ |
-| [CLI ツールリファレンス](CLI-TOOLS.md) | コントリビューター、エージェント作成者 | `gsd-tools.cjs` のプログラマティック API（ワークフローおよびエージェント向け） |
+| [CLI ツールリファレンス](CLI-TOOLS.md) | コントリビューター、エージェント作成者 | `sdd-tools.cjs` のプログラマティック API（ワークフローおよびエージェント向け） |
 | [エージェントリファレンス](AGENTS.md) | コントリビューター、上級ユーザー | 全18種の専門エージェント — 役割、ツール、スポーンパターン |
 | [ユーザーガイド](USER-GUIDE.md) | 全ユーザー | ワークフローのウォークスルー、トラブルシューティング、リカバリー |
 | [コンテキストモニター](context-monitor.md) | 全ユーザー | コンテキストウィンドウ監視フックのアーキテクチャ |
@@ -18,8 +18,8 @@ Spec-Driven Development（GSD）フレームワークの包括的なドキュメ
 
 ## クイックリンク
 
-- **v1.32 の新機能:** STATE.md 整合性ゲート、`--to N` 自律モード、リサーチゲート、ベリファイヤーマイルストーンスコープフィルタリング、read-before-edit ガード、コンテキスト削減、新規ランタイム（Trae, Cline, Augment Code）、レスポンス言語設定、`--power`/`--diagnose` フラグ、`/gsd-analyze-dependencies`
-- **はじめに:** [README](../README.md) → インストール → `/gsd-new-project`
+- **v1.32 の新機能:** STATE.md 整合性ゲート、`--to N` 自律モード、リサーチゲート、ベリファイヤーマイルストーンスコープフィルタリング、read-before-edit ガード、コンテキスト削減、新規ランタイム（Trae, Cline, Augment Code）、レスポンス言語設定、`--power`/`--diagnose` フラグ、`/sdd-analyze-dependencies`
+- **はじめに:** [README](../README.md) → インストール → `/sdd-new-project`
 - **ワークフロー完全ガイド:** [ユーザーガイド](USER-GUIDE.md)
 - **コマンド一覧:** [コマンドリファレンス](COMMANDS.md)
 - **SDD の設定:** [設定リファレンス](CONFIGURATION.md)

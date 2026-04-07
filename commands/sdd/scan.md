@@ -1,6 +1,6 @@
 ---
-name: gsd:scan
-description: Rapid codebase assessment — lightweight alternative to /gsd-map-codebase
+name: sdd:scan
+description: Rapid codebase assessment — lightweight alternative to /sdd-map-codebase
 allowed-tools:
   - Read
   - Write
@@ -14,13 +14,13 @@ allowed-tools:
 Run a focused codebase scan for a single area, producing targeted documents in `.planning/codebase/`.
 Accepts an optional `--focus` flag: `tech`, `arch`, `quality`, `concerns`, or `tech+arch` (default).
 
-Lightweight alternative to `/gsd-map-codebase` — spawns one mapper agent instead of four parallel ones.
+Lightweight alternative to `/sdd-map-codebase` — spawns one mapper agent instead of four parallel ones.
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/scan.md
+@~/.claude/sdd/workflows/scan.md
 </execution_context>
 
 <process>
-Execute the scan workflow from @~/.claude/get-shit-done/workflows/scan.md end-to-end.
+Execute the scan workflow from @~/.claude/sdd/workflows/scan.md end-to-end.
 </process>

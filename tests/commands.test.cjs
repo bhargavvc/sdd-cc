@@ -1258,7 +1258,7 @@ describe('commit command', () => {
       JSON.stringify({
         commit_docs: true,
         branching_strategy: 'phase',
-        phase_branch_template: 'gsd/phase-{phase}-{slug}',
+        phase_branch_template: 'sdd/phase-{phase}-{slug}',
       })
     );
     // Create ROADMAP.md with a decimal phase
@@ -1283,7 +1283,7 @@ describe('commit command', () => {
     // Verify we're on the correct branch (45.14, not 14)
     const { execFileSync } = require('child_process');
     const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: tmpDir, encoding: 'utf-8' }).trim();
-    assert.strictEqual(branch, 'gsd/phase-45.14-golden-capture', 'should be on decimal phase branch, not integer-only');
+    assert.strictEqual(branch, 'sdd/phase-45.14-golden-capture', 'should be on decimal phase branch, not integer-only');
   });
 });
 

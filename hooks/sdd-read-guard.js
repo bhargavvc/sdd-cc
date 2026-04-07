@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GSD_VERSION}}
-// GSD Read Guard — PreToolUse hook
+// sdd-hook-version: {{SDD_VERSION}}
+// SDD Read Guard — PreToolUse hook
 // Injects advisory guidance when Write/Edit targets an existing file,
 // reminding the model to Read the file first.
 //

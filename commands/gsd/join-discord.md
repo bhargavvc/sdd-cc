@@ -1,17 +1,17 @@
 ---
-name: gsd:join-discord
-description: Join the GSD Discord community
+name: sdd:join-discord
+description: Join the SDD Discord community
 allowed-tools: []
 ---
 
 <objective>
-Display the Discord invite link for the GSD community server.
+Display the Discord invite link for the SDD community server.
 </objective>
 
 <output>
-# Join the GSD Discord
+# Join the SDD Discord
 
-Connect with other GSD users, get help, share what you're building, and stay updated.
+Connect with other SDD users, get help, share what you're building, and stay updated.
 
 **Invite link:** https://discord.gg/mYgfVNfA2r
 

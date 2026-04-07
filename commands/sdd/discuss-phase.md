@@ -1,5 +1,5 @@
 ---
-name: gsd:discuss-phase
+name: sdd:discuss-phase
 description: Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute. Use --power for bulk question generation into a file-based UI (answer at your own pace).
 argument-hint: "<phase> [--auto] [--chain] [--batch] [--analyze] [--text] [--power]"
 allowed-tools:
@@ -29,10 +29,10 @@ Extract implementation decisions that downstream agents need — researcher and 
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/discuss-phase.md
-@~/.claude/get-shit-done/workflows/discuss-phase-assumptions.md
-@~/.claude/get-shit-done/workflows/discuss-phase-power.md
-@~/.claude/get-shit-done/templates/context.md
+@~/.claude/sdd/workflows/discuss-phase.md
+@~/.claude/sdd/workflows/discuss-phase-assumptions.md
+@~/.claude/sdd/workflows/discuss-phase-power.md
+@~/.claude/sdd/templates/context.md
 </execution_context>
 
 <runtime_note>

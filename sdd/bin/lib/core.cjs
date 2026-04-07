@@ -10,7 +10,7 @@ const { execSync, execFileSync, spawnSync } = require('child_process');
 const { MODEL_PROFILES } = require('./model-profiles.cjs');
 
 const WORKSTREAM_SESSION_ENV_KEYS = [
-  'GSD_SESSION_KEY',
+  'SDD_SESSION_KEY',
   'CODEX_THREAD_ID',
   'CLAUDE_SESSION_ID',
   'CLAUDE_CODE_SSE_PORT',
@@ -222,8 +222,8 @@ const CONFIG_DEFAULTS = {
   commit_docs: true,
   search_gitignored: false,
   branching_strategy: 'none',
-  phase_branch_template: 'gsd/phase-{phase}-{slug}',
-  milestone_branch_template: 'gsd/{milestone}-{slug}',
+  phase_branch_template: 'sdd/phase-{phase}-{slug}',
+  milestone_branch_template: 'sdd/{milestone}-{slug}',
   quick_branch_template: null,
   research: true,
   plan_checker: true,
@@ -309,7 +309,7 @@ function loadConfig(cwd) {
     const unknownKeys = Object.keys(parsed).filter(k => !KNOWN_TOP_LEVEL.has(k));
     if (unknownKeys.length > 0) {
       process.stderr.write(
-        `gsd-tools: warning: unknown config key(s) in .planning/config.json: ${unknownKeys.join(', ')} — these will be ignored\n`
+        `sdd-tools: warning: unknown config key(s) in .planning/config.json: ${unknownKeys.join(', ')} — these will be ignored\n`
       );
     }
 
@@ -365,14 +365,14 @@ function loadConfig(cwd) {
       response_language: get('response_language') || null,
     };
   } catch {
-    // Fall back to ~/.gsd/defaults.json only for truly pre-project contexts (#1683)
+    // Fall back to ~/.sdd/defaults.json only for truly pre-project contexts (#1683)
     // If .planning/ exists, the project is initialized — just missing config.json
     if (fs.existsSync(planningDir(cwd))) {
       return defaults;
     }
     try {
-      const home = process.env.GSD_HOME || os.homedir();
-      const globalDefaultsPath = path.join(home, '.gsd', 'defaults.json');
+      const home = process.env.SDD_HOME || os.homedir();
+      const globalDefaultsPath = path.join(home, '.sdd', 'defaults.json');
       const raw = fs.readFileSync(globalDefaultsPath, 'utf-8');
       const globalDefaults = JSON.parse(raw);
       return {
@@ -631,31 +631,31 @@ function withPlanningLock(cwd, fn) {
  * Get the .planning directory path, project- and workstream-aware.
  *
  * Resolution order:
- * 1. If GSD_PROJECT is set (env var or explicit `project` arg), routes to
+ * 1. If SDD_PROJECT is set (env var or explicit `project` arg), routes to
  *    `.planning/{project}/` — supports multi-project workspaces where several
  *    independent projects share a single `.planning/` root directory (e.g.,
  *    an Obsidian vault or monorepo knowledge base used as a command center).
- * 2. If GSD_WORKSTREAM is set, routes to `.planning/workstreams/{ws}/`.
+ * 2. If SDD_WORKSTREAM is set, routes to `.planning/workstreams/{ws}/`.
  * 3. Otherwise returns `.planning/`.
  *
- * GSD_PROJECT and GSD_WORKSTREAM can be combined:
+ * SDD_PROJECT and SDD_WORKSTREAM can be combined:
  *   `.planning/{project}/workstreams/{ws}/`
  *
  * @param {string} cwd - project root
- * @param {string} [ws] - explicit workstream name; if omitted, checks GSD_WORKSTREAM env var
- * @param {string} [project] - explicit project name; if omitted, checks GSD_PROJECT env var
+ * @param {string} [ws] - explicit workstream name; if omitted, checks SDD_WORKSTREAM env var
+ * @param {string} [project] - explicit project name; if omitted, checks SDD_PROJECT env var
  */
 function planningDir(cwd, ws, project) {
-  if (project === undefined) project = process.env.GSD_PROJECT || null;
-  if (ws === undefined) ws = process.env.GSD_WORKSTREAM || null;
+  if (project === undefined) project = process.env.SDD_PROJECT || null;
+  if (ws === undefined) ws = process.env.SDD_WORKSTREAM || null;
 
   // Reject path separators and traversal components in project/workstream names
   const BAD_SEGMENT = /[/\\]|\.\./;
   if (project && BAD_SEGMENT.test(project)) {
-    throw new Error(`GSD_PROJECT contains invalid path characters: ${project}`);
+    throw new Error(`SDD_PROJECT contains invalid path characters: ${project}`);
   }
   if (ws && BAD_SEGMENT.test(ws)) {
-    throw new Error(`GSD_WORKSTREAM contains invalid path characters: ${ws}`);
+    throw new Error(`SDD_WORKSTREAM contains invalid path characters: ${ws}`);
   }
 
   let base = path.join(cwd, '.planning');
@@ -733,7 +733,7 @@ function getControllingTtyToken() {
  * Resolve a deterministic session key for workstream-local routing.
  *
  * Order:
- * 1. Explicit runtime/session env vars (`GSD_SESSION_KEY`, `CODEX_THREAD_ID`, etc.)
+ * 1. Explicit runtime/session env vars (`SDD_SESSION_KEY`, `CODEX_THREAD_ID`, etc.)
  * 2. Terminal identity exposed via `TTY` or `SSH_TTY`
  * 3. One best-effort `tty` probe when stdin is interactive
  * 4. `null`, which tells callers to use the legacy shared pointer fallback
@@ -769,7 +769,7 @@ function getSessionScopedWorkstreamFile(cwd) {
     .digest('hex')
     .slice(0, 16);
 
-  const dirPath = path.join(os.tmpdir(), 'gsd-workstream-sessions', projectId);
+  const dirPath = path.join(os.tmpdir(), 'sdd-workstream-sessions', projectId);
   return {
     sessionKey,
     dirPath,
@@ -1228,16 +1228,16 @@ function getRoadmapPhaseInternal(cwd, phaseNum) {
  * sdd-tools.cjs lives at <configDir>/sdd/bin/sdd-tools.cjs,
  * so agents/ is at <configDir>/agents/.
  *
- * GSD_AGENTS_DIR env var overrides the default path. Used in tests and for
- * installs where the agents directory is not co-located with gsd-tools.cjs.
+ * SDD_AGENTS_DIR env var overrides the default path. Used in tests and for
+ * installs where the agents directory is not co-located with sdd-tools.cjs.
  *
  * @returns {string} Absolute path to the agents directory
  */
 function getAgentsDir() {
-  if (process.env.GSD_AGENTS_DIR) {
-    return process.env.GSD_AGENTS_DIR;
+  if (process.env.SDD_AGENTS_DIR) {
+    return process.env.SDD_AGENTS_DIR;
   }
-  // __dirname is get-shit-done/bin/lib/ → go up 3 levels to configDir
+  // __dirname is sdd/bin/lib/ → go up 3 levels to configDir
   return path.join(__dirname, '..', '..', '..', 'agents');
 }
 
@@ -1245,8 +1245,8 @@ function getAgentsDir() {
  * Check which SDD agents are installed on disk.
  * Returns an object with installation status and details.
  *
- * Recognises both standard format (gsd-planner.md) and Copilot format
- * (gsd-planner.agent.md). Copilot renames agent files during install (#1512).
+ * Recognises both standard format (sdd-planner.md) and Copilot format
+ * (sdd-planner.agent.md). Copilot renames agent files during install (#1512).
  *
  * @returns {{ agents_installed: boolean, missing_agents: string[], installed_agents: string[], agents_dir: string }}
  */

@@ -1,7 +1,7 @@
 /**
  * Execute-phase wave filter tests
  *
- * Validates the /gsd-execute-phase --wave feature contract:
+ * Validates the /sdd-execute-phase --wave feature contract:
  * - Command frontmatter advertises --wave
  * - Workflow parses WAVE_FILTER
  * - Workflow enforces lower-wave safety
@@ -89,7 +89,7 @@ describe('execute-phase docs: user-facing wave flag', () => {
     const content = fs.readFileSync(COMMANDS_DOC_PATH, 'utf-8');
     assert.ok(content.includes('`--wave N`'), 'COMMANDS.md should mention --wave N');
     assert.ok(
-      content.includes('/gsd-execute-phase 1 --wave 2'),
+      content.includes('/sdd-execute-phase 1 --wave 2'),
       'COMMANDS.md should include a wave-filter example'
     );
   });
@@ -101,7 +101,7 @@ describe('execute-phase docs: user-facing wave flag', () => {
       'help.md should describe wave-specific execution'
     );
     assert.ok(
-      content.includes('Usage: `/gsd-execute-phase 5 --wave 2`'),
+      content.includes('Usage: `/sdd-execute-phase 5 --wave 2`'),
       'help.md should include wave-filter usage'
     );
   });
@@ -124,11 +124,11 @@ describe('execute-phase docs: user-facing wave flag', () => {
 });
 
 describe('use_worktrees config: cross-workflow structural coverage', () => {
-  const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
-  const DIAGNOSE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'diagnose-issues.md');
-  const EXECUTE_PLAN_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-plan.md');
-  const PLANNING_CONFIG_PATH = path.join(__dirname, '..', 'get-shit-done', 'references', 'planning-config.md');
-  const CONFIG_CJS_PATH = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'config.cjs');
+  const QUICK_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'quick.md');
+  const DIAGNOSE_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'diagnose-issues.md');
+  const EXECUTE_PLAN_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'execute-plan.md');
+  const PLANNING_CONFIG_PATH = path.join(__dirname, '..', 'sdd', 'references', 'planning-config.md');
+  const CONFIG_CJS_PATH = path.join(__dirname, '..', 'sdd', 'bin', 'lib', 'config.cjs');
 
   test('quick workflow reads USE_WORKTREES from config', () => {
     const content = fs.readFileSync(QUICK_PATH, 'utf-8');

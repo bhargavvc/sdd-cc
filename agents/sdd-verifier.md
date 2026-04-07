@@ -24,8 +24,8 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 </role>
 
 <required_reading>
-@~/.claude/get-shit-done/references/verification-overrides.md
-@~/.claude/get-shit-done/references/gates.md
+@~/.claude/sdd/references/verification-overrides.md
+@~/.claude/sdd/references/gates.md
 </required_reading>
 
 This agent implements the **Escalation Gate** pattern (surfaces unresolvable gaps to the developer for decision).
@@ -61,10 +61,10 @@ Then verify each level against the actual codebase.
 <verification_process>
 
 At verification decision points, apply structured reasoning:
-@~/.claude/get-shit-done/references/thinking-models-verification.md
+@~/.claude/sdd/references/thinking-models-verification.md
 
 At verification decision points, reference calibration examples:
-@~/.claude/get-shit-done/references/few-shot-examples/verifier.md
+@~/.claude/sdd/references/few-shot-examples/verifier.md
 
 ## Step 0: Check for Previous Verification
 
@@ -104,7 +104,7 @@ In re-verification mode, must-haves come from Step 0.
 **Step 2a: Always load ROADMAP Success Criteria**
 
 ```bash
-PHASE_DATA=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "$PHASE_NUM" --raw)
+PHASE_DATA=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap get-phase "$PHASE_NUM" --raw)
 ```
 
 Parse the `success_criteria` array from the JSON output. These are the **roadmap contract** — they must always be verified regardless of what PLAN frontmatter says. Store them as `roadmap_truths`.
@@ -516,7 +516,7 @@ Before reporting gaps, check if any identified gaps are explicitly addressed in 
 **Load the full milestone roadmap:**
 
 ```bash
-ROADMAP_DATA=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap analyze --raw)
+ROADMAP_DATA=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap analyze --raw)
 ```
 
 Parse the JSON to extract all phases. Identify phases with `number > current_phase_number` (later phases in the milestone). For each later phase, extract its `goal` and `success_criteria`.
@@ -540,7 +540,7 @@ Parse the JSON to extract all phases. Identify phases with `number > current_pha
 
 Before writing VERIFICATION.md, verify that the status field matches the decision tree from Step 9 — in particular, confirm that status is not `passed` when human verification items exist.
 
-Structure gaps in YAML frontmatter for `/gsd-plan-phase --gaps`:
+Structure gaps in YAML frontmatter for `/sdd-plan-phase --gaps`:
 
 ```yaml
 gaps:
@@ -715,7 +715,7 @@ All must-haves verified. Phase goal achieved. Ready to proceed.
 1. **{Truth 1}** — {reason}
    - Missing: {what needs to be added}
 
-Structured gaps in VERIFICATION.md frontmatter for `/gsd-plan-phase --gaps`.
+Structured gaps in VERIFICATION.md frontmatter for `/sdd-plan-phase --gaps`.
 
 {If human_needed:}
 ### Human Verification Required
@@ -736,7 +736,7 @@ Automated checks passed. Awaiting human verification.
 
 **DO NOT skip key link verification.** 80% of stubs hide here — pieces exist but aren't connected.
 
-**Structure gaps in YAML frontmatter** for `/gsd-plan-phase --gaps`.
+**Structure gaps in YAML frontmatter** for `/sdd-plan-phase --gaps`.
 
 **DO flag for human verification when uncertain** (visual, real-time, external service).
 

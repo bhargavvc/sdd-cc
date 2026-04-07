@@ -1,8 +1,8 @@
 /**
  * commit_docs bypass guard tests (#1783)
  *
- * When users set commit_docs: false during /gsd-new-project, .planning/
- * files should never be staged or committed. The gsd-tools.cjs commit
+ * When users set commit_docs: false during /sdd-new-project, .planning/
+ * files should never be staged or committed. The sdd-tools.cjs commit
  * wrapper already checks this flag, but three locations in execute-phase.md
  * and quick.md used raw `git add .planning/` commands that bypassed it.
  *
@@ -15,8 +15,8 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const EXECUTE_PHASE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-phase.md');
-const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
+const EXECUTE_PHASE_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'execute-phase.md');
+const QUICK_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'quick.md');
 
 describe('commit_docs bypass guard (#1783)', () => {
 

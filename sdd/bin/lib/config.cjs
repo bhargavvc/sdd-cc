@@ -78,8 +78,8 @@ function validateKnownConfigKeyPath(keyPath) {
  *
  * Merges (increasing priority):
  *   1. Hardcoded defaults — every key that loadConfig() resolves, plus mode/granularity
- *   2. User-level defaults from ~/.gsd/defaults.json (if present)
- *   3. userChoices — the settings the user explicitly selected during /gsd-new-project
+ *   2. User-level defaults from ~/.sdd/defaults.json (if present)
+ *   3. userChoices — the settings the user explicitly selected during /sdd-new-project
  *
  * Uses the canonical `git` namespace for branching keys (consistent with VALID_CONFIG_KEYS
  * and the settings workflow). loadConfig() handles both flat and nested formats, so this
@@ -190,8 +190,8 @@ function buildNewProjectConfig(userChoices) {
  * Command: create a fully-materialized .planning/config.json for a new project.
  *
  * Accepts user-chosen settings as a JSON string (the keys the user explicitly
- * configured during /gsd-new-project). All remaining keys are filled from
- * hardcoded defaults and optional ~/.gsd/defaults.json.
+ * configured during /sdd-new-project). All remaining keys are filled from
+ * hardcoded defaults and optional ~/.sdd/defaults.json.
  *
  * Idempotent: if config.json already exists, returns { created: false }.
  */

@@ -20,7 +20,7 @@ function detectConfigDir(baseDir) {
     return envDir;
   }
   for (const dir of ['.claude', '.gemini', '.config/kilo', '.kilo', '.config/opencode', '.opencode']) {
-    if (fs.existsSync(path.join(baseDir, dir, 'get-shit-done', 'VERSION'))) {
+    if (fs.existsSync(path.join(baseDir, dir, 'sdd', 'VERSION'))) {
       return path.join(baseDir, dir);
     }
   }
@@ -32,8 +32,8 @@ const projectConfigDir = detectConfigDir(cwd);
 // Use a shared, tool-agnostic cache directory to avoid multi-runtime
 // resolution mismatches where check-update writes to one runtime's cache
 // but statusline reads from another (#1421).
-const cacheDir = path.join(homeDir, '.cache', 'gsd');
-const cacheFile = path.join(cacheDir, 'gsd-update-check.json');
+const cacheDir = path.join(homeDir, '.cache', 'sdd');
+const cacheFile = path.join(cacheDir, 'sdd-update-check.json');
 
 // VERSION file locations (check project first, then global)
 const projectVersionFile = path.join(projectConfigDir, 'sdd', 'VERSION');
@@ -81,15 +81,15 @@ const child = spawn(process.execPath, ['-e', `
 
   // Check for stale hooks — compare hook version headers against installed VERSION
   // Hooks are installed at configDir/hooks/ (e.g. ~/.claude/hooks/) (#1421)
-  // Only check hooks that GSD currently ships — orphaned files from removed features
-  // (e.g., gsd-intel-*.js) must be ignored to avoid permanent stale warnings (#1750)
+  // Only check hooks that SDD currently ships — orphaned files from removed features
+  // (e.g., sdd-intel-*.js) must be ignored to avoid permanent stale warnings (#1750)
   const MANAGED_HOOKS = [
-    'gsd-check-update.js',
-    'gsd-context-monitor.js',
-    'gsd-prompt-guard.js',
-    'gsd-read-guard.js',
-    'gsd-statusline.js',
-    'gsd-workflow-guard.js',
+    'sdd-check-update.js',
+    'sdd-context-monitor.js',
+    'sdd-prompt-guard.js',
+    'sdd-read-guard.js',
+    'sdd-statusline.js',
+    'sdd-workflow-guard.js',
   ];
   let staleHooks = [];
   if (configDir) {

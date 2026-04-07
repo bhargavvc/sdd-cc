@@ -2,7 +2,7 @@
  * Tests for verification overrides reference document (#1747)
  *
  * Verifies that the verification-overrides.md reference exists, documents
- * the YAML frontmatter override format, and is referenced by gsd-verifier.md.
+ * the YAML frontmatter override format, and is referenced by sdd-verifier.md.
  */
 
 'use strict';
@@ -18,8 +18,8 @@ describe('verification overrides reference (#1747)', () => {
 
   // ── Reference document ────────────────────────────────────────────────────
 
-  describe('get-shit-done/references/verification-overrides.md', () => {
-    const refPath = path.join(ROOT, 'get-shit-done', 'references', 'verification-overrides.md');
+  describe('sdd/references/verification-overrides.md', () => {
+    const refPath = path.join(ROOT, 'sdd', 'references', 'verification-overrides.md');
     let content;
 
     test('file exists', () => {
@@ -188,7 +188,7 @@ describe('verification overrides reference (#1747)', () => {
     test('documents milestone audit surfacing', () => {
       content = content || fs.readFileSync(refPath, 'utf-8');
       assert.ok(
-        content.includes('gsd-audit-milestone') || content.includes('audit-milestone') || content.includes('milestone'),
+        content.includes('sdd-audit-milestone') || content.includes('audit-milestone') || content.includes('milestone'),
         'should document that overrides are surfaced during milestone audit'
       );
     });
@@ -196,12 +196,12 @@ describe('verification overrides reference (#1747)', () => {
 
   // ── Verifier agent reference ──────────────────────────────────────────────
 
-  describe('agents/gsd-verifier.md references overrides', () => {
-    const verifierPath = path.join(ROOT, 'agents', 'gsd-verifier.md');
+  describe('agents/sdd-verifier.md references overrides', () => {
+    const verifierPath = path.join(ROOT, 'agents', 'sdd-verifier.md');
     let verifierContent;
 
-    test('gsd-verifier.md exists', () => {
-      assert.ok(fs.existsSync(verifierPath), 'gsd-verifier.md should exist');
+    test('sdd-verifier.md exists', () => {
+      assert.ok(fs.existsSync(verifierPath), 'sdd-verifier.md should exist');
       verifierContent = fs.readFileSync(verifierPath, 'utf-8');
     });
 
@@ -209,7 +209,7 @@ describe('verification overrides reference (#1747)', () => {
       verifierContent = verifierContent || fs.readFileSync(verifierPath, 'utf-8');
       assert.ok(
         verifierContent.includes('verification-overrides.md'),
-        'gsd-verifier.md should reference verification-overrides.md'
+        'sdd-verifier.md should reference verification-overrides.md'
       );
     });
 
@@ -231,7 +231,7 @@ describe('verification overrides reference (#1747)', () => {
       verifierContent = verifierContent || fs.readFileSync(verifierPath, 'utf-8');
       assert.ok(
         verifierContent.includes('Step 3b'),
-        'gsd-verifier.md should include a Step 3b override check'
+        'sdd-verifier.md should include a Step 3b override check'
       );
     });
 
@@ -252,7 +252,7 @@ describe('verification overrides reference (#1747)', () => {
       verifierContent = verifierContent || fs.readFileSync(verifierPath, 'utf-8');
       assert.ok(
         verifierContent.includes('overrides_applied'),
-        'gsd-verifier.md frontmatter template should include overrides_applied counter'
+        'sdd-verifier.md frontmatter template should include overrides_applied counter'
       );
     });
   });

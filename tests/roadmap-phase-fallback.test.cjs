@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - roadmap get-phase fallback to full ROADMAP.md
+ * SDD Tools Tests - roadmap get-phase fallback to full ROADMAP.md
  *
  * Covers issue #1634: phases outside the current milestone slice should still
  * resolve by falling back to the full ROADMAP.md content.

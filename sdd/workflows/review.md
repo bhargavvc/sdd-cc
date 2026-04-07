@@ -39,7 +39,7 @@ No external AI CLIs found. Install at least one:
 - claude: https://github.com/anthropics/claude-code
 - opencode: https://opencode.ai (leverages GitHub Copilot subscription models)
 
-Then run /gsd-review again.
+Then run /sdd-review again.
 ```
 Exit.
 
@@ -148,7 +148,7 @@ gemini -p "$(cat /tmp/sdd-review-prompt-{phase}.md)" 2>/dev/null > /tmp/sdd-revi
 
 **Claude (separate session):**
 ```bash
-claude -p "$(cat /tmp/gsd-review-prompt-{phase}.md)" 2>/dev/null > /tmp/gsd-review-claude-{phase}.md
+claude -p "$(cat /tmp/sdd-review-prompt-{phase}.md)" 2>/dev/null > /tmp/sdd-review-claude-{phase}.md
 ```
 
 **Codex:**
@@ -161,14 +161,14 @@ codex exec --skip-git-repo-check "$(cat /tmp/sdd-review-prompt-{phase}.md)" 2>/d
 Note: CodeRabbit reviews the current git diff/working tree — it does not accept a prompt. It may take up to 5 minutes. Use `timeout: 360000` on the Bash tool call.
 
 ```bash
-coderabbit review --prompt-only 2>/dev/null > /tmp/gsd-review-coderabbit-{phase}.md
+coderabbit review --prompt-only 2>/dev/null > /tmp/sdd-review-coderabbit-{phase}.md
 ```
 
 **OpenCode (via GitHub Copilot):**
 ```bash
-cat /tmp/gsd-review-prompt-{phase}.md | opencode run - 2>/dev/null > /tmp/gsd-review-opencode-{phase}.md
-if [ ! -s /tmp/gsd-review-opencode-{phase}.md ]; then
-  echo "OpenCode review failed or returned empty output." > /tmp/gsd-review-opencode-{phase}.md
+cat /tmp/sdd-review-prompt-{phase}.md | opencode run - 2>/dev/null > /tmp/sdd-review-opencode-{phase}.md
+if [ ! -s /tmp/sdd-review-opencode-{phase}.md ]; then
+  echo "OpenCode review failed or returned empty output." > /tmp/sdd-review-opencode-{phase}.md
 fi
 ```
 
@@ -264,7 +264,7 @@ Consensus concerns:
 Full review: {padded_phase}-REVIEWS.md
 
 To incorporate feedback into planning:
-  /gsd-plan-phase {N} --reviews
+  /sdd-plan-phase {N} --reviews
 ```
 
 Clean up temp files.
@@ -277,5 +277,5 @@ Clean up temp files.
 - [ ] REVIEWS.md written with structured feedback
 - [ ] Consensus summary synthesized from multiple reviewers
 - [ ] Temp files cleaned up
-- [ ] User knows how to use feedback (/gsd-plan-phase --reviews)
+- [ ] User knows how to use feedback (/sdd-plan-phase --reviews)
 </success_criteria>

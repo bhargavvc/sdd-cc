@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GSD_VERSION}}
-// GSD Workflow Guard — PreToolUse hook
-// Detects when Claude attempts file edits outside a GSD workflow context
-// (no active /gsd- skill or Task subagent) and injects an advisory warning.
+// sdd-hook-version: {{SDD_VERSION}}
+// SDD Workflow Guard — PreToolUse hook
+// Detects when Claude attempts file edits outside a SDD workflow context
+// (no active /sdd- skill or Task subagent) and injects an advisory warning.
 //
 // This is a SOFT guard — it advises, not blocks. The edit still proceeds.
-// The warning nudges Claude to use /gsd-quick or /gsd-fast instead of
+// The warning nudges Claude to use /sdd-quick or /sdd-fast instead of
 // making direct edits that bypass state tracking.
 //
 // Enable via config: hooks.workflow_guard: true (default: false)
@@ -29,7 +29,7 @@ process.stdin.on('end', () => {
       process.exit(0);
     }
 
-    // Check if we're inside a GSD workflow (Task subagent or /gsd- skill)
+    // Check if we're inside a SDD workflow (Task subagent or /sdd- skill)
     // Subagents have a session_id that differs from the parent
     // and typically have a description field set by the orchestrator
     if (data.tool_input?.is_subagent || data.session_type === 'task') {
@@ -80,7 +80,7 @@ process.stdin.on('end', () => {
         hookEventName: "PreToolUse",
         additionalContext: `⚠️ WORKFLOW ADVISORY: You're editing ${path.basename(filePath)} directly without a SDD command. ` +
           'This edit will not be tracked in STATE.md or produce a SUMMARY.md. ' +
-          'Consider using /gsd-fast for trivial fixes or /gsd-quick for larger changes ' +
+          'Consider using /sdd-fast for trivial fixes or /sdd-quick for larger changes ' +
           'to maintain project state tracking. ' +
           'If this is intentional (e.g., user explicitly asked for a direct edit), proceed normally.'
       }

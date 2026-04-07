@@ -1,18 +1,18 @@
 <purpose>
 Socratic ideation workflow. Guides the developer through exploring an idea via probing questions,
-offers mid-conversation research when useful, then routes crystallized outputs to GSD artifacts.
+offers mid-conversation research when useful, then routes crystallized outputs to SDD artifacts.
 </purpose>
 
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@~/.claude/get-shit-done/references/questioning.md
-@~/.claude/get-shit-done/references/domain-probes.md
+@~/.claude/sdd/references/questioning.md
+@~/.claude/sdd/references/domain-probes.md
 </required_reading>
 
 <available_agent_types>
-Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-phase-researcher — Researches specific questions and returns concise findings
+Valid SDD subagent types (use exact names — do not fall back to 'general-purpose'):
+- sdd-phase-researcher — Researches specific questions and returns concise findings
 </available_agent_types>
 
 <process>
@@ -62,7 +62,7 @@ If yes, spawn a research agent:
 ```
 Task(
   prompt="Quick research: {specific_question}. Return 3-5 key findings, no more than 200 words.",
-  subagent_type="gsd-phase-researcher"
+  subagent_type="sdd-phase-researcher"
 )
 ```
 
@@ -107,11 +107,11 @@ For each selected output, write the file:
 - **Seeds:** Create `.planning/seeds/{slug}.md` with frontmatter (title, trigger_condition, planted_date)
 - **Research questions:** Append to `.planning/research/questions.md`
 - **Requirements:** Append to `.planning/REQUIREMENTS.md` with next available REQ ID
-- **Phases:** Use existing `/gsd-add-phase` command via SlashCommand
+- **Phases:** Use existing `/sdd-add-phase` command via SlashCommand
 
 Commit if `commit_docs` is enabled:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: capture exploration — {topic_slug}" --files {file_list}
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs: capture exploration — {topic_slug}" --files {file_list}
 ```
 
 ## Step 6: Close
@@ -123,7 +123,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: capture explo
 **Outputs:** {count} artifact(s) created
 {list of created files}
 
-Continue exploring with `/gsd-explore` or start working with `/gsd-next`.
+Continue exploring with `/sdd-explore` or start working with `/sdd-next`.
 ```
 
 </process>

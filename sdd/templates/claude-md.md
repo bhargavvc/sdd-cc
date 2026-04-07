@@ -21,7 +21,7 @@ The profile section is managed exclusively by `generate-claude-profile`.
 
 **Fallback text:**
 ```
-Project not yet initialized. Run /gsd-new-project to set up.
+Project not yet initialized. Run /sdd-new-project to set up.
 ```
 
 ### Stack Section
@@ -68,13 +68,13 @@ Architecture not yet mapped. Follow existing patterns found in the codebase.
 
 ### Skills Section
 ```
-<!-- GSD:skills-start source:skills/ -->
+<!-- SDD:skills-start source:skills/ -->
 ## Project Skills
 
 | Skill          | Description           | Path                      |
 | -------------- | --------------------- | ------------------------- |
 | {{skill_name}} | {{skill_description}} | `{{skill_path}}/SKILL.md` |
-<!-- GSD:skills-end -->
+<!-- SDD:skills-end -->
 ```
 
 **Fallback text:**
@@ -85,7 +85,7 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 **Discovery behavior:**
 - Scans `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/` for subdirectories containing `SKILL.md`
 - Extracts `name` and `description` from YAML frontmatter (supports multi-line descriptions)
-- Skips GSD's own installed skills (directories starting with `gsd-`)
+- Skips SDD's own installed skills (directories starting with `sdd-`)
 - Deduplicates by skill name across directories
 
 ### Workflow Enforcement Section
@@ -96,9 +96,9 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 Before using Edit, Write, or other file-changing tools, start work through a SDD command so planning artifacts and execution context stay in sync.
 
 Use these entry points:
-- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd-debug` for investigation and bug fixing
-- `/gsd-execute-phase` for planned phase work
+- `/sdd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/sdd-debug` for investigation and bug fixing
+- `/sdd-execute-phase` for planned phase work
 
 Do not make direct repo edits outside a SDD workflow unless the user explicitly asks to bypass it.
 <!-- SDD:workflow-end -->
@@ -109,7 +109,7 @@ Do not make direct repo edits outside a SDD workflow unless the user explicitly 
 <!-- SDD:profile-start -->
 ## Developer Profile
 
-> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> Profile not yet configured. Run `/sdd-profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` — do not edit manually.
 <!-- SDD:profile-end -->
 ```
@@ -127,7 +127,7 @@ CLAUDE.md file and no profile section exists yet.
 3. **Conventions** — Code patterns and rules (how code is written)
 4. **Architecture** — System structure (how components fit together)
 5. **Skills** — Discovered project skills with name and description (what domain knowledge is available)
-6. **Workflow Enforcement** — Default GSD entry points for file-changing work
+6. **Workflow Enforcement** — Default SDD entry points for file-changing work
 7. **Profile** — Developer behavioral preferences (how to interact)
 
 ## Marker Format

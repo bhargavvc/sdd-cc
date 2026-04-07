@@ -39,7 +39,7 @@ describe('init commands', () => {
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'config.json'), JSON.stringify({
       model_profile: 'balanced',
-      model_overrides: { 'gsd-executor': 'openai/o4-mini' },
+      model_overrides: { 'sdd-executor': 'openai/o4-mini' },
     }));
 
     const result = runGsdTools('init execute-phase 1 --raw', tmpDir, { HOME: tmpDir });
@@ -47,7 +47,7 @@ describe('init commands', () => {
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.executor_model, 'openai/o4-mini',
-      'model_overrides["gsd-executor"] must take precedence over profile');
+      'model_overrides["sdd-executor"] must take precedence over profile');
   });
 
   test('init execute-phase respects model_overrides when resolve_model_ids is omit', () => {
@@ -56,7 +56,7 @@ describe('init commands', () => {
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'config.json'), JSON.stringify({
       resolve_model_ids: 'omit',
-      model_overrides: { 'gsd-executor': 'openai/o4-mini' },
+      model_overrides: { 'sdd-executor': 'openai/o4-mini' },
     }));
 
     const result = runGsdTools('init execute-phase 1 --raw', tmpDir, { HOME: tmpDir });

@@ -1,5 +1,5 @@
 /**
- * lib/intel.cjs -- Intel storage and query operations for GSD.
+ * lib/intel.cjs -- Intel storage and query operations for SDD.
  *
  * Provides a persistent, queryable intelligence system for project metadata.
  * Intel files live in .planning/intel/ and store structured data about
@@ -336,7 +336,7 @@ function intelUpdate(planningDir) {
 
   return {
     action: 'spawn_agent',
-    message: 'Run gsd-tools intel update or spawn gsd-intel-updater agent for full refresh'
+    message: 'Run sdd-tools intel update or spawn sdd-intel-updater agent for full refresh'
   };
 }
 

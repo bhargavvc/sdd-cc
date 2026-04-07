@@ -1,5 +1,5 @@
 ---
-name: gsd:intel
+name: sdd:intel
 description: "Query, inspect, or refresh codebase intelligence files in .planning/intel/"
 argument-hint: "[query <term>|status|diff|refresh]"
 allowed-tools:
@@ -15,7 +15,7 @@ allowed-tools:
 **Before ANY tool calls**, display this banner:
 
 ```
-GSD > INTEL
+SDD > INTEL
 ```
 
 Then proceed to Step 1.
@@ -24,7 +24,7 @@ Then proceed to Step 1.
 
 Check if intel is enabled by reading `.planning/config.json` directly using the Read tool.
 
-**DO NOT use the gsd-tools config get-value command** -- it hard-exits on missing keys.
+**DO NOT use the sdd-tools config get-value command** -- it hard-exits on missing keys.
 
 1. Read `.planning/config.json` using the Read tool
 2. If the file does not exist: display the disabled message below and **STOP**
@@ -35,13 +35,13 @@ Check if intel is enabled by reading `.planning/config.json` directly using the 
 **Disabled message:**
 
 ```
-GSD > INTEL
+SDD > INTEL
 
 Intel system is disabled. To activate:
 
-  node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs config-set intel.enabled true
+  node $HOME/.claude/sdd/bin/sdd-tools.cjs config-set intel.enabled true
 
-Then run /gsd-intel refresh to build the initial index.
+Then run /sdd-intel refresh to build the initial index.
 ```
 
 ---
@@ -61,9 +61,9 @@ Parse `$ARGUMENTS` to determine the operation mode:
 **Usage message** (shown when no argument or unrecognized argument):
 
 ```
-GSD > INTEL
+SDD > INTEL
 
-Usage: /gsd-intel <mode>
+Usage: /sdd-intel <mode>
 
 Modes:
   query <term>  Search intel files for a term
@@ -77,12 +77,12 @@ Modes:
 Run:
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs intel query <term>
+node $HOME/.claude/sdd/bin/sdd-tools.cjs intel query <term>
 ```
 
 Parse the JSON output and display results:
 - If the output contains `"disabled": true`, display the disabled message from Step 1 and **STOP**
-- If no matches found, display: `No intel matches for '<term>'. Try /gsd-intel refresh to build the index.`
+- If no matches found, display: `No intel matches for '<term>'. Try /sdd-intel refresh to build the index.`
 - Otherwise, display matching entries grouped by intel file
 
 **STOP** after displaying results. Do not spawn an agent.
@@ -92,7 +92,7 @@ Parse the JSON output and display results:
 Run:
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs intel status
+node $HOME/.claude/sdd/bin/sdd-tools.cjs intel status
 ```
 
 Parse the JSON output and display each intel file with:
@@ -107,7 +107,7 @@ Parse the JSON output and display each intel file with:
 Run:
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs intel diff
+node $HOME/.claude/sdd/bin/sdd-tools.cjs intel diff
 ```
 
 Parse the JSON output and display:
@@ -126,7 +126,7 @@ If no snapshot exists, suggest running `refresh` first.
 Display before spawning:
 
 ```
-GSD > Spawning intel-updater agent to analyze codebase...
+SDD > Spawning intel-updater agent to analyze codebase...
 ```
 
 Spawn a Task:
@@ -134,18 +134,18 @@ Spawn a Task:
 ```
 Task(
   description="Refresh codebase intelligence files",
-  prompt="You are the gsd-intel-updater agent. Your job is to analyze this codebase and write/update intelligence files in .planning/intel/.
+  prompt="You are the sdd-intel-updater agent. Your job is to analyze this codebase and write/update intelligence files in .planning/intel/.
 
 Project root: ${CWD}
-gsd-tools path: $HOME/.claude/get-shit-done/bin/gsd-tools.cjs
+sdd-tools path: $HOME/.claude/sdd/bin/sdd-tools.cjs
 
 Instructions:
 1. Analyze the codebase structure, dependencies, APIs, and architecture
 2. Write JSON intel files to .planning/intel/ (stack.json, api-map.json, dependency-graph.json, file-roles.json, arch-decisions.json)
 3. Each file must have a _meta object with updated_at timestamp
-4. Use gsd-tools intel extract-exports <file> to analyze source files
-5. Use gsd-tools intel patch-meta <file> to update timestamps after writing
-6. Use gsd-tools intel validate to check your output
+4. Use sdd-tools intel extract-exports <file> to analyze source files
+5. Use sdd-tools intel patch-meta <file> to update timestamps after writing
+6. Use sdd-tools intel validate to check your output
 
 When complete, output: ## INTEL UPDATE COMPLETE
 If something fails, output: ## INTEL UPDATE FAILED with details."
@@ -161,7 +161,7 @@ Wait for the agent to complete.
 After the agent completes, run:
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs intel status
+node $HOME/.claude/sdd/bin/sdd-tools.cjs intel status
 ```
 
 Display a summary showing:
@@ -176,4 +176,4 @@ Display a summary showing:
 1. DO NOT spawn an agent for query/status/diff operations -- these are inline CLI calls
 2. DO NOT modify intel files directly -- the agent handles writes during refresh
 3. DO NOT skip the config gate check
-4. DO NOT use the gsd-tools config get-value CLI for the config gate -- it exits on missing keys
+4. DO NOT use the sdd-tools config get-value CLI for the config gate -- it exits on missing keys

@@ -2,7 +2,7 @@
 
 External plan ingestion with conflict detection and agent delegation.
 
-- **--from**: Import external plan → conflict detection → write PLAN.md → validate via gsd-plan-checker
+- **--from**: Import external plan → conflict detection → write PLAN.md → validate via sdd-plan-checker
 
 Future: `--prd` mode (PRD extraction into PROJECT.md + REQUIREMENTS.md + ROADMAP.md) is planned for a follow-up PR.
 
@@ -14,7 +14,7 @@ Display the stage banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► IMPORT
+ SDD ► IMPORT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -27,14 +27,14 @@ Parse `$ARGUMENTS` to determine the execution mode:
 - If `--from` is present: extract FILEPATH (the next token after `--from`), set MODE=plan
 - If `--prd` is present: display message that `--prd` is not yet implemented and exit:
   ```
-  GSD > --prd mode is planned for a future release. Use --from to import plan files.
+  SDD > --prd mode is planned for a future release. Use --from to import plan files.
   ```
 - If neither flag is found: display usage and exit:
 
 ```
-Usage: /gsd-import --from <path>
+Usage: /sdd-import --from <path>
 
-  --from <path>   Import an external plan file into GSD format
+  --from <path>   Import an external plan file into SDD format
 ```
 
 **Validate the file path:**
@@ -74,7 +74,7 @@ Load project context for conflict detection:
 2. Read `.planning/PROJECT.md` — extract project constraints, tech stack, scope boundaries.
    **If PROJECT.md does not exist:** skip constraint checks that rely on it and display:
    ```
-   GSD > Note: No PROJECT.md found. Conflict checks against project constraints will be skipped.
+   SDD > Note: No PROJECT.md found. Conflict checks against project constraints will be skipped.
    ```
 3. Read `.planning/REQUIREMENTS.md` — extract existing requirements for overlap and contradiction checks.
    **If REQUIREMENTS.md does not exist:** skip requirement conflict checks and continue.
@@ -93,7 +93,7 @@ Store loaded context for conflict detection in the next step.
 Read the imported file at FILEPATH.
 
 Determine the format:
-- **GSD PLAN.md format**: Has YAML frontmatter with `phase:`, `plan:`, `type:` fields
+- **SDD PLAN.md format**: Has YAML frontmatter with `phase:`, `plan:`, `type:` fields
 - **Freeform document**: Any other format (markdown spec, design doc, task list, etc.)
 
 Extract from the imported content:
@@ -157,7 +157,7 @@ Display the full Conflict Detection Report:
 
 Display:
 ```
-GSD > BLOCKED: {N} blockers must be resolved before import can proceed.
+SDD > BLOCKED: {N} blockers must be resolved before import can proceed.
 ```
 
 Exit WITHOUT writing any files. This is the safety gate — no PLAN.md is written when blockers exist.
@@ -175,7 +175,7 @@ If user selects "Abort": exit cleanly with message "Import cancelled."
 
 <step name="plan_convert">
 
-Convert the imported content to GSD PLAN.md format.
+Convert the imported content to SDD PLAN.md format.
 
 Ensure the PLAN.md has all required frontmatter fields:
 ```yaml
@@ -194,9 +194,9 @@ must_haves:
 ```
 
 **Reject PBR naming conventions in source content:**
-If the imported plan references PBR plan naming (e.g., `PLAN-01.md`, `plan-01.md`), rename all references to GSD `{NN}-{MM}-PLAN.md` convention during conversion.
+If the imported plan references PBR plan naming (e.g., `PLAN-01.md`, `plan-01.md`), rename all references to SDD `{NN}-{MM}-PLAN.md` convention during conversion.
 
-Apply GSD naming convention for the output filename:
+Apply SDD naming convention for the output filename:
 - Format: `{NN}-{MM}-PLAN.md` (e.g., `04-01-PLAN.md`)
 - NEVER use `PLAN-01.md`, `plan-01.md`, or any other format
 - NN = phase number (zero-padded), MM = plan number within the phase (zero-padded)
@@ -217,12 +217,12 @@ Write the PLAN.md file to the target directory.
 
 <step name="plan_validate">
 
-Delegate validation to gsd-plan-checker:
+Delegate validation to sdd-plan-checker:
 
 ```
 Task({
-  subagent_type: "gsd-plan-checker",
-  prompt: "Validate: .planning/phases/{phase}/{plan}-PLAN.md — check frontmatter completeness, task structure, and GSD conventions. Report any issues."
+  subagent_type: "sdd-plan-checker",
+  prompt: "Validate: .planning/phases/{phase}/{plan}-PLAN.md — check frontmatter completeness, task structure, and SDD conventions. Report any issues."
 })
 ```
 
@@ -246,13 +246,13 @@ Update `.planning/STATE.md` if appropriate (e.g., increment total plan count).
 
 Commit the imported plan and updated files:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({phase}): import plan from {basename FILEPATH}" --files .planning/phases/{phase}/{plan}-PLAN.md .planning/ROADMAP.md
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs({phase}): import plan from {basename FILEPATH}" --files .planning/phases/{phase}/{plan}-PLAN.md .planning/ROADMAP.md
 ```
 
 Display completion:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► IMPORT COMPLETE
+ SDD ► IMPORT COMPLETE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -267,8 +267,8 @@ Show: plan filename written, phase directory, validation result, next steps.
 Do NOT:
 - Use markdown tables (`|---|`) in the conflict detection report — use plain-text [BLOCKER]/[WARNING]/[INFO] labels
 - Write PLAN.md files as `PLAN-01.md` or `plan-01.md` — always use `{NN}-{MM}-PLAN.md`
-- Use `pbr:plan-checker` or `pbr:planner` — use `gsd-plan-checker` and `gsd-planner`
-- Write `.planning/.active-skill` — this is a PBR pattern with no GSD equivalent
+- Use `pbr:plan-checker` or `pbr:planner` — use `sdd-plan-checker` and `sdd-planner`
+- Write `.planning/.active-skill` — this is a PBR pattern with no SDD equivalent
 - Reference `pbr-tools`, `pbr:`, or `PLAN-BUILD-RUN` anywhere
 - Write any PLAN.md file when blockers exist — the safety gate must hold
 - Skip path validation on the --from file argument

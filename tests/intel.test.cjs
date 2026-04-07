@@ -1,8 +1,8 @@
 /**
- * Tests for get-shit-done/bin/lib/intel.cjs
+ * Tests for sdd/bin/lib/intel.cjs
  *
  * Covers: query, status, diff, validate, snapshot, patch-meta,
- * extract-exports, enabled/disabled gating, and CLI routing via gsd-tools.
+ * extract-exports, enabled/disabled gating, and CLI routing via sdd-tools.
  */
 
 'use strict';
@@ -24,7 +24,7 @@ const {
   ensureIntelDir,
   isIntelEnabled,
   INTEL_FILES,
-} = require('../get-shit-done/bin/lib/intel.cjs');
+} = require('../sdd/bin/lib/intel.cjs');
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -556,9 +556,9 @@ describe('intelExtractExports', () => {
   });
 });
 
-// ─── CLI routing via gsd-tools ──────────────────────────────────────────────
+// ─── CLI routing via sdd-tools ──────────────────────────────────────────────
 
-describe('gsd-tools intel subcommands', () => {
+describe('sdd-tools intel subcommands', () => {
   let tmpDir;
 
   beforeEach(() => {

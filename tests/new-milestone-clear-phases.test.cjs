@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - New Milestone Clear Phases (#1588)
+ * SDD Tools Tests - New Milestone Clear Phases (#1588)
  *
  * Verifies that `phases clear` removes all phase subdirectories from
  * .planning/phases/, leaving the directory itself intact.

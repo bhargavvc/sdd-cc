@@ -1,6 +1,6 @@
 ---
-name: gsd:help
-description: Show available GSD commands and usage guide
+name: sdd:help
+description: Show available SDD commands and usage guide
 allowed-tools:
   - Read
 ---

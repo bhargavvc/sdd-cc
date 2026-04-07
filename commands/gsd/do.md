@@ -1,6 +1,6 @@
 ---
-name: gsd:do
-description: Route freeform text to the right GSD command automatically
+name: sdd:do
+description: Route freeform text to the right SDD command automatically
 argument-hint: "<description of what you want to do>"
 allowed-tools:
   - Read
@@ -8,16 +8,16 @@ allowed-tools:
   - AskUserQuestion
 ---
 <objective>
-Analyze freeform natural language input and dispatch to the most appropriate GSD command.
+Analyze freeform natural language input and dispatch to the most appropriate SDD command.
 
-Acts as a smart dispatcher — never does the work itself. Matches intent to the best GSD command using routing rules, confirms the match, then hands off.
+Acts as a smart dispatcher — never does the work itself. Matches intent to the best SDD command using routing rules, confirms the match, then hands off.
 
-Use when you know what you want but don't know which `/gsd-*` command to run.
+Use when you know what you want but don't know which `/sdd-*` command to run.
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/do.md
-@~/.claude/get-shit-done/references/ui-brand.md
+@~/.claude/sdd/workflows/do.md
+@~/.claude/sdd/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -25,6 +25,6 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the do workflow from @~/.claude/get-shit-done/workflows/do.md end-to-end.
-Route user intent to the best GSD command and invoke it.
+Execute the do workflow from @~/.claude/sdd/workflows/do.md end-to-end.
+Route user intent to the best SDD command and invoke it.
 </process>

@@ -1,10 +1,10 @@
 <purpose>
-Safe git revert workflow. Rolls back GSD phase or plan commits using the phase manifest with dependency checks and a confirmation gate. Uses git revert --no-commit (NEVER git reset) to preserve history.
+Safe git revert workflow. Rolls back SDD phase or plan commits using the phase manifest with dependency checks and a confirmation gate. Uses git revert --no-commit (NEVER git reset) to preserve history.
 </purpose>
 
 <required_reading>
-@~/.claude/get-shit-done/references/ui-brand.md
-@~/.claude/get-shit-done/references/gate-prompts.md
+@~/.claude/sdd/references/ui-brand.md
+@~/.claude/sdd/references/gate-prompts.md
 </required_reading>
 
 <process>
@@ -14,7 +14,7 @@ Display the stage banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► UNDO
+ SDD ► UNDO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 </step>
@@ -29,17 +29,17 @@ Parse $ARGUMENTS for the undo mode:
 If no valid argument is provided, display usage and exit:
 
 ```
-Usage: /gsd-undo --last N | --phase NN | --plan NN-MM
+Usage: /sdd-undo --last N | --phase NN | --plan NN-MM
 
 Modes:
-  --last N      Show last N GSD commits for interactive selection
+  --last N      Show last N SDD commits for interactive selection
   --phase NN    Revert all commits for phase NN
   --plan NN-MM  Revert all commits for plan NN-MM
 
 Examples:
-  /gsd-undo --last 5
-  /gsd-undo --phase 03
-  /gsd-undo --plan 03-02
+  /sdd-undo --last 5
+  /sdd-undo --phase 03
+  /sdd-undo --plan 03-02
 ```
 </step>
 
@@ -53,11 +53,11 @@ Run:
 git log --oneline --no-merges -${COUNT}
 ```
 
-Filter for GSD conventional commits matching `type(scope): message` pattern (e.g., `feat(04-01):`, `docs(03):`, `fix(02-03):`).
+Filter for SDD conventional commits matching `type(scope): message` pattern (e.g., `feat(04-01):`, `docs(03):`, `fix(02-03):`).
 
 Display a numbered list of matching commits:
 ```
-Recent GSD commits:
+Recent SDD commits:
   1. abc1234 feat(04-01): implement auth endpoint
   2. def5678 docs(03-02): complete plan summary
   3. ghi9012 fix(02-03): correct validation logic
@@ -202,7 +202,7 @@ Store the response as REVERT_REASON. Continue to execute_revert.
 
 Run `git status --porcelain`. If the output is non-empty, display the dirty files and abort:
 ```
-Working tree has uncommitted changes. Commit or stash them before running /gsd-undo.
+Working tree has uncommitted changes. Commit or stash them before running /sdd-undo.
 ```
 Exit immediately — do not proceed to any revert operations.
 
@@ -263,7 +263,7 @@ Display the completion banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► UNDO COMPLETE ✓
+ SDD ► UNDO COMPLETE ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -283,13 +283,13 @@ Show next steps:
 
 /clear then:
 
-/gsd-progress
+/sdd-progress
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
-- `/gsd-execute-phase ${PHASE}` — re-execute if needed
-- `/gsd-undo --last 1` — undo the revert itself if something went wrong
+- `/sdd-execute-phase ${PHASE}` — re-execute if needed
+- `/sdd-undo --last 1` — undo the revert itself if something went wrong
 
 ───────────────────────────────────────────────────────────────
 ```

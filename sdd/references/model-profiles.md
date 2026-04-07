@@ -6,18 +6,18 @@ Model profiles control which Claude model each SDD agent uses. This allows balan
 
 | Agent | `quality` | `balanced` | `budget` | `adaptive` | `inherit` |
 |-------|-----------|------------|----------|------------|-----------|
-| gsd-planner | opus | opus | sonnet | opus | inherit |
-| gsd-roadmapper | opus | sonnet | sonnet | sonnet | inherit |
-| gsd-executor | opus | sonnet | sonnet | sonnet | inherit |
-| gsd-phase-researcher | opus | sonnet | haiku | sonnet | inherit |
-| gsd-project-researcher | opus | sonnet | haiku | sonnet | inherit |
-| gsd-research-synthesizer | sonnet | sonnet | haiku | haiku | inherit |
-| gsd-debugger | opus | sonnet | sonnet | opus | inherit |
-| gsd-codebase-mapper | sonnet | haiku | haiku | haiku | inherit |
-| gsd-verifier | sonnet | sonnet | haiku | sonnet | inherit |
-| gsd-plan-checker | sonnet | sonnet | haiku | haiku | inherit |
-| gsd-integration-checker | sonnet | sonnet | haiku | haiku | inherit |
-| gsd-nyquist-auditor | sonnet | sonnet | haiku | haiku | inherit |
+| sdd-planner | opus | opus | sonnet | opus | inherit |
+| sdd-roadmapper | opus | sonnet | sonnet | sonnet | inherit |
+| sdd-executor | opus | sonnet | sonnet | sonnet | inherit |
+| sdd-phase-researcher | opus | sonnet | haiku | sonnet | inherit |
+| sdd-project-researcher | opus | sonnet | haiku | sonnet | inherit |
+| sdd-research-synthesizer | sonnet | sonnet | haiku | haiku | inherit |
+| sdd-debugger | opus | sonnet | sonnet | opus | inherit |
+| sdd-codebase-mapper | sonnet | haiku | haiku | haiku | inherit |
+| sdd-verifier | sonnet | sonnet | haiku | sonnet | inherit |
+| sdd-plan-checker | sonnet | sonnet | haiku | haiku | inherit |
+| sdd-integration-checker | sonnet | sonnet | haiku | haiku | inherit |
+| sdd-nyquist-auditor | sonnet | sonnet | haiku | haiku | inherit |
 
 ## Profile Philosophy
 
@@ -46,8 +46,8 @@ Model profiles control which Claude model each SDD agent uses. This allows balan
 **inherit** - Follow the current session model
 - All agents resolve to `inherit`
 - Best when you switch models interactively (for example OpenCode or Kilo `/model`)
-- **Required when using non-Anthropic providers** (OpenRouter, local models, etc.) — otherwise GSD may call Anthropic models directly, incurring unexpected costs
-- Use when: you want GSD to follow your currently selected runtime model
+- **Required when using non-Anthropic providers** (OpenRouter, local models, etc.) — otherwise SDD may call Anthropic models directly, incurring unexpected costs
+- Use when: you want SDD to follow your currently selected runtime model
 
 ## Using Non-Claude Runtimes (Codex, OpenCode, Gemini CLI, Kilo)
 
@@ -75,7 +75,7 @@ If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic
 
 ```bash
 # Via settings command
-/gsd-settings
+/sdd-settings
 # → Select "Inherit" for model profile
 
 # Or manually in .planning/config.json
@@ -115,7 +115,7 @@ Overrides take precedence over the profile. Valid values: `opus`, `sonnet`, `hai
 
 ## Switching Profiles
 
-Runtime: `/gsd-set-profile <profile>`
+Runtime: `/sdd-set-profile <profile>`
 
 Per-project default: Set in `.planning/config.json`:
 ```json

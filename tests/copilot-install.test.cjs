@@ -708,7 +708,7 @@ describe('Copilot agent conversion - real files', () => {
     const content = fs.readFileSync(path.join(agentsSrc, 'sdd-executor.md'), 'utf8');
     const result = convertClaudeAgentToCopilotAgent(content);
 
-    assert.ok(result.startsWith('---\nname: gsd-executor\n'), 'starts with correct name');
+    assert.ok(result.startsWith('---\nname: sdd-executor\n'), 'starts with correct name');
     // Verify deduplication happened and core tools are present (not hardcoded exact list)
     const toolsLine = result.split('\n').find(l => l.startsWith('tools:'));
     assert.ok(toolsLine, 'tools line present in converted output');
@@ -1081,7 +1081,7 @@ describe('Copilot manifest and patches fixes', () => {
       assert.ok(!output.includes('/sdd:reapply-patches'), 'does not use colon format');
     });
 
-    test('reportLocalPatches shows /gsd-reapply-patches for Claude', () => {
+    test('reportLocalPatches shows /sdd-reapply-patches for Claude', () => {
       // Create patches directory with metadata
       const patchesDir = path.join(tmpDir, 'sdd-local-patches');
       fs.mkdirSync(patchesDir, { recursive: true });
@@ -1094,8 +1094,8 @@ describe('Copilot manifest and patches fixes', () => {
 
       assert.ok(result.length > 0, 'returns patched files list');
       const output = logs.join('\n');
-      assert.ok(output.includes('/gsd-reapply-patches'), 'uses hyphen format for Claude');
-      assert.ok(!output.includes('/gsd:reapply-patches'), 'does not use colon format for Claude');
+      assert.ok(output.includes('/sdd-reapply-patches'), 'uses hyphen format for Claude');
+      assert.ok(!output.includes('/sdd:reapply-patches'), 'does not use colon format for Claude');
     });
   });
 });
@@ -1179,30 +1179,30 @@ describe('E2E: Copilot full install verification', () => {
     const files = fs.readdirSync(agentsDir);
     const sddAgents = files.filter(f => f.startsWith('sdd-') && f.endsWith('.agent.md')).sort();
     const expected = [
-      'gsd-advisor-researcher.agent.md',
-      'gsd-assumptions-analyzer.agent.md',
-      'gsd-code-fixer.agent.md',
-      'gsd-code-reviewer.agent.md',
-      'gsd-codebase-mapper.agent.md',
-      'gsd-debugger.agent.md',
-      'gsd-doc-verifier.agent.md',
-      'gsd-doc-writer.agent.md',
-      'gsd-executor.agent.md',
-      'gsd-integration-checker.agent.md',
-      'gsd-intel-updater.agent.md',
-      'gsd-nyquist-auditor.agent.md',
-      'gsd-phase-researcher.agent.md',
-      'gsd-plan-checker.agent.md',
-      'gsd-planner.agent.md',
-      'gsd-project-researcher.agent.md',
-      'gsd-research-synthesizer.agent.md',
-      'gsd-roadmapper.agent.md',
-      'gsd-security-auditor.agent.md',
-      'gsd-ui-auditor.agent.md',
-      'gsd-ui-checker.agent.md',
-      'gsd-ui-researcher.agent.md',
-      'gsd-user-profiler.agent.md',
-      'gsd-verifier.agent.md',
+      'sdd-advisor-researcher.agent.md',
+      'sdd-assumptions-analyzer.agent.md',
+      'sdd-code-fixer.agent.md',
+      'sdd-code-reviewer.agent.md',
+      'sdd-codebase-mapper.agent.md',
+      'sdd-debugger.agent.md',
+      'sdd-doc-verifier.agent.md',
+      'sdd-doc-writer.agent.md',
+      'sdd-executor.agent.md',
+      'sdd-integration-checker.agent.md',
+      'sdd-intel-updater.agent.md',
+      'sdd-nyquist-auditor.agent.md',
+      'sdd-phase-researcher.agent.md',
+      'sdd-plan-checker.agent.md',
+      'sdd-planner.agent.md',
+      'sdd-project-researcher.agent.md',
+      'sdd-research-synthesizer.agent.md',
+      'sdd-roadmapper.agent.md',
+      'sdd-security-auditor.agent.md',
+      'sdd-ui-auditor.agent.md',
+      'sdd-ui-checker.agent.md',
+      'sdd-ui-researcher.agent.md',
+      'sdd-user-profiler.agent.md',
+      'sdd-verifier.agent.md',
     ].sort();
     assert.deepStrictEqual(sddAgents, expected);
   });
@@ -1366,7 +1366,7 @@ describe('E2E: Copilot uninstall verification', () => {
 
 function runClaudeInstall(cwd) {
   const env = { ...process.env };
-  delete env.GSD_TEST_MODE;
+  delete env.SDD_TEST_MODE;
   return execFileSync(process.execPath, [INSTALL_PATH, '--claude', '--local'], {
     cwd,
     encoding: 'utf-8',
@@ -1377,7 +1377,7 @@ function runClaudeInstall(cwd) {
 
 function runClaudeUninstall(cwd) {
   const env = { ...process.env };
-  delete env.GSD_TEST_MODE;
+  delete env.SDD_TEST_MODE;
   return execFileSync(process.execPath, [INSTALL_PATH, '--claude', '--local', '--uninstall'], {
     cwd,
     encoding: 'utf-8',
@@ -1390,7 +1390,7 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-preserve-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-preserve-'));
     runClaudeInstall(tmpDir);
   });
 
@@ -1399,7 +1399,7 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
   });
 
   test('preserves USER-PROFILE.md across uninstall', () => {
-    const profilePath = path.join(tmpDir, '.claude', 'get-shit-done', 'USER-PROFILE.md');
+    const profilePath = path.join(tmpDir, '.claude', 'sdd', 'USER-PROFILE.md');
     const content = '# Developer Profile\n\nAutonomy: High\nGenerated: 2026-03-29\n';
     fs.writeFileSync(profilePath, content);
 
@@ -1410,7 +1410,7 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
   });
 
   test('preserves dev-preferences.md across uninstall', () => {
-    const prefsDir = path.join(tmpDir, '.claude', 'commands', 'gsd');
+    const prefsDir = path.join(tmpDir, '.claude', 'commands', 'sdd');
     fs.mkdirSync(prefsDir, { recursive: true });
     const prefsPath = path.join(prefsDir, 'dev-preferences.md');
     const content = '---\nname: dev-preferences\n---\n# Preferences\nUse TypeScript strict.\n';
@@ -1422,12 +1422,12 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
     assert.strictEqual(fs.readFileSync(prefsPath, 'utf-8'), content, 'content should be identical');
   });
 
-  test('still removes GSD engine files during uninstall', () => {
-    const profilePath = path.join(tmpDir, '.claude', 'get-shit-done', 'USER-PROFILE.md');
+  test('still removes SDD engine files during uninstall', () => {
+    const profilePath = path.join(tmpDir, '.claude', 'sdd', 'USER-PROFILE.md');
     fs.writeFileSync(profilePath, '# Profile\n');
 
     // Verify engine files exist before uninstall
-    const binDir = path.join(tmpDir, '.claude', 'get-shit-done', 'bin');
+    const binDir = path.join(tmpDir, '.claude', 'sdd', 'bin');
     assert.ok(fs.existsSync(binDir), 'bin/ should exist before uninstall');
 
     runClaudeUninstall(tmpDir);
@@ -1440,10 +1440,10 @@ describe('Claude uninstall preserves user-generated files (#1423)', () => {
   test('clean uninstall when no user files exist', () => {
     runClaudeUninstall(tmpDir);
 
-    const gsdDir = path.join(tmpDir, '.claude', 'get-shit-done');
-    const cmdDir = path.join(tmpDir, '.claude', 'commands', 'gsd');
+    const gsdDir = path.join(tmpDir, '.claude', 'sdd');
+    const cmdDir = path.join(tmpDir, '.claude', 'commands', 'sdd');
     // Directories should be fully removed when no user files to preserve
-    assert.ok(!fs.existsSync(gsdDir), 'get-shit-done/ should not exist after clean uninstall');
-    assert.ok(!fs.existsSync(cmdDir), 'commands/gsd/ should not exist after clean uninstall');
+    assert.ok(!fs.existsSync(gsdDir), 'sdd/ should not exist after clean uninstall');
+    assert.ok(!fs.existsSync(cmdDir), 'commands/sdd/ should not exist after clean uninstall');
   });
 });

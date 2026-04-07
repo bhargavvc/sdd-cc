@@ -351,12 +351,12 @@ Created .planning/codebase/:
 
 `/clear` then:
 
-`/gsd-new-project`
+`/sdd-new-project`
 
 ---
 
 **Also available:**
-- Re-run mapping: `/gsd-map-codebase`
+- Re-run mapping: `/sdd-map-codebase`
 - Review specific file: `cat .planning/codebase/STACK.md`
 - Edit any document before proceeding
 

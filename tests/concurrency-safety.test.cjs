@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Concurrency Safety
+ * SDD Tools Tests - Concurrency Safety
  *
  * Tests for fix/concurrency-safety-1473a:
  *   - Planning lock integration (withPlanningLock in phase/roadmap operations)
@@ -24,7 +24,7 @@ const { runGsdTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpe
 
 const {
   normalizeMd,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../sdd/bin/lib/core.cjs');
 
 const execAsync = promisify(exec);
 

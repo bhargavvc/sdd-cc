@@ -71,7 +71,7 @@ for (const { label, convert, configDir } of flatRuntimeSuites) {
     test('keeps name: field for agents', () => {
       const result = convert(SAMPLE_AGENT, { isAgent: true });
       const frontmatter = result.split('---')[1];
-      assert.ok(frontmatter.includes('name: gsd-executor'), 'name: should be preserved for agents');
+      assert.ok(frontmatter.includes('name: sdd-executor'), 'name: should be preserved for agents');
     });
 
     test('does not add model: inherit', () => {
@@ -109,7 +109,7 @@ for (const { label, convert, configDir } of flatRuntimeSuites) {
       const result = convert(SAMPLE_AGENT, { isAgent: true });
       const frontmatter = result.split('---')[1];
       assert.ok(!frontmatter.includes('skills:'), 'skills: should be stripped');
-      assert.ok(!frontmatter.includes('gsd-executor-workflow'), 'skill entries should be stripped');
+      assert.ok(!frontmatter.includes('sdd-executor-workflow'), 'skill entries should be stripped');
     });
 
     test('strips color: field', () => {
@@ -128,13 +128,13 @@ for (const { label, convert, configDir } of flatRuntimeSuites) {
     test('keeps description: field', () => {
       const result = convert(SAMPLE_AGENT, { isAgent: true });
       const frontmatter = result.split('---')[1];
-      assert.ok(frontmatter.includes('description: Executes GSD plans'), 'description should be kept');
+      assert.ok(frontmatter.includes('description: Executes SDD plans'), 'description should be kept');
     });
 
     test('preserves body content', () => {
       const result = convert(SAMPLE_AGENT, { isAgent: true });
       assert.ok(result.includes('<role>'), 'body should be preserved');
-      assert.ok(result.includes('You are a GSD plan executor.'), 'body content should be intact');
+      assert.ok(result.includes('You are a SDD plan executor.'), 'body content should be intact');
     });
 
     test('applies body text replacements', () => {
@@ -147,7 +147,7 @@ tools: Read
 Read ~/.claude/agent-memory/ for context.
 Use $HOME/.claude/skills/ for reference.
 Check .claude/skills/ and .claude/agents/ locally.
-Use ./.claude/hooks/gsd-statusline.js during local testing.
+Use ./.claude/hooks/sdd-statusline.js during local testing.
 Fallback skills live in .agents/skills/.`;
 
       const result = convert(agentWithClaudePaths, { isAgent: true });

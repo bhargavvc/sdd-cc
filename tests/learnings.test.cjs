@@ -19,7 +19,7 @@ const {
   learningsDelete,
   learningsCopyFromProject,
   learningsPrune,
-} = require('../get-shit-done/bin/lib/learnings.cjs');
+} = require('../sdd/bin/lib/learnings.cjs');
 const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── Test Helpers ────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
  * @returns {string}
  */
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-learnings-test-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'sdd-learnings-test-'));
 }
 
 /**

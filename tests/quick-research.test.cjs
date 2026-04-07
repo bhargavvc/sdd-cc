@@ -1,7 +1,7 @@
 /**
  * SDD Quick Research Flag Tests
  *
- * Validates the --research flag for /gsd-quick:
+ * Validates the --research flag for /sdd-quick:
  * - Command frontmatter advertises --research
  * - Workflow includes research step (Step 4.75)
  * - Research artifacts work within quick task directories

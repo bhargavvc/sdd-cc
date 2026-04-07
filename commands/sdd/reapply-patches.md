@@ -1,13 +1,13 @@
 ---
-name: gsd:reapply-patches
-description: Reapply local modifications after a GSD update
+name: sdd:reapply-patches
+description: Reapply local modifications after a SDD update
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 ---
 
 <purpose>
-After a GSD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.
+After a SDD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.
 
-**Critical invariant:** Every file in `gsd-local-patches/` was backed up because the installer's hash comparison detected it was modified. The workflow must NEVER conclude "no custom content" for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.
+**Critical invariant:** Every file in `sdd-local-patches/` was backed up because the installer's hash comparison detected it was modified. The workflow must NEVER conclude "no custom content" for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.
 </purpose>
 
 <process>
@@ -28,55 +28,55 @@ PATCHES_DIR=""
 
 # Env overrides first — covers custom config directories used with --config-dir
 if [ -n "$KILO_CONFIG_DIR" ]; then
-  candidate="$(expand_home "$KILO_CONFIG_DIR")/gsd-local-patches"
+  candidate="$(expand_home "$KILO_CONFIG_DIR")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 elif [ -n "$KILO_CONFIG" ]; then
-  candidate="$(dirname "$(expand_home "$KILO_CONFIG")")/gsd-local-patches"
+  candidate="$(dirname "$(expand_home "$KILO_CONFIG")")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 elif [ -n "$XDG_CONFIG_HOME" ]; then
-  candidate="$(expand_home "$XDG_CONFIG_HOME")/kilo/gsd-local-patches"
+  candidate="$(expand_home "$XDG_CONFIG_HOME")/kilo/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 fi
 
 if [ -z "$PATCHES_DIR" ] && [ -n "$OPENCODE_CONFIG_DIR" ]; then
-  candidate="$(expand_home "$OPENCODE_CONFIG_DIR")/gsd-local-patches"
+  candidate="$(expand_home "$OPENCODE_CONFIG_DIR")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 elif [ -z "$PATCHES_DIR" ] && [ -n "$OPENCODE_CONFIG" ]; then
-  candidate="$(dirname "$(expand_home "$OPENCODE_CONFIG")")/gsd-local-patches"
+  candidate="$(dirname "$(expand_home "$OPENCODE_CONFIG")")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 elif [ -z "$PATCHES_DIR" ] && [ -n "$XDG_CONFIG_HOME" ]; then
-  candidate="$(expand_home "$XDG_CONFIG_HOME")/opencode/gsd-local-patches"
+  candidate="$(expand_home "$XDG_CONFIG_HOME")/opencode/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 fi
 
 if [ -z "$PATCHES_DIR" ] && [ -n "$GEMINI_CONFIG_DIR" ]; then
-  candidate="$(expand_home "$GEMINI_CONFIG_DIR")/gsd-local-patches"
+  candidate="$(expand_home "$GEMINI_CONFIG_DIR")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 fi
 
 if [ -z "$PATCHES_DIR" ] && [ -n "$CODEX_HOME" ]; then
-  candidate="$(expand_home "$CODEX_HOME")/gsd-local-patches"
+  candidate="$(expand_home "$CODEX_HOME")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
 fi
 
 if [ -z "$PATCHES_DIR" ] && [ -n "$CLAUDE_CONFIG_DIR" ]; then
-  candidate="$(expand_home "$CLAUDE_CONFIG_DIR")/gsd-local-patches"
+  candidate="$(expand_home "$CLAUDE_CONFIG_DIR")/sdd-local-patches"
   if [ -d "$candidate" ]; then
     PATCHES_DIR="$candidate"
   fi
@@ -84,25 +84,25 @@ fi
 
 # Global install — detect runtime config directory defaults
 if [ -z "$PATCHES_DIR" ]; then
-  if [ -d "$HOME/.config/kilo/gsd-local-patches" ]; then
-    PATCHES_DIR="$HOME/.config/kilo/gsd-local-patches"
-  elif [ -d "$HOME/.config/opencode/gsd-local-patches" ]; then
-    PATCHES_DIR="$HOME/.config/opencode/gsd-local-patches"
-  elif [ -d "$HOME/.opencode/gsd-local-patches" ]; then
-    PATCHES_DIR="$HOME/.opencode/gsd-local-patches"
-  elif [ -d "$HOME/.gemini/gsd-local-patches" ]; then
-    PATCHES_DIR="$HOME/.gemini/gsd-local-patches"
-  elif [ -d "$HOME/.codex/gsd-local-patches" ]; then
-    PATCHES_DIR="$HOME/.codex/gsd-local-patches"
+  if [ -d "$HOME/.config/kilo/sdd-local-patches" ]; then
+    PATCHES_DIR="$HOME/.config/kilo/sdd-local-patches"
+  elif [ -d "$HOME/.config/opencode/sdd-local-patches" ]; then
+    PATCHES_DIR="$HOME/.config/opencode/sdd-local-patches"
+  elif [ -d "$HOME/.opencode/sdd-local-patches" ]; then
+    PATCHES_DIR="$HOME/.opencode/sdd-local-patches"
+  elif [ -d "$HOME/.gemini/sdd-local-patches" ]; then
+    PATCHES_DIR="$HOME/.gemini/sdd-local-patches"
+  elif [ -d "$HOME/.codex/sdd-local-patches" ]; then
+    PATCHES_DIR="$HOME/.codex/sdd-local-patches"
   else
-    PATCHES_DIR="$HOME/.claude/gsd-local-patches"
+    PATCHES_DIR="$HOME/.claude/sdd-local-patches"
   fi
 fi
 # Local install fallback — check all runtime directories
 if [ ! -d "$PATCHES_DIR" ]; then
   for dir in .config/kilo .kilo .config/opencode .opencode .gemini .codex .claude; do
-    if [ -d "./$dir/gsd-local-patches" ]; then
-      PATCHES_DIR="./$dir/gsd-local-patches"
+    if [ -d "./$dir/sdd-local-patches" ]; then
+      PATCHES_DIR="./$dir/sdd-local-patches"
       break
     fi
   done
@@ -115,16 +115,16 @@ Read `backup-meta.json` from the patches directory.
 ```
 No local patches found. Nothing to reapply.
 
-Local patches are automatically saved when you run /gsd-update
-after modifying any GSD workflow, command, or agent files.
+Local patches are automatically saved when you run /sdd-update
+after modifying any SDD workflow, command, or agent files.
 ```
 Exit.
 
 ## Step 2: Determine baseline for three-way comparison
 
-The quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update GSD release. This enables three-way comparison:
-- **Pristine baseline** (original GSD file before any user edits)
-- **User's version** (backed up in `gsd-local-patches/`)
+The quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update SDD release. This enables three-way comparison:
+- **Pristine baseline** (original SDD file before any user edits)
+- **User's version** (backed up in `sdd-local-patches/`)
 - **New version** (freshly installed after update)
 
 Check for baseline sources in priority order:
@@ -137,7 +137,7 @@ if git -C "$CONFIG_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   HAS_GIT=true
 fi
 ```
-When `HAS_GIT=true`, use `git log` to find the commit where GSD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:
+When `HAS_GIT=true`, use `git log` to find the commit where SDD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:
 ```bash
 git -C "$CONFIG_DIR" log --diff-filter=A --format="%H" -- "{file_path}"
 ```
@@ -147,9 +147,9 @@ git -C "$CONFIG_DIR" show {install_commit}:{file_path}
 ```
 
 ### Option B: Pristine snapshot directory
-Check if a `gsd-pristine/` directory exists alongside `gsd-local-patches/`:
+Check if a `sdd-pristine/` directory exists alongside `sdd-local-patches/`:
 ```bash
-PRISTINE_DIR="$CONFIG_DIR/gsd-pristine"
+PRISTINE_DIR="$CONFIG_DIR/sdd-pristine"
 ```
 If it exists, the installer saved pristine copies at install time. Use these as the baseline.
 
@@ -178,7 +178,7 @@ For each file in `backup-meta.json`:
 
 1. **Read the backed-up version** (user's modified copy from `sdd-local-patches/`)
 2. **Read the newly installed version** (current file after update)
-3. **If available, read the pristine baseline** (from git history or `gsd-pristine/`)
+3. **If available, read the pristine baseline** (from git history or `sdd-pristine/`)
 
 ### Three-way merge (when baseline is available)
 
@@ -201,7 +201,7 @@ When no pristine baseline is available, use these **strengthened heuristics**:
 For each file:
 a. Read both versions completely
 b. Identify ALL differences, then classify each as:
-   - **Mechanical drift** — path substitutions (e.g. `/Users/xxx/.claude/` → `$HOME/.claude/`), variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
+   - **Mechanical drift** — path substitutions (e.g. `/Users/xxx/.claude/` → `$HOME/.claude/`), variable additions (`${SDD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
    - **User customization** — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions
 
 c. **If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.**
@@ -212,7 +212,7 @@ d. **If ALL differences appear to be mechanical drift → still flag as CONFLICT
 When the config directory is a git repo but the pristine install commit can't be found, use commit history to identify user changes:
 ```bash
 # Find non-update commits that touched this file
-git -C "$CONFIG_DIR" log --oneline --no-merges -- "{file_path}" | grep -v "gsd:update\|GSD update\|gsd-install"
+git -C "$CONFIG_DIR" log --oneline --no-merges -- "{file_path}" | grep -v "sdd:update\|SDD update\|sdd-install"
 ```
 Each matching commit represents an intentional user modification. Use the commit messages and diffs to understand what was changed and why.
 
@@ -264,7 +264,7 @@ Ask user:
 <success_criteria>
 - [ ] All backed-up patches processed — zero files left unhandled
 - [ ] No file classified as "no custom content" or "SKIP" — every backed-up file is definitionally modified
-- [ ] Three-way merge used when pristine baseline available (git history or gsd-pristine/)
+- [ ] Three-way merge used when pristine baseline available (git history or sdd-pristine/)
 - [ ] User modifications identified and merged into new version
 - [ ] Conflicts surfaced to user with both versions shown
 - [ ] Status reported for each file with summary of what was preserved

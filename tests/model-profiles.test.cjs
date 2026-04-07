@@ -99,18 +99,18 @@ describe('getAgentToModelMapForProfile', () => {
 
   test('returns correct models for adaptive profile', () => {
     const map = getAgentToModelMapForProfile('adaptive');
-    assert.strictEqual(map['gsd-planner'], 'opus', 'planner should use opus in adaptive');
-    assert.strictEqual(map['gsd-debugger'], 'opus', 'debugger should use opus in adaptive');
-    assert.strictEqual(map['gsd-executor'], 'sonnet', 'executor should use sonnet in adaptive');
-    assert.strictEqual(map['gsd-codebase-mapper'], 'haiku', 'mapper should use haiku in adaptive');
-    assert.strictEqual(map['gsd-plan-checker'], 'haiku', 'checker should use haiku in adaptive');
+    assert.strictEqual(map['sdd-planner'], 'opus', 'planner should use opus in adaptive');
+    assert.strictEqual(map['sdd-debugger'], 'opus', 'debugger should use opus in adaptive');
+    assert.strictEqual(map['sdd-executor'], 'sonnet', 'executor should use sonnet in adaptive');
+    assert.strictEqual(map['sdd-codebase-mapper'], 'haiku', 'mapper should use haiku in adaptive');
+    assert.strictEqual(map['sdd-plan-checker'], 'haiku', 'checker should use haiku in adaptive');
   });
 
   test('resolution order: override > profile > default', () => {
     // This tests the conceptual resolution — actual runtime test is in resolveModelInternal
     const map = getAgentToModelMapForProfile('adaptive');
     // Profile gives planner opus
-    assert.strictEqual(map['gsd-planner'], 'opus');
+    assert.strictEqual(map['sdd-planner'], 'opus');
     // An override would take precedence (tested via resolveModelInternal in model-alias-map tests)
     // Default fallback is 'sonnet' (core.cjs line 1320)
   });

@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #1818
  *
- * gsd-tools must reject unknown/invalid flags (--help, -h, etc.) with a
+ * sdd-tools must reject unknown/invalid flags (--help, -h, etc.) with a
  * non-zero exit and an error message instead of silently ignoring them and
  * proceeding with the command — which can cause destructive operations to run
  * when an AI agent hallucinates a flag like --help.

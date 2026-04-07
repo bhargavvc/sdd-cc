@@ -1,5 +1,5 @@
 /**
- * Regression guard for #1767: gsd-workflow-guard.js must be registered in settings.json
+ * Regression guard for #1767: sdd-workflow-guard.js must be registered in settings.json
  *
  * The hook file is built, copied, and installed — but was never registered as a
  * PreToolUse hook entry in install.js. This test ensures the registration block
@@ -16,20 +16,20 @@ const path = require('path');
 const INSTALL_JS = path.join(__dirname, '..', 'bin', 'install.js');
 
 describe('workflow-guard hook registration (#1767)', () => {
-  test('install.js constructs a command path variable for gsd-workflow-guard.js', () => {
+  test('install.js constructs a command path variable for sdd-workflow-guard.js', () => {
     const content = fs.readFileSync(INSTALL_JS, 'utf-8');
     const lines = content.split('\n');
     // Every registered JS hook has a command variable constructed via
     // buildHookCommand() or string concatenation. Filter out references
     // that are only in the cleanup/uninstall arrays.
     const commandConstructionLines = lines.filter(line =>
-      line.includes('gsd-workflow-guard.js') &&
+      line.includes('sdd-workflow-guard.js') &&
       (line.includes('buildHookCommand') || line.includes("'node '"))
     );
     assert.ok(
       commandConstructionLines.length > 0,
       [
-        'install.js must construct a command path for gsd-workflow-guard.js',
+        'install.js must construct a command path for sdd-workflow-guard.js',
         '(e.g. buildHookCommand or node + dirName pattern).',
         'Currently only referenced in gsdHooks cleanup array.',
       ].join(' ')

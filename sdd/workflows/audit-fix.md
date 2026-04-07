@@ -5,7 +5,7 @@ after each fix, and commits atomically with finding IDs for traceability.
 </purpose>
 
 <available_agent_types>
-- gsd-executor — executes a specific, scoped code change
+- sdd-executor — executes a specific, scoped code change
 </available_agent_types>
 
 <process>
@@ -32,7 +32,7 @@ Invoke the source audit command and capture output.
 
 For `audit-uat` source:
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init audit-uat 2>/dev/null || echo "{}")
+INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init audit-uat 2>/dev/null || echo "{}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -97,7 +97,7 @@ For each **auto-fixable** finding (up to `--max`, ordered by severity desc):
 ```
 Task(
   prompt="Fix finding {ID}: {description}. Files: {file_refs}. Make the minimal change to resolve this specific finding. Do not refactor surrounding code.",
-  subagent_type="gsd-executor"
+  subagent_type="sdd-executor"
 )
 ```
 
