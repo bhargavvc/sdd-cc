@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { PhaseRunner, PhaseRunnerError } from './phase-runner.js';
 import type { PhaseRunnerDeps, VerificationOutcome } from './phase-runner.js';
 import type {
@@ -423,6 +426,171 @@ describe('PhaseRunner', () => {
     });
   });
 
+  // ─── Research gate (#1602) ──────────────────────────────────────────────
+
+  describe('research gate (#1602)', () => {
+    let tempPhaseDir: string;
+
+    beforeEach(async () => {
+      tempPhaseDir = await mkdtemp(join(tmpdir(), 'gsd-research-gate-'));
+    });
+
+    afterEach(async () => {
+      await rm(tempPhaseDir, { recursive: true, force: true });
+    });
+
+    it('invokes onBlockerDecision when RESEARCH.md has unresolved open questions', async () => {
+      // Write a RESEARCH.md with unresolved questions
+      const researchPath = join(tempPhaseDir, '01-RESEARCH.md');
+      await writeFile(researchPath, `# Research
+
+## Key Findings
+TypeScript is the right choice.
+
+## Open Questions
+
+1. **Hash prefix** — keep or change?
+2. **Cache TTL** — what duration?
+
+## Recommendations
+Use TypeScript.`, 'utf-8');
+
+      const onBlockerDecision = vi.fn().mockResolvedValue('stop');
+      const phaseOp = makePhaseOp({
+        has_context: true,
+        has_research: true,
+        has_plans: true,
+        plan_count: 1,
+        phase_dir: tempPhaseDir,
+        research_path: researchPath,
+      });
+      const deps = makeDeps();
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      const result = await runner.run('1', {
+        callbacks: { onBlockerDecision },
+      });
+
+      expect(onBlockerDecision).toHaveBeenCalled();
+      const callArg = onBlockerDecision.mock.calls[0][0];
+      expect(callArg.step).toBe(PhaseStepType.Research);
+      expect(callArg.error).toContain('unresolved open questions');
+      expect(callArg.error).toContain('Hash prefix');
+    });
+
+    it('does not block when RESEARCH.md has no open questions', async () => {
+      const researchPath = join(tempPhaseDir, '01-RESEARCH.md');
+      await writeFile(researchPath, `# Research
+
+## Key Findings
+Everything resolved.
+
+## Recommendations
+Use TypeScript.`, 'utf-8');
+
+      const onBlockerDecision = vi.fn().mockResolvedValue('stop');
+      const phaseOp = makePhaseOp({
+        has_context: true,
+        has_research: true,
+        has_plans: true,
+        plan_count: 1,
+        phase_dir: tempPhaseDir,
+        research_path: researchPath,
+      });
+      const deps = makeDeps();
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      await runner.run('1', {
+        callbacks: { onBlockerDecision },
+      });
+
+      // Should NOT have been called for research step
+      const researchCalls = onBlockerDecision.mock.calls.filter(
+        (c: any[]) => c[0].step === PhaseStepType.Research,
+      );
+      expect(researchCalls).toHaveLength(0);
+    });
+
+    it('does not block when all open questions are resolved', async () => {
+      const researchPath = join(tempPhaseDir, '01-RESEARCH.md');
+      await writeFile(researchPath, `# Research
+
+## Open Questions (RESOLVED)
+
+1. **Hash prefix** — RESOLVED: Use "guest_contract:"`, 'utf-8');
+
+      const onBlockerDecision = vi.fn().mockResolvedValue('stop');
+      const phaseOp = makePhaseOp({
+        has_context: true,
+        has_research: true,
+        has_plans: true,
+        plan_count: 1,
+        phase_dir: tempPhaseDir,
+        research_path: researchPath,
+      });
+      const deps = makeDeps();
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      await runner.run('1', { callbacks: { onBlockerDecision } });
+
+      const researchCalls = onBlockerDecision.mock.calls.filter(
+        (c: any[]) => c[0].step === PhaseStepType.Research,
+      );
+      expect(researchCalls).toHaveLength(0);
+    });
+
+    it('skips research gate when has_research=false', async () => {
+      const onBlockerDecision = vi.fn().mockResolvedValue('stop');
+      const phaseOp = makePhaseOp({
+        has_context: true,
+        has_research: false,
+        has_plans: true,
+        plan_count: 1,
+      });
+      const deps = makeDeps();
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      await runner.run('1', { callbacks: { onBlockerDecision } });
+
+      // Research gate should not fire when there's no research
+      const researchCalls = onBlockerDecision.mock.calls.filter(
+        (c: any[]) => c[0].step === PhaseStepType.Research,
+      );
+      expect(researchCalls).toHaveLength(0);
+    });
+
+    it('auto-approves (skip) research gate when no callback registered', async () => {
+      const researchPath = join(tempPhaseDir, '01-RESEARCH.md');
+      await writeFile(researchPath, `# Research
+
+## Open Questions
+
+1. **Something** — needs decision`, 'utf-8');
+
+      const phaseOp = makePhaseOp({
+        has_context: true,
+        has_research: true,
+        has_plans: true,
+        plan_count: 1,
+        phase_dir: tempPhaseDir,
+        research_path: researchPath,
+      });
+      const deps = makeDeps();
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      const result = await runner.run('1'); // No callbacks
+
+      // Should proceed past research gate (auto-skip)
+      const stepTypes = result.steps.map(s => s.step);
+      expect(stepTypes).toContain(PhaseStepType.Plan);
+    });
+  });
+
   // ─── Human gate: reject halts runner ───────────────────────────────────
 
   describe('human gate reject', () => {
@@ -577,9 +745,9 @@ describe('PhaseRunner', () => {
 
       // 1 initial + 1 retry = 2 calls (not 3)
       expect(verifyCallCount).toBe(2);
-      // Verify step still succeeds (gap closure exhausted → proceed)
+      // Verify step fails when gaps persist after exhausting retries
       const verifyStep = result.steps.find(s => s.step === PhaseStepType.Verify);
-      expect(verifyStep!.success).toBe(true);
+      expect(verifyStep!.success).toBe(false);
     });
 
     it('gaps_found triggers plan → execute → re-verify cycle', async () => {
@@ -659,9 +827,9 @@ describe('PhaseRunner', () => {
       expect(afterVerify).not.toContain(PhaseStepType.Plan);
       expect(afterVerify.filter(s => s === PhaseStepType.Execute)).toHaveLength(0);
 
-      // Verify step still reports success (exhausted retries → proceed)
+      // Verify step fails when gaps persist (no retries allowed)
       const verifyStep = result.steps.find(s => s.step === PhaseStepType.Verify);
-      expect(verifyStep!.success).toBe(true);
+      expect(verifyStep!.success).toBe(false);
     });
 
     it('gap closure plan step failure proceeds to re-verify without executing', async () => {
@@ -724,8 +892,9 @@ describe('PhaseRunner', () => {
 
       // 1 initial + 3 retries = 4 verify calls
       expect(verifyCallCount).toBe(4);
+      // Verify step fails when gaps persist after all retries exhausted
       const verifyStep = result.steps.find(s => s.step === PhaseStepType.Verify);
-      expect(verifyStep!.success).toBe(true);
+      expect(verifyStep!.success).toBe(false);
     });
 
     it('gap closure results are included in the final verify step planResults', async () => {
@@ -771,6 +940,69 @@ describe('PhaseRunner', () => {
       expect(sessionIds).toContain('gap-exec');
       expect(sessionIds).toContain('verify-2');
       expect(verifyStep!.planResults!.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  // ─── Advance gate on persistent gaps ──────────────────────────────────
+
+  describe('advance gate on persistent gaps', () => {
+    it('persistent gaps_found does NOT append Advance step', async () => {
+      const phaseOp = makePhaseOp({ has_context: true, has_plans: true, plan_count: 1 });
+      const config = makeConfig({ workflow: { research: false, skip_discuss: true, plan_check: false } as any });
+      const deps = makeDeps({ config });
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      mockRunPhaseStepSession.mockImplementation(async (_prompt, step) => {
+        if (step === PhaseStepType.Verify) {
+          return makePlanResult({
+            success: false,
+            error: { subtype: 'verification_failed', messages: ['Gaps persist'] },
+          });
+        }
+        return makePlanResult();
+      });
+
+      const runner = new PhaseRunner(deps);
+      const result = await runner.run('1');
+
+      const stepTypes = result.steps.map(s => s.step);
+      expect(stepTypes).not.toContain(PhaseStepType.Advance);
+    });
+
+    it('persistent gaps_found does NOT call phaseComplete', async () => {
+      const phaseOp = makePhaseOp({ has_context: true, has_plans: true, plan_count: 1 });
+      const config = makeConfig({ workflow: { research: false, skip_discuss: true, plan_check: false } as any });
+      const deps = makeDeps({ config });
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      mockRunPhaseStepSession.mockImplementation(async (_prompt, step) => {
+        if (step === PhaseStepType.Verify) {
+          return makePlanResult({
+            success: false,
+            error: { subtype: 'verification_failed', messages: ['Gaps persist'] },
+          });
+        }
+        return makePlanResult();
+      });
+
+      const runner = new PhaseRunner(deps);
+      await runner.run('1');
+
+      expect(deps.tools.phaseComplete).not.toHaveBeenCalled();
+    });
+
+    it('verifier disabled still advances normally', async () => {
+      const phaseOp = makePhaseOp({ has_context: true, has_plans: true, plan_count: 1 });
+      const config = makeConfig({ workflow: { research: false, verifier: false, skip_discuss: true, plan_check: false } as any });
+      const deps = makeDeps({ config });
+      (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
+
+      const runner = new PhaseRunner(deps);
+      const result = await runner.run('1');
+
+      const stepTypes = result.steps.map(s => s.step);
+      expect(stepTypes).toContain(PhaseStepType.Advance);
+      expect(result.success).toBe(true);
     });
   });
 

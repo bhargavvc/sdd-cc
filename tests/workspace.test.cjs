@@ -1,12 +1,12 @@
 /**
  * SDD Workspace Tests
  *
- * Tests for /sdd:new-workspace, /sdd:list-workspaces, /sdd:remove-workspace
- * init functions and integration with sdd-tools routing.
+ * Tests for /gsd-new-workspace, /gsd-list-workspaces, /gsd-remove-workspace
+ * init functions and integration with gsd-tools routing.
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
-const assert = require('node:assert');
+const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');

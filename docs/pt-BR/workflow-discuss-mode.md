@@ -1,6 +1,6 @@
 # Discuss Mode (Modo de Discussão)
 
-O SDD oferece dois estilos para `/sdd:discuss-phase`:
+O GSD oferece dois estilos para `/gsd-discuss-phase`:
 
 - **`standard`**: entrevista aberta para levantar preferências
 - **`assumptions`**: análise do código primeiro, seguida de confirmação/correção de suposições
@@ -33,7 +33,7 @@ Trade-off: depende da qualidade do mapeamento de contexto.
 
 ## Como habilitar
 
-Via `/sdd:settings`, defina:
+Via `/gsd-settings`, defina:
 
 ```json
 {

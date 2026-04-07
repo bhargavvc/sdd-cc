@@ -53,8 +53,8 @@ describe('autonomous workflow ui-phase and ui-review integration (#1375)', () =>
 
     test('UI design contract step invokes sdd:ui-phase skill', () => {
       assert.ok(
-        content.includes('skill="sdd:ui-phase"'),
-        'should invoke sdd:ui-phase via Skill()'
+        content.includes('skill="gsd-ui-phase"'),
+        'should invoke gsd-ui-phase via Skill()'
       );
     });
 
@@ -94,8 +94,8 @@ describe('autonomous workflow ui-phase and ui-review integration (#1375)', () =>
 
     test('UI review step invokes sdd:ui-review skill', () => {
       assert.ok(
-        content.includes('skill="sdd:ui-review"'),
-        'should invoke sdd:ui-review via Skill()'
+        content.includes('skill="gsd-ui-review"'),
+        'should invoke gsd-ui-review via Skill()'
       );
     });
 

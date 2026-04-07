@@ -108,15 +108,15 @@ Always at end of major completions.
 
 **{Identifier}: {Name}** — {one-line description}
 
-`{copy-paste command}`
+`/clear` then:
 
-<sub>`/clear` first → fresh context window</sub>
+`{copy-paste command}`
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
-- `/sdd:alternative-1` — description
-- `/sdd:alternative-2` — description
+- `/gsd-alternative-1` — description
+- `/gsd-alternative-2` — description
 
 ───────────────────────────────────────────────────────────────
 ```

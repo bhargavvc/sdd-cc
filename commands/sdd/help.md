@@ -1,6 +1,8 @@
 ---
-name: sdd:help
-description: Show available SDD commands and usage guide
+name: gsd:help
+description: Show available GSD commands and usage guide
+allowed-tools:
+  - Read
 ---
 <objective>
 Display the complete SDD command reference.

@@ -7,21 +7,23 @@
  * would be faster, use fewer tokens, and be less error-prone).
  */
 const MODEL_PROFILES = {
-  'sdd-planner': { quality: 'opus', balanced: 'opus', budget: 'sonnet' },
-  'sdd-roadmapper': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-  'sdd-executor': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-  'sdd-phase-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-project-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-research-synthesizer': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-debugger': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-  'sdd-codebase-mapper': { quality: 'sonnet', balanced: 'haiku', budget: 'haiku' },
-  'sdd-verifier': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-plan-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-integration-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-nyquist-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-ui-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-ui-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'sdd-ui-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
+  'gsd-planner': { quality: 'opus', balanced: 'opus', budget: 'sonnet', adaptive: 'opus' },
+  'gsd-roadmapper': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet', adaptive: 'sonnet' },
+  'gsd-executor': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet', adaptive: 'sonnet' },
+  'gsd-phase-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
+  'gsd-project-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
+  'gsd-research-synthesizer': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-debugger': { quality: 'opus', balanced: 'sonnet', budget: 'sonnet', adaptive: 'opus' },
+  'gsd-codebase-mapper': { quality: 'sonnet', balanced: 'haiku', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-verifier': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
+  'gsd-plan-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-integration-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-nyquist-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-ui-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
+  'gsd-ui-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-ui-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'gsd-doc-writer': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
+  'gsd-doc-verifier': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
 };
 const VALID_PROFILES = Object.keys(MODEL_PROFILES['sdd-planner']);
 

@@ -9,7 +9,7 @@
 process.env.SDD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
-const assert = require('node:assert');
+const assert = require('node:assert/strict');
 
 const {
   convertClaudeCommandToCursorSkill,

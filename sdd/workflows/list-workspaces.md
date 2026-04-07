@@ -25,7 +25,7 @@ Parse JSON for: `workspace_base`, `workspaces`, `workspace_count`.
 No workspaces found in ~/sdd-workspaces/
 
 Create one with:
-  /sdd:new-workspace --name my-workspace --repos repo1,repo2
+  /gsd-new-workspace --name my-workspace --repos repo1,repo2
 ```
 
 Done.
@@ -43,8 +43,8 @@ SDD Workspaces (~/sdd-workspaces/)
 | feature-b | 2 | clone | No |
 
 Manage:
-  cd ~/sdd-workspaces/<name>     # Enter a workspace
-  /sdd:remove-workspace <name>   # Remove a workspace
+  cd ~/gsd-workspaces/<name>     # Enter a workspace
+  /gsd-remove-workspace <name>   # Remove a workspace
 ```
 
 For each workspace, show:

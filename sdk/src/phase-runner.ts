@@ -26,6 +26,9 @@ import type { PromptFactory } from './phase-prompt.js';
 import type { ContextEngine } from './context-engine.js';
 import type { GSDLogger } from './logger.js';
 import { runPhaseStepSession, runPlanSession } from './session-runner.js';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { checkResearchGate } from './research-gate.js';
 
 // ─── Error type ──────────────────────────────────────────────────────────────
 
@@ -185,6 +188,21 @@ export class PhaseRunner {
       }
     }
 
+    // ── Step 2.5: Research gate (#1602) ──
+    // Check RESEARCH.md for unresolved open questions before planning
+    if (!halted && phaseOp.has_research) {
+      const gateResult = await this.checkResearchGate(phaseOp);
+      if (!gateResult.pass) {
+        const questionList = gateResult.unresolvedQuestions.join(', ');
+        const error = `RESEARCH.md has unresolved open questions: ${questionList}`;
+        this.logger?.warn(error, { phase: phaseNumber });
+        const decision = await this.invokeBlockerCallback(callbacks, phaseNumber, PhaseStepType.Research, error);
+        if (decision === 'stop') {
+          halted = true;
+        }
+      }
+    }
+
     // ── Step 3: Plan ──
     if (!halted) {
       const result = await this.retryOnce('plan', () => this.runStep(PhaseStepType.Plan, phaseNumber, sessionOpts));
@@ -239,6 +257,8 @@ export class PhaseRunner {
       if (!this.config.workflow.verifier) {
         this.logger?.debug('Skipping verify: config.workflow.verifier=false');
       } else {
+        // Verify has its own internal retry logic (gap closure). retryOnce only
+        // retries on unexpected session throws, not on verification outcomes like gaps_found.
         const verifyResult = await this.retryOnce('verify', () => this.runVerifyStep(phaseNumber, sessionOpts, callbacks, options));
         steps.push(verifyResult);
 
@@ -250,9 +270,13 @@ export class PhaseRunner {
     }
 
     // ── Step 6: Advance ──
-    if (!halted) {
+    // Only advance if verify passed — never mark a phase complete when gaps were found.
+    const verifyPassed = steps.every(s => s.step !== PhaseStepType.Verify || s.success);
+    if (!halted && verifyPassed) {
       const advanceResult = await this.runAdvanceStep(phaseNumber, sessionOpts, callbacks);
       steps.push(advanceResult);
+    } else if (!halted && !verifyPassed) {
+      this.logger?.warn(`Skipping advance for phase ${phaseNumber}: verification found gaps`);
     }
 
     const totalDurationMs = Date.now() - startTime;
@@ -295,6 +319,9 @@ export class PhaseRunner {
   private async retryOnce<T extends PhaseStepResult>(label: string, fn: () => Promise<T>): Promise<T> {
     const result = await fn();
     if (result.success) return result;
+
+    // Don't retry verify outcomes (gaps_found, human_needed) — they have their own retry logic.
+    if (result.error?.startsWith('verification_')) return result;
 
     this.logger?.warn(`Step "${label}" failed, retrying once...`);
     return fn();
@@ -410,8 +437,9 @@ export class PhaseRunner {
       const contextFiles = await this.contextEngine.resolveContextFiles(PhaseType.Discuss);
       let prompt = await this.promptFactory.buildPrompt(PhaseType.Discuss, null, contextFiles);
 
-      // Supplement with self-discuss instructions
-      prompt += '\n\n## Self-Discuss Mode\n\nYou are the AI discussing decisions with yourself. No human is present. Identify 3-5 gray areas in the project scope, reason through each one, make opinionated choices, and write CONTEXT.md with your decisions.';
+      // Supplement with self-discuss instructions with pass cap
+      const maxPasses = this.config.workflow.max_discuss_passes ?? 3;
+      prompt += `\n\n## Self-Discuss Mode\n\nYou are the AI discussing decisions with yourself. No human is present. Identify 3-5 gray areas in the project scope, reason through each one, make opinionated choices, and write CONTEXT.md with your decisions.\n\n**CRITICAL: Single-pass only.** You MUST complete all decisions in ONE pass and write CONTEXT.md once. Do NOT re-read your own CONTEXT.md to find "gaps" and do additional passes. The maximum allowed passes is ${maxPasses} — if you have already written CONTEXT.md, you are DONE. Proceed to the next workflow step. Self-referential gap-finding loops waste resources without adding value.`;
 
       planResult = await runPhaseStepSession(
         prompt,
@@ -838,6 +866,7 @@ export class PhaseRunner {
         });
 
         if (decision === 'accept') {
+          outcome = 'passed';
           break; // Treat as passed
         } else if (decision === 'retry' && gapRetryCount < maxGapRetries) {
           gapRetryCount++;
@@ -912,6 +941,7 @@ export class PhaseRunner {
     }
 
     const durationMs = Date.now() - stepStart;
+    const verifySuccess = outcome === 'passed';
 
     this.eventStream.emitEvent({
       type: GSDEventType.PhaseStepComplete,
@@ -919,15 +949,17 @@ export class PhaseRunner {
       sessionId: lastResult?.sessionId ?? '',
       phaseNumber,
       step: PhaseStepType.Verify,
-      success: true,
+      success: verifySuccess,
       durationMs,
+      ...(!verifySuccess && { error: `verification_${outcome}` }),
     });
 
     return {
       step: PhaseStepType.Verify,
-      success: true,
+      success: verifySuccess,
       durationMs,
       planResults: allPlanResults,
+      ...(!verifySuccess && { error: `verification_${outcome}` }),
     };
   }
 
@@ -1060,6 +1092,22 @@ export class PhaseRunner {
     if (result.success) return 'passed';
     if (result.error?.subtype === 'human_review_needed') return 'human_needed';
     return 'gaps_found';
+  }
+
+  /**
+   * Check RESEARCH.md for unresolved open questions (#1602).
+   * Returns the gate result — pass means safe to proceed to planning.
+   */
+  private async checkResearchGate(phaseOp: PhaseOpInfo): Promise<{ pass: boolean; unresolvedQuestions: string[] }> {
+    try {
+      const researchPath = phaseOp.research_path ||
+        join(phaseOp.phase_dir, `${phaseOp.padded_phase}-RESEARCH.md`);
+      const content = await readFile(researchPath, 'utf-8');
+      return checkResearchGate(content);
+    } catch {
+      // File doesn't exist or can't be read — pass (nothing to gate on)
+      return { pass: true, unresolvedQuestions: [] };
+    }
   }
 
   /**
