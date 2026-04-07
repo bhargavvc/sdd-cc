@@ -2,13 +2,13 @@
 description: Manage parallel workstreams — list, create, switch, status, progress, complete, and resume
 ---
 
-# /sdd:workstreams
+# /sdd-workstreams
 
 Manage parallel workstreams for concurrent milestone work.
 
 ## Usage
 
-`/sdd:workstreams [subcommand] [args]`
+`/sdd-workstreams [subcommand] [args]`
 
 ### Subcommands
 
@@ -36,7 +36,7 @@ Display the workstreams in a table format showing name, status, current phase, a
 ### create
 Run: `node "$SDD_TOOLS" workstream create <name> --raw --cwd "$CWD"`
 After creation, display the new workstream path and suggest next steps:
-- `/sdd:new-milestone --ws <name>` to set up the milestone
+- `/sdd-new-milestone --ws <name>` to set up the milestone
 
 ### status
 Run: `node "$SDD_TOOLS" workstream status <name> --raw --cwd "$CWD"`
@@ -55,7 +55,7 @@ Run: `node "$SDD_TOOLS" workstream complete <name> --raw --cwd "$CWD"`
 Archive the workstream to milestones/.
 
 ### resume
-Set the workstream as active and suggest `/sdd:resume-work --ws <name>`.
+Set the workstream as active and suggest `/sdd-resume-work --ws <name>`.
 
 ## Step 3: Display Results
 

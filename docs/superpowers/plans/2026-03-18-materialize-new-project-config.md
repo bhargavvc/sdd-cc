@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** When `/sdd:new-project` creates `.planning/config.json`, the file contains all effective defaults — not just the 6 user-chosen keys — so developers can see every setting without reading source code.
+**Goal:** When `/sdd-new-project` creates `.planning/config.json`, the file contains all effective defaults — not just the 6 user-chosen keys — so developers can see every setting without reading source code.
 
 **Architecture:** Add a single JS function `buildNewProjectConfig(cwd, userChoices)` in `config.cjs` as the one source of truth for a new project's full config. Expose it as a CLI command `config-new-project`. Update the `new-project.md` workflow to call this command instead of writing a partial JSON inline.
 
@@ -317,7 +317,7 @@ function buildNewProjectConfig(cwd, userChoices) {
  * Command: create a fully-materialized .planning/config.json for a new project.
  *
  * Accepts user-chosen settings as a JSON string (the keys the user explicitly
- * configured during /sdd:new-project). All remaining keys are filled from
+ * configured during /sdd-new-project). All remaining keys are filled from
  * hardcoded defaults and optional ~/.sdd/defaults.json.
  *
  * Idempotent: if config.json already exists, returns { created: false }.
@@ -661,7 +661,7 @@ Expected: All pass, 0 failures.
 feat: materialize all config defaults at new-project initialization
 
 **Problem:**
-`/sdd:new-project` creates `.planning/config.json` with only the 6 keys
+`/sdd-new-project` creates `.planning/config.json` with only the 6 keys
 the user explicitly chose during onboarding. Five additional keys
 (`search_gitignored`, `brave_search`, `git.branching_strategy`,
 `git.phase_branch_template`, `git.milestone_branch_template`) are resolved
@@ -670,7 +670,7 @@ silently by `loadConfig()` at runtime but never written to disk.
 This creates two problems:
 1. **Discoverability**: users can't see or understand `git.branching_strategy`
    without reading source code — it doesn't appear in their config.
-2. **Implicit expansion**: the first time `/sdd:settings` or `config-set`
+2. **Implicit expansion**: the first time `/sdd-settings` or `config-set`
    writes to the config, those keys still aren't added. The config only
    reflects a fraction of the effective configuration.
 

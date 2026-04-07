@@ -9,7 +9,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 /**
  * Helper: write STATE.md with a milestone version so extractCurrentMilestone
@@ -54,7 +54,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 1', tmpDir);
+    const result = runSddTools('roadmap get-phase 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -82,7 +82,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 999.60', tmpDir);
+    const result = runSddTools('roadmap get-phase 999.60', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -114,7 +114,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 1025', tmpDir);
+    const result = runSddTools('roadmap get-phase 1025', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -144,7 +144,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 9999', tmpDir);
+    const result = runSddTools('roadmap get-phase 9999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -169,7 +169,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 50', tmpDir);
+    const result = runSddTools('roadmap get-phase 50', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -198,7 +198,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 50', tmpDir);
+    const result = runSddTools('roadmap get-phase 50', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -233,7 +233,7 @@ This phase covers:
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 10', tmpDir);
+    const result = runSddTools('roadmap get-phase 10', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

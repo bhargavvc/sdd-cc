@@ -11,7 +11,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const AGENTS_DIR_NAME = 'agents';
 const MODEL_PROFILES = require('../sdd/bin/lib/model-profiles.cjs').MODEL_PROFILES;
@@ -62,7 +62,7 @@ describe('init commands: agents_installed field (#1371)', () => {
     const agentsDir = path.join(configDir, 'agents');
 
     // Agents already exist in the repo root /agents/ dir which is sibling to sdd/
-    const result = runGsdTools('init execute-phase 1 --raw', tmpDir);
+    const result = runSddTools('init execute-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -77,7 +77,7 @@ describe('init commands: agents_installed field (#1371)', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
 
-    const result = runGsdTools('init plan-phase 1 --raw', tmpDir);
+    const result = runSddTools('init plan-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -90,7 +90,7 @@ describe('init commands: agents_installed field (#1371)', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
 
-    const result = runGsdTools('init execute-phase 1 --raw', tmpDir);
+    const result = runSddTools('init execute-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -99,7 +99,7 @@ describe('init commands: agents_installed field (#1371)', () => {
   });
 
   test('init quick includes agents_installed field', () => {
-    const result = runGsdTools(['init', 'quick', 'test description', '--raw'], tmpDir);
+    const result = runSddTools(['init', 'quick', 'test description', '--raw'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -146,7 +146,7 @@ describe('validate health: agent installation check W010 (#1371)', () => {
   test('health check reports healthy when agents are installed (repo layout)', () => {
     // In the repo, agents/ exists as a sibling of sdd/, so the
     // health check should find them via the sdd-tools.cjs path resolution
-    const result = runGsdTools('validate health --raw', tmpDir);
+    const result = runSddTools('validate health --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -182,7 +182,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
+    const result = runSddTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -205,7 +205,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${firstAgent}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
+    const result = runSddTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -225,7 +225,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('init new-workspace --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
+    const result = runSddTools('init new-workspace --raw', tmpDir, { SDD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -245,7 +245,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${EXPECTED_AGENTS[0]}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: customAgentsDir });
+    const result = runSddTools('validate agents --raw', tmpDir, { SDD_AGENTS_DIR: customAgentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -269,7 +269,7 @@ describe('validate agents subcommand (#1371)', () => {
   });
 
   test('validate agents returns status with agent list', () => {
-    const result = runGsdTools('validate agents --raw', tmpDir);
+    const result = runSddTools('validate agents --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -280,7 +280,7 @@ describe('validate agents subcommand (#1371)', () => {
   });
 
   test('validate agents lists all expected agent types', () => {
-    const result = runGsdTools('validate agents --raw', tmpDir);
+    const result = runSddTools('validate agents --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

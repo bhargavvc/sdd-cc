@@ -1,4 +1,4 @@
-# Multi-Project Workspaces (`/sdd:new-workspace`)
+# Multi-Project Workspaces (`/sdd-new-workspace`)
 
 **Issue:** #1241
 **Date:** 2026-03-20
@@ -18,13 +18,13 @@ This covers two use cases:
 
 ## Commands
 
-### `/sdd:new-workspace`
+### `/sdd-new-workspace`
 
 Creates a workspace directory with repo copies and its own `.planning/`.
 
 ```
-/sdd:new-workspace --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
-/sdd:new-workspace --name feature-b --repos . --strategy worktree   # same-repo isolation
+/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
+/sdd-new-workspace --name feature-b --repos . --strategy worktree   # same-repo isolation
 ```
 
 **Arguments:**
@@ -38,11 +38,11 @@ Creates a workspace directory with repo copies and its own `.planning/`.
 | `--branch` | No | `workspace/<name>` | Branch to checkout |
 | `--auto` | No | false | Skip interactive questions, use defaults |
 
-### `/sdd:list-workspaces`
+### `/sdd-list-workspaces`
 
 Scans `~/sdd-workspaces/*/WORKSPACE.md` for workspace manifests. Displays table with name, path, repo count, SDD status (has PROJECT.md, current phase).
 
-### `/sdd:remove-workspace`
+### `/sdd-remove-workspace`
 
 Removes a workspace directory after confirmation. For worktree strategy, runs `git worktree remove` for each member repo first. Refuses if any repo has uncommitted changes.
 
@@ -52,7 +52,7 @@ Removes a workspace directory after confirmation. For worktree strategy, runs `g
 ~/sdd-workspaces/feature-b/          # workspace root
 ├── WORKSPACE.md                      # manifest
 ├── .planning/                        # independent SDD planning directory
-│   ├── PROJECT.md                    # (if user ran /sdd:new-project)
+│   ├── PROJECT.md                    # (if user ran /sdd-new-project)
 │   ├── STATE.md
 │   └── config.json
 ├── hr-ui/                            # git worktree of source repo
@@ -89,7 +89,7 @@ Strategy: worktree
 
 ## Workflow
 
-### `/sdd:new-workspace` Workflow Steps
+### `/sdd-new-workspace` Workflow Steps
 
 1. **Setup** — Call `init new-workspace`, parse JSON context
 2. **Gather inputs** — If `--name`/`--repos`/`--path` not provided, ask interactively. For repos, show child `.git` directories in cwd as options
@@ -100,7 +100,7 @@ Strategy: worktree
    - Clone: `git clone <source> <workspace>/<repo-name>`
 6. **Write WORKSPACE.md** — Manifest with source paths, strategy, branch
 7. **Initialize .planning/** — `mkdir -p <workspace>/.planning`
-8. **Offer /sdd:new-project** — Ask if user wants to run project initialization in the new workspace
+8. **Offer /sdd-new-project** — Ask if user wants to run project initialization in the new workspace
 9. **Commit** — If commit_docs enabled, atomic commit of WORKSPACE.md
 10. **Done** — Print workspace path and next steps
 
