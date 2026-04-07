@@ -1,14 +1,14 @@
 {
-  "name": "get-shit-done-cc",
-  "version": "1.30.0",
+  "name": "@bhargavvc/sdd-cc",
+  "version": "1.30.1",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
   "bin": {
-    "get-shit-done-cc": "bin/install.js"
+    "sdd-cc": "bin/install.js"
   },
   "files": [
     "bin",
     "commands",
-    "get-shit-done",
+    "sdd",
     "agents",
     "hooks/dist",
     "scripts"
@@ -29,11 +29,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/get-shit-done.git"
+    "url": "git+https://github.com/bhargavvc/sdd-cc.git"
   },
-  "homepage": "https://github.com/gsd-build/get-shit-done",
+  "homepage": "https://github.com/bhargavvc/sdd-cc",
   "bugs": {
-    "url": "https://github.com/gsd-build/get-shit-done/issues"
+    "url": "https://github.com/bhargavvc/sdd-cc/issues"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -47,6 +47,9 @@
     "build:hooks": "node scripts/build-hooks.js",
     "prepublishOnly": "npm run build:hooks",
     "test": "node scripts/run-tests.cjs",
-    "test:coverage": "c8 --check-coverage --lines 70 --reporter text --include 'get-shit-done/bin/lib/*.cjs' --exclude 'tests/**' --all node scripts/run-tests.cjs"
+    "test:coverage": "c8 --check-coverage --lines 70 --reporter text --include 'sdd/bin/lib/*.cjs' --exclude 'tests/**' --all node scripts/run-tests.cjs"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

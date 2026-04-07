@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Verify
+ * SDD Tools Tests - Verify
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');

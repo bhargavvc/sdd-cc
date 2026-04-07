@@ -13,18 +13,18 @@ const {
   VALID_PROFILES,
   formatAgentToModelMapAsTable,
   getAgentToModelMapForProfile,
-} = require('../get-shit-done/bin/lib/model-profiles.cjs');
+} = require('../sdd/bin/lib/model-profiles.cjs');
 
 // ─── MODEL_PROFILES data integrity ────────────────────────────────────────────
 
 describe('MODEL_PROFILES', () => {
-  test('contains all expected GSD agents', () => {
+  test('contains all expected SDD agents', () => {
     const expectedAgents = [
-      'gsd-planner', 'gsd-roadmapper', 'gsd-executor',
-      'gsd-phase-researcher', 'gsd-project-researcher', 'gsd-research-synthesizer',
-      'gsd-debugger', 'gsd-codebase-mapper', 'gsd-verifier',
-      'gsd-plan-checker', 'gsd-integration-checker', 'gsd-nyquist-auditor',
-      'gsd-ui-researcher', 'gsd-ui-checker', 'gsd-ui-auditor',
+      'sdd-planner', 'sdd-roadmapper', 'sdd-executor',
+      'sdd-phase-researcher', 'sdd-project-researcher', 'sdd-research-synthesizer',
+      'sdd-debugger', 'sdd-codebase-mapper', 'sdd-verifier',
+      'sdd-plan-checker', 'sdd-integration-checker', 'sdd-nyquist-auditor',
+      'sdd-ui-researcher', 'sdd-ui-checker', 'sdd-ui-auditor',
     ];
     for (const agent of expectedAgents) {
       assert.ok(MODEL_PROFILES[agent], `Missing agent: ${agent}`);
@@ -69,7 +69,7 @@ describe('VALID_PROFILES', () => {
   });
 
   test('is derived from MODEL_PROFILES keys', () => {
-    const fromData = Object.keys(MODEL_PROFILES['gsd-planner']);
+    const fromData = Object.keys(MODEL_PROFILES['sdd-planner']);
     assert.deepStrictEqual(VALID_PROFILES.sort(), fromData.sort());
   });
 });
@@ -79,21 +79,21 @@ describe('VALID_PROFILES', () => {
 describe('getAgentToModelMapForProfile', () => {
   test('returns correct models for balanced profile', () => {
     const map = getAgentToModelMapForProfile('balanced');
-    assert.strictEqual(map['gsd-planner'], 'opus');
-    assert.strictEqual(map['gsd-codebase-mapper'], 'haiku');
-    assert.strictEqual(map['gsd-verifier'], 'sonnet');
+    assert.strictEqual(map['sdd-planner'], 'opus');
+    assert.strictEqual(map['sdd-codebase-mapper'], 'haiku');
+    assert.strictEqual(map['sdd-verifier'], 'sonnet');
   });
 
   test('returns correct models for budget profile', () => {
     const map = getAgentToModelMapForProfile('budget');
-    assert.strictEqual(map['gsd-planner'], 'sonnet');
-    assert.strictEqual(map['gsd-phase-researcher'], 'haiku');
+    assert.strictEqual(map['sdd-planner'], 'sonnet');
+    assert.strictEqual(map['sdd-phase-researcher'], 'haiku');
   });
 
   test('returns correct models for quality profile', () => {
     const map = getAgentToModelMapForProfile('quality');
-    assert.strictEqual(map['gsd-planner'], 'opus');
-    assert.strictEqual(map['gsd-executor'], 'opus');
+    assert.strictEqual(map['sdd-planner'], 'opus');
+    assert.strictEqual(map['sdd-executor'], 'opus');
   });
 
   test('returns all agents in the map', () => {
@@ -107,12 +107,12 @@ describe('getAgentToModelMapForProfile', () => {
 
 describe('formatAgentToModelMapAsTable', () => {
   test('produces a table with header and separator', () => {
-    const map = { 'gsd-planner': 'opus', 'gsd-executor': 'sonnet' };
+    const map = { 'sdd-planner': 'opus', 'sdd-executor': 'sonnet' };
     const table = formatAgentToModelMapAsTable(map);
     assert.ok(table.includes('Agent'), 'should have Agent header');
     assert.ok(table.includes('Model'), 'should have Model header');
     assert.ok(table.includes('─'), 'should have separator line');
-    assert.ok(table.includes('gsd-planner'), 'should list agent');
+    assert.ok(table.includes('sdd-planner'), 'should list agent');
     assert.ok(table.includes('opus'), 'should list model');
   });
 

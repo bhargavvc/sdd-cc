@@ -1,6 +1,6 @@
-# Referência de Recursos do GSD
+# Referência de Recursos do SDD
 
-Visão em Português dos recursos centrais do GSD.  
+Visão em Português dos recursos centrais do SDD.  
 Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em inglês](../FEATURES.md).
 
 ---
@@ -13,8 +13,8 @@ Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em ingl�
 - **Execução em ondas paralelas** com controle por dependências
 - **Commits atômicos por tarefa** para rastreabilidade e rollback
 - **Verificação pós-execução** com foco em objetivos da fase
-- **UAT guiado** via `/gsd:verify-work`
-- **Suporte brownfield** com `/gsd:map-codebase`
+- **UAT guiado** via `/sdd:verify-work`
+- **Suporte brownfield** com `/sdd:map-codebase`
 - **Workstreams** para trilhas paralelas sem colisão de estado
 - **Backlog, seeds e threads** para memória de médio/longo prazo
 
@@ -28,16 +28,16 @@ Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em ingl�
 
 ## UX de frontend
 
-- **`/gsd:ui-phase`**: contrato visual antes da execução
-- **`/gsd:ui-review`**: auditoria visual em 6 pilares
+- **`/sdd:ui-phase`**: contrato visual antes da execução
+- **`/sdd:ui-review`**: auditoria visual em 6 pilares
 - **UI safety gate** para uso de registries de terceiros
 
 ## Operação e manutenção
 
 - **Perfis de modelo** (`quality`, `balanced`, `budget`, `inherit`)
 - **Ajuste por toggles** para custo/qualidade/velocidade
-- **Diagnóstico forense** com `/gsd:forensics`
-- **Relatório de sessão** com `/gsd:session-report`
+- **Diagnóstico forense** com `/sdd:forensics`
+- **Relatório de sessão** com `/sdd:session-report`
 
 ---
 
@@ -45,10 +45,10 @@ Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em ingl�
 
 | Cenário | Comandos |
 |--------|----------|
-| Projeto novo | `/gsd:new-project` -> `/gsd:discuss-phase` -> `/gsd:plan-phase` -> `/gsd:execute-phase` |
-| Correção rápida | `/gsd:quick` |
-| Código existente | `/gsd:map-codebase` -> `/gsd:new-project` |
-| Fechamento de release | `/gsd:audit-milestone` -> `/gsd:complete-milestone` |
+| Projeto novo | `/sdd:new-project` -> `/sdd:discuss-phase` -> `/sdd:plan-phase` -> `/sdd:execute-phase` |
+| Correção rápida | `/sdd:quick` |
+| Código existente | `/sdd:map-codebase` -> `/sdd:new-project` |
+| Fechamento de release | `/sdd:audit-milestone` -> `/sdd:complete-milestone` |
 
 ---
 

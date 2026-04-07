@@ -2,11 +2,11 @@
 
 > **エージェント型ワーカー向け:** 必須サブスキル: superpowers:subagent-driven-development（推奨）または superpowers:executing-plans を使用して、このプランをタスクごとに実装してください。各ステップはチェックボックス（`- [ ]`）構文で進捗を追跡します。
 
-**目標:** `/gsd:new-project` が `.planning/config.json` を作成する際、ユーザーが選択した6つのキーだけでなく、すべての有効なデフォルト値を含むファイルを生成する。これにより、開発者はソースコードを読まなくてもすべての設定を確認できるようになる。
+**目標:** `/sdd:new-project` が `.planning/config.json` を作成する際、ユーザーが選択した6つのキーだけでなく、すべての有効なデフォルト値を含むファイルを生成する。これにより、開発者はソースコードを読まなくてもすべての設定を確認できるようになる。
 
 **アーキテクチャ:** `config.cjs` に単一の JS 関数 `buildNewProjectConfig(cwd, userChoices)` を追加し、新規プロジェクトの完全な設定の唯一の信頼できる情報源とする。これを CLI コマンド `config-new-project` として公開する。`new-project.md` ワークフローを更新し、部分的な JSON をインラインで書き込む代わりにこのコマンドを呼び出すようにする。
 
-**技術スタック:** Node.js/CommonJS、既存の gsd-tools CLI、テストには `node:test` を使用。
+**技術スタック:** Node.js/CommonJS、既存の sdd-tools CLI、テストには `node:test` を使用。
 
 ---
 
@@ -27,8 +27,8 @@
 - `search_gitignored: false`
 - `brave_search: false`（または環境検出による `true`）
 - `git.branching_strategy: "none"`
-- `git.phase_branch_template: "gsd/phase-{phase}-{slug}"`
-- `git.milestone_branch_template: "gsd/{milestone}-{slug}"`
+- `git.phase_branch_template: "sdd/phase-{phase}-{slug}"`
+- `git.milestone_branch_template: "sdd/{milestone}-{slug}"`
 
 最初から存在すべき完全な設定:
 
@@ -43,8 +43,8 @@
   "brave_search": false,
   "git": {
     "branching_strategy": "none",
-    "phase_branch_template": "gsd/phase-{phase}-{slug}",
-    "milestone_branch_template": "gsd/{milestone}-{slug}"
+    "phase_branch_template": "sdd/phase-{phase}-{slug}",
+    "milestone_branch_template": "sdd/{milestone}-{slug}"
   },
   "workflow": {
     "research": true,
@@ -61,9 +61,9 @@
 
 | ファイル | 操作 | 目的 |
 |------|--------|---------|
-| `get-shit-done/bin/lib/config.cjs` | 変更 | `buildNewProjectConfig()` + `cmdConfigNewProject()` を追加 |
-| `get-shit-done/bin/gsd-tools.cjs` | 変更 | `config-new-project` の case を登録 + usage 文字列を更新 |
-| `get-shit-done/workflows/new-project.md` | 変更 | ステップ 2a + 5: インライン JSON 書き込みを CLI 呼び出しに置換 |
+| `sdd/bin/lib/config.cjs` | 変更 | `buildNewProjectConfig()` + `cmdConfigNewProject()` を追加 |
+| `sdd/bin/sdd-tools.cjs` | 変更 | `config-new-project` の case を登録 + usage 文字列を更新 |
+| `sdd/workflows/new-project.md` | 変更 | ステップ 2a + 5: インライン JSON 書き込みを CLI 呼び出しに置換 |
 | `tests/config.test.cjs` | 変更 | `config-new-project` テストスイートを追加 |
 
 ---
@@ -72,7 +72,7 @@
 
 **ファイル:**
 
-- 変更: `get-shit-done/bin/lib/config.cjs`
+- 変更: `sdd/bin/lib/config.cjs`
 
 - [ ] **ステップ 1.1: まず失敗するテストを書く**
 
@@ -120,8 +120,8 @@ describe('config-new-project command', () => {
     // git セクションが3つのキーすべてを持つ
     assert.ok(config.git && typeof config.git === 'object', 'git section should exist');
     assert.strictEqual(config.git.branching_strategy, 'none');
-    assert.strictEqual(config.git.phase_branch_template, 'gsd/phase-{phase}-{slug}');
-    assert.strictEqual(config.git.milestone_branch_template, 'gsd/{milestone}-{slug}');
+    assert.strictEqual(config.git.phase_branch_template, 'sdd/phase-{phase}-{slug}');
+    assert.strictEqual(config.git.milestone_branch_template, 'sdd/{milestone}-{slug}');
 
     // workflow セクションが4つのキーすべてを持つ
     assert.ok(config.workflow && typeof config.workflow === 'object', 'workflow section should exist');
@@ -227,7 +227,7 @@ describe('config-new-project command', () => {
 - [ ] **ステップ 1.2: 失敗するテストを実行して失敗を確認する**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
+cd /Users/diego/Dev/sdd
 node --test tests/config.test.cjs 2>&1 | grep -E "config-new-project|FAIL|Error"
 ```
 
@@ -235,7 +235,7 @@ node --test tests/config.test.cjs 2>&1 | grep -E "config-new-project|FAIL|Error"
 
 - [ ] **ステップ 1.3: config.cjs に `buildNewProjectConfig` と `cmdConfigNewProject` を実装する**
 
-`get-shit-done/bin/lib/config.cjs` の `validateKnownConfigKeyPath` 関数の後（35行目付近）、`ensureConfigFile` の前に以下を追加する:
+`sdd/bin/lib/config.cjs` の `validateKnownConfigKeyPath` 関数の後（35行目付近）、`ensureConfigFile` の前に以下を追加する:
 
 ```js
 /**
@@ -243,7 +243,7 @@ node --test tests/config.test.cjs 2>&1 | grep -E "config-new-project|FAIL|Error"
  *
  * 以下の優先順位（昇順）でマージする:
  *   1. ハードコードされたデフォルト値
- *   2. ~/.gsd/defaults.json のユーザーレベルデフォルト（存在する場合）
+ *   2. ~/.sdd/defaults.json のユーザーレベルデフォルト（存在する場合）
  *   3. userChoices（new-project 時にユーザーが明示的に選択した設定）
  *
  * プレーンオブジェクトを返す — ファイルの書き込みは行わない。
@@ -253,11 +253,11 @@ function buildNewProjectConfig(cwd, userChoices) {
   const homedir = require('os').homedir();
 
   // Brave Search API キーの利用可能性を検出
-  const braveKeyFile = path.join(homedir, '.gsd', 'brave_api_key');
+  const braveKeyFile = path.join(homedir, '.sdd', 'brave_api_key');
   const hasBraveSearch = !!(process.env.BRAVE_API_KEY || fs.existsSync(braveKeyFile));
 
-  // ~/.gsd/defaults.json からユーザーレベルのデフォルトを読み込む（存在する場合）
-  const globalDefaultsPath = path.join(homedir, '.gsd', 'defaults.json');
+  // ~/.sdd/defaults.json からユーザーレベルのデフォルトを読み込む（存在する場合）
+  const globalDefaultsPath = path.join(homedir, '.sdd', 'defaults.json');
   let userDefaults = {};
   try {
     if (fs.existsSync(globalDefaultsPath)) {
@@ -284,8 +284,8 @@ function buildNewProjectConfig(cwd, userChoices) {
     brave_search: hasBraveSearch,
     git: {
       branching_strategy: 'none',
-      phase_branch_template: 'gsd/phase-{phase}-{slug}',
-      milestone_branch_template: 'gsd/{milestone}-{slug}',
+      phase_branch_template: 'sdd/phase-{phase}-{slug}',
+      milestone_branch_template: 'sdd/{milestone}-{slug}',
     },
     workflow: {
       research: true,
@@ -316,9 +316,9 @@ function buildNewProjectConfig(cwd, userChoices) {
 /**
  * コマンド: 新規プロジェクト用の完全展開された .planning/config.json を作成する。
  *
- * ユーザーが選択した設定を JSON 文字列として受け取る（/gsd:new-project 時に
+ * ユーザーが選択した設定を JSON 文字列として受け取る（/sdd:new-project 時に
  * ユーザーが明示的に設定したキー）。残りのキーはハードコードされたデフォルトと
- * オプションの ~/.gsd/defaults.json から補完される。
+ * オプションの ~/.sdd/defaults.json から補完される。
  *
  * 冪等: config.json が既に存在する場合は { created: false } を返す。
  */
@@ -367,7 +367,7 @@ function cmdConfigNewProject(cwd, choicesJson, raw) {
 - [ ] **ステップ 1.4: テストを実行してパスすることを確認する**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
+cd /Users/diego/Dev/sdd
 node --test tests/config.test.cjs 2>&1 | tail -20
 ```
 
@@ -376,20 +376,20 @@ node --test tests/config.test.cjs 2>&1 | tail -20
 - [ ] **ステップ 1.5: コミット**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
-git add get-shit-done/bin/lib/config.cjs tests/config.test.cjs
+cd /Users/diego/Dev/sdd
+git add sdd/bin/lib/config.cjs tests/config.test.cjs
 git commit -m "feat: add config-new-project command for full config materialization"
 ```
 
 ---
 
-## タスク 2: gsd-tools.cjs に `config-new-project` を登録する
+## タスク 2: sdd-tools.cjs に `config-new-project` を登録する
 
 **ファイル:**
 
-- 変更: `get-shit-done/bin/gsd-tools.cjs`
+- 変更: `sdd/bin/sdd-tools.cjs`
 
-- [ ] **ステップ 2.1: gsd-tools.cjs の switch 文に case を追加する**
+- [ ] **ステップ 2.1: sdd-tools.cjs の switch 文に case を追加する**
 
 `config-get` の case の後（401行目付近）に以下を追加する:
 
@@ -408,18 +408,18 @@ git commit -m "feat: add config-new-project command for full config materializat
 - [ ] **ステップ 2.2: CLI 登録のスモークテスト**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
-node get-shit-done/bin/gsd-tools.cjs config-new-project '{"mode":"interactive","granularity":"standard"}' --cwd /tmp/gsd-smoke-$(date +%s)
+cd /Users/diego/Dev/sdd
+node sdd/bin/sdd-tools.cjs config-new-project '{"mode":"interactive","granularity":"standard"}' --cwd /tmp/sdd-smoke-$(date +%s)
 ```
 
 期待結果: `{"created":true,"path":".planning/config.json"}` （または類似の出力）が表示される。
 
-クリーンアップ: `rm -rf /tmp/gsd-smoke-*`
+クリーンアップ: `rm -rf /tmp/sdd-smoke-*`
 
 - [ ] **ステップ 2.3: フルテストスイートを実行する**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
+cd /Users/diego/Dev/sdd
 node --test tests/config.test.cjs 2>&1 | tail -10
 ```
 
@@ -428,9 +428,9 @@ node --test tests/config.test.cjs 2>&1 | tail -10
 - [ ] **ステップ 2.4: コミット**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
-git add get-shit-done/bin/gsd-tools.cjs
-git commit -m "feat: register config-new-project in gsd-tools CLI router"
+cd /Users/diego/Dev/sdd
+git add sdd/bin/sdd-tools.cjs
+git commit -m "feat: register config-new-project in sdd-tools CLI router"
 ```
 
 ---
@@ -439,7 +439,7 @@ git commit -m "feat: register config-new-project in gsd-tools CLI router"
 
 **ファイル:**
 
-- 変更: `get-shit-done/workflows/new-project.md`
+- 変更: `sdd/workflows/new-project.md`
 
 これが中心となる変更。2箇所を更新する必要がある:
 
@@ -470,7 +470,7 @@ Create `.planning/config.json` using the CLI (fills in all defaults automaticall
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-new-project "$(cat <<'CHOICES'
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-new-project "$(cat <<'CHOICES'
 {
   "mode": "yolo",
   "granularity": "[selected: coarse|standard|fine]",
@@ -516,7 +516,7 @@ Create `.planning/config.json` using the CLI (fills in all defaults automaticall
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-new-project "$(cat <<'CHOICES'
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-new-project "$(cat <<'CHOICES'
 {
   "mode": "[selected: yolo|interactive]",
   "granularity": "[selected: coarse|standard|fine]",
@@ -541,8 +541,8 @@ CHOICES
 - [ ] **ステップ 3.3: ワークフローファイルが正しく読めることを確認する**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
-grep -n "config-new-project\|config\.json\|CHOICES" get-shit-done/workflows/new-project.md
+cd /Users/diego/Dev/sdd
+grep -n "config-new-project\|config\.json\|CHOICES" sdd/workflows/new-project.md
 ```
 
 期待結果: `config-new-project` が2箇所（各ステップに1つ）で出現し、設定作成用のインライン JSON テンプレートがなくなっている。
@@ -550,8 +550,8 @@ grep -n "config-new-project\|config\.json\|CHOICES" get-shit-done/workflows/new-
 - [ ] **ステップ 3.4: コミット**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
-git add get-shit-done/workflows/new-project.md
+cd /Users/diego/Dev/sdd
+git add sdd/workflows/new-project.md
 git commit -m "feat: use config-new-project in new-project workflow for full config materialization"
 ```
 
@@ -562,7 +562,7 @@ git commit -m "feat: use config-new-project in new-project workflow for full con
 - [ ] **ステップ 4.1: フルテストスイートを実行する**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
+cd /Users/diego/Dev/sdd
 node --test tests/ 2>&1 | tail -30
 ```
 
@@ -578,10 +578,10 @@ TMP=$(mktemp -d)
 cd "$TMP"
 
 # ステップ 1 のシミュレーション: init new-project の実行結果
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs init new-project --cwd "$TMP"
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs init new-project --cwd "$TMP"
 
 # ステップ 5 のシミュレーション: 完全な設定を作成
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-new-project '{
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-new-project '{
   "mode": "interactive",
   "granularity": "standard",
   "parallelization": true,
@@ -611,11 +611,11 @@ rm -rf "$TMP"
 TMP=$(mktemp -d)
 CHOICES='{"mode":"yolo","granularity":"coarse"}'
 
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-new-project "$CHOICES" --cwd "$TMP"
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-new-project "$CHOICES" --cwd "$TMP"
 FIRST=$(cat "$TMP/.planning/config.json")
 
 # 2回目の呼び出しは何も変更しないはず
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-new-project "$CHOICES" --cwd "$TMP"
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-new-project "$CHOICES" --cwd "$TMP"
 SECOND=$(cat "$TMP/.planning/config.json")
 
 [ "$FIRST" = "$SECOND" ] && echo "IDEMPOTENT: OK" || echo "IDEMPOTENT: FAIL"
@@ -628,17 +628,17 @@ rm -rf "$TMP"
 
 ```bash
 TMP=$(mktemp -d)
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-new-project '{
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-new-project '{
   "mode":"yolo","granularity":"standard","parallelization":true,"commit_docs":true,
   "model_profile":"balanced",
   "workflow":{"research":true,"plan_check":false,"verifier":true,"nyquist_validation":true}
 }' --cwd "$TMP"
 
 # loadConfig が正しく plan_check（workflow.plan_check としてネスト）を読み取るか
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-get workflow.plan_check --cwd "$TMP"
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-get workflow.plan_check --cwd "$TMP"
 # 期待値: false
 
-node /Users/diego/Dev/get-shit-done/get-shit-done/bin/gsd-tools.cjs config-get git.branching_strategy --cwd "$TMP"
+node /Users/diego/Dev/sdd/sdd/bin/sdd-tools.cjs config-get git.branching_strategy --cwd "$TMP"
 # 期待値: "none"
 
 rm -rf "$TMP"
@@ -647,7 +647,7 @@ rm -rf "$TMP"
 - [ ] **ステップ 4.5: 最終フルテストスイート + コミット**
 
 ```bash
-cd /Users/diego/Dev/get-shit-done
+cd /Users/diego/Dev/sdd
 node --test tests/ 2>&1 | grep -E "pass|fail|error" | tail -5
 ```
 
@@ -661,7 +661,7 @@ node --test tests/ 2>&1 | grep -E "pass|fail|error" | tail -5
 feat: materialize all config defaults at new-project initialization
 
 **問題:**
-`/gsd:new-project` はオンボーディング時にユーザーが明示的に選択した6つのキーのみで
+`/sdd:new-project` はオンボーディング時にユーザーが明示的に選択した6つのキーのみで
 `.planning/config.json` を作成する。5つの追加キー
 （`search_gitignored`、`brave_search`、`git.branching_strategy`、
 `git.phase_branch_template`、`git.milestone_branch_template`）は実行時に
@@ -670,11 +670,11 @@ feat: materialize all config defaults at new-project initialization
 これにより2つの問題が生じる:
 1. **発見可能性**: ユーザーがソースコードを読まない限り `git.branching_strategy` を
    確認・理解できない — 設定ファイルに表示されない。
-2. **暗黙的な拡張**: `/gsd:settings` や `config-set` が初めて設定に書き込む際にも、
+2. **暗黙的な拡張**: `/sdd:settings` や `config-set` が初めて設定に書き込む際にも、
    これらのキーは追加されない。設定ファイルは実効設定のごく一部しか反映しない。
 
 **解決策:**
-`gsd-tools.cjs` に `config-new-project` CLI コマンドを追加する。このコマンドは:
+`sdd-tools.cjs` に `config-new-project` CLI コマンドを追加する。このコマンドは:
 - ユーザーが選択した値を JSON として受け取る
 - すべてのランタイムデフォルト（環境検出される `brave_search` を含む）とマージする
 - 完全に展開された設定を一度に書き込む
@@ -694,6 +694,6 @@ JSON テンプレートの書き込みの代わりにこのコマンドを呼び
 
 **発見可能性が向上する理由:**
 初めて `.planning/config.json` を開いた開発者が `git.branching_strategy: "none"` を
-見て、GSD のソースコードを読まなくてもブランチ戦略機能が利用可能で設定変更できることを
+見て、SDD のソースコードを読まなくてもブランチ戦略機能が利用可能で設定変更できることを
 即座に理解できるようになる。
 ```

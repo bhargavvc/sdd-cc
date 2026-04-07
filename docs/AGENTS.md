@@ -1,4 +1,4 @@
-# GSD Agent Reference
+# SDD Agent Reference
 
 > All 18 specialized agents — roles, tools, spawn patterns, and relationships. For architecture context, see [Architecture](ARCHITECTURE.md).
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-GSD uses a multi-agent architecture where thin orchestrators (workflow files) spawn specialized agents with fresh context windows. Each agent has a focused role, limited tool access, and produces specific artifacts.
+SDD uses a multi-agent architecture where thin orchestrators (workflow files) spawn specialized agents with fresh context windows. Each agent has a focused role, limited tool access, and produces specific artifacts.
 
 ### Agent Categories
 
@@ -28,13 +28,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ## Agent Details
 
-### gsd-project-researcher
+### sdd-project-researcher
 
 **Role:** Researches domain ecosystem before roadmap creation.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:new-project`, `/gsd:new-milestone` |
+| **Spawned by** | `/sdd:new-project`, `/sdd:new-milestone` |
 | **Parallelism** | 4 instances (stack, features, architecture, pitfalls) |
 | **Tools** | Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp (context7) |
 | **Model (balanced)** | Sonnet |
@@ -47,13 +47,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-phase-researcher
+### sdd-phase-researcher
 
 **Role:** Researches how to implement a specific phase before planning.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:plan-phase` |
+| **Spawned by** | `/sdd:plan-phase` |
 | **Parallelism** | 4 instances (same focus areas as project researcher) |
 | **Tools** | Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp (context7) |
 | **Model (balanced)** | Sonnet |
@@ -66,13 +66,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-ui-researcher
+### sdd-ui-researcher
 
 **Role:** Produces UI design contracts for frontend phases.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:ui-phase` |
+| **Spawned by** | `/sdd:ui-phase` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp (context7) |
 | **Model (balanced)** | Sonnet |
@@ -87,7 +87,7 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-assumptions-analyzer
+### sdd-assumptions-analyzer
 
 **Role:** Deeply analyzes codebase for a phase and returns structured assumptions with evidence, confidence levels, and consequences if wrong.
 
@@ -110,7 +110,7 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-advisor-researcher
+### sdd-advisor-researcher
 
 **Role:** Researches a single gray area decision during discuss-phase advisor mode and returns a structured comparison table.
 
@@ -132,13 +132,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-research-synthesizer
+### sdd-research-synthesizer
 
 **Role:** Combines outputs from parallel researchers into a unified summary.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:new-project` (after 4 researchers complete) |
+| **Spawned by** | `/sdd:new-project` (after 4 researchers complete) |
 | **Parallelism** | Single instance (sequential after researchers) |
 | **Tools** | Read, Write, Bash |
 | **Model (balanced)** | Sonnet |
@@ -147,13 +147,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-planner
+### sdd-planner
 
 **Role:** Creates executable phase plans with task breakdown, dependency analysis, and goal-backward verification.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:plan-phase`, `/gsd:quick` |
+| **Spawned by** | `/sdd:plan-phase`, `/sdd:quick` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Bash, Glob, Grep, WebFetch, mcp (context7) |
 | **Model (balanced)** | Opus |
@@ -169,13 +169,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-roadmapper
+### sdd-roadmapper
 
 **Role:** Creates project roadmaps with phase breakdown and requirement mapping.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:new-project` |
+| **Spawned by** | `/sdd:new-project` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Bash, Glob, Grep |
 | **Model (balanced)** | Sonnet |
@@ -190,13 +190,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-executor
+### sdd-executor
 
-**Role:** Executes GSD plans with atomic commits, deviation handling, and checkpoint protocols.
+**Role:** Executes SDD plans with atomic commits, deviation handling, and checkpoint protocols.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:execute-phase`, `/gsd:quick` |
+| **Spawned by** | `/sdd:execute-phase`, `/sdd:quick` |
 | **Parallelism** | Multiple (parallel within waves, sequential across waves) |
 | **Tools** | Read, Write, Edit, Bash, Grep, Glob |
 | **Model (balanced)** | Sonnet |
@@ -213,13 +213,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-plan-checker
+### sdd-plan-checker
 
 **Role:** Verifies plans will achieve phase goals before execution.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:plan-phase` (verification loop, max 3 iterations) |
+| **Spawned by** | `/sdd:plan-phase` (verification loop, max 3 iterations) |
 | **Parallelism** | Single instance (iterative) |
 | **Tools** | Read, Bash, Glob, Grep |
 | **Model (balanced)** | Sonnet |
@@ -238,13 +238,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-integration-checker
+### sdd-integration-checker
 
 **Role:** Verifies cross-phase integration and end-to-end flows.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:audit-milestone` |
+| **Spawned by** | `/sdd:audit-milestone` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Bash, Grep, Glob |
 | **Model (balanced)** | Sonnet |
@@ -253,13 +253,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-ui-checker
+### sdd-ui-checker
 
 **Role:** Validates UI-SPEC.md design contracts against quality dimensions.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:ui-phase` (validation loop, max 2 iterations) |
+| **Spawned by** | `/sdd:ui-phase` (validation loop, max 2 iterations) |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Bash, Glob, Grep |
 | **Model (balanced)** | Sonnet |
@@ -268,13 +268,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-verifier
+### sdd-verifier
 
 **Role:** Verifies phase goal achievement through goal-backward analysis.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:execute-phase` (after all executors complete) |
+| **Spawned by** | `/sdd:execute-phase` (after all executors complete) |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Model (balanced)** | Sonnet |
@@ -284,17 +284,17 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 **Key behaviors:**
 - Checks codebase against phase goals, not just task completion
 - PASS/FAIL with specific evidence
-- Logs issues for `/gsd:verify-work` to address
+- Logs issues for `/sdd:verify-work` to address
 
 ---
 
-### gsd-nyquist-auditor
+### sdd-nyquist-auditor
 
 **Role:** Fills Nyquist validation gaps by generating tests.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:validate-phase` |
+| **Spawned by** | `/sdd:validate-phase` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Edit, Bash, Grep, Glob |
 | **Model (balanced)** | Sonnet |
@@ -307,13 +307,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-ui-auditor
+### sdd-ui-auditor
 
 **Role:** Retroactive 6-pillar visual audit of implemented frontend code.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:ui-review` |
+| **Spawned by** | `/sdd:ui-review` |
 | **Parallelism** | Single instance |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Model (balanced)** | Sonnet |
@@ -330,13 +330,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-codebase-mapper
+### sdd-codebase-mapper
 
 **Role:** Explores codebase and writes structured analysis documents.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:map-codebase` |
+| **Spawned by** | `/sdd:map-codebase` |
 | **Parallelism** | 4 instances (tech, architecture, quality, concerns) |
 | **Tools** | Read, Bash, Grep, Glob, Write |
 | **Model (balanced)** | Haiku |
@@ -350,13 +350,13 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-debugger
+### sdd-debugger
 
 **Role:** Investigates bugs using scientific method with persistent state.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:debug`, `/gsd:verify-work` (for failures) |
+| **Spawned by** | `/sdd:debug`, `/sdd:verify-work` (for failures) |
 | **Parallelism** | Single instance (interactive) |
 | **Tools** | Read, Write, Edit, Bash, Grep, Glob, WebSearch |
 | **Model (balanced)** | Sonnet |
@@ -375,18 +375,18 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ---
 
-### gsd-user-profiler
+### sdd-user-profiler
 
 **Role:** Analyzes session messages across 8 behavioral dimensions to produce a scored developer profile.
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/gsd:profile-user` |
+| **Spawned by** | `/sdd:profile-user` |
 | **Parallelism** | Single instance |
 | **Tools** | Read |
 | **Model (balanced)** | Sonnet |
 | **Color** | Magenta |
-| **Produces** | `USER-PROFILE.md`, `/gsd:dev-preferences`, `CLAUDE.md` profile section |
+| **Produces** | `USER-PROFILE.md`, `/sdd:dev-preferences`, `CLAUDE.md` profile section |
 
 **Behavioral Dimensions:**
 Communication style, decision patterns, debugging approach, UX preferences, vendor choices, frustration triggers, learning style, explanation depth.

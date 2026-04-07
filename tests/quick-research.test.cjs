@@ -1,11 +1,11 @@
 /**
- * GSD Quick Research Flag Tests
+ * SDD Quick Research Flag Tests
  *
- * Validates the --research flag for /gsd:quick:
+ * Validates the --research flag for /sdd:quick:
  * - Command frontmatter advertises --research
  * - Workflow includes research step (Step 4.75)
  * - Research artifacts work within quick task directories
- * - Workflow spawns gsd-phase-researcher for research
+ * - Workflow spawns sdd-phase-researcher for research
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
@@ -14,8 +14,8 @@ const fs = require('fs');
 const path = require('path');
 const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
-const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-shit-done', 'workflows');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'sdd');
+const WORKFLOWS_DIR = path.join(__dirname, '..', 'sdd', 'workflows');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Command frontmatter: --research flag advertised
@@ -26,7 +26,7 @@ describe('quick command: --research in frontmatter', () => {
   let content;
 
   test('quick.md exists', () => {
-    assert.ok(fs.existsSync(commandPath), 'commands/gsd/quick.md should exist');
+    assert.ok(fs.existsSync(commandPath), 'commands/sdd/quick.md should exist');
   });
 
   test('argument-hint includes --research', () => {
@@ -96,15 +96,15 @@ describe('quick workflow: research step', () => {
     );
   });
 
-  test('research step spawns gsd-phase-researcher', () => {
+  test('research step spawns sdd-phase-researcher', () => {
     content = fs.readFileSync(workflowPath, 'utf-8');
     const researchSection = content.substring(
       content.indexOf('Step 4.75'),
       content.indexOf('Step 5:')
     );
     assert.ok(
-      researchSection.includes('subagent_type="gsd-phase-researcher"'),
-      'research step should spawn gsd-phase-researcher agent'
+      researchSection.includes('subagent_type="sdd-phase-researcher"'),
+      'research step should spawn sdd-phase-researcher agent'
     );
   });
 

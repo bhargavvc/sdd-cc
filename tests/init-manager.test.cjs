@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Init Manager
+ * SDD Tools Tests - Init Manager
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');

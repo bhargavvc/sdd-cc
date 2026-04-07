@@ -1,8 +1,8 @@
 /**
- * GSD Tools Tests - config.cjs
+ * SDD Tools Tests - config.cjs
  *
  * CLI integration tests for config-ensure-section, config-set, and config-get
- * commands exercised through gsd-tools.cjs via execSync.
+ * commands exercised through sdd-tools.cjs via execSync.
  *
  * Requirements: TEST-13
  */
@@ -46,7 +46,7 @@ describe('config-ensure-section command', () => {
     assert.strictEqual(output.created, true);
 
     const config = readConfig(tmpDir);
-    // Verify structure and types — exact values may vary if ~/.gsd/defaults.json exists
+    // Verify structure and types — exact values may vary if ~/.sdd/defaults.json exists
     assert.strictEqual(typeof config.model_profile, 'string');
     assert.strictEqual(typeof config.commit_docs, 'boolean');
     assert.strictEqual(typeof config.parallelization, 'boolean');
@@ -79,9 +79,9 @@ describe('config-ensure-section command', () => {
   test('detects Brave Search from file-based key', () => {
     // runGsdTools sandboxes HOME=tmpDir, so brave_api_key is written there —
     // no real filesystem side effects, cleanup happens via afterEach.
-    const gsdDir = path.join(tmpDir, '.gsd');
-    fs.mkdirSync(gsdDir, { recursive: true });
-    fs.writeFileSync(path.join(gsdDir, 'brave_api_key'), 'test-key', 'utf-8');
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
+    fs.writeFileSync(path.join(sddDir, 'brave_api_key'), 'test-key', 'utf-8');
 
     const result = runGsdTools('config-ensure-section', tmpDir, { HOME: tmpDir, USERPROFILE: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -93,9 +93,9 @@ describe('config-ensure-section command', () => {
   test('merges user defaults from defaults.json', () => {
     // runGsdTools sandboxes HOME=tmpDir, so defaults.json is written there —
     // no real filesystem side effects, cleanup happens via afterEach.
-    const gsdDir = path.join(tmpDir, '.gsd');
-    fs.mkdirSync(gsdDir, { recursive: true });
-    fs.writeFileSync(path.join(gsdDir, 'defaults.json'), JSON.stringify({
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
+    fs.writeFileSync(path.join(sddDir, 'defaults.json'), JSON.stringify({
       model_profile: 'quality',
       commit_docs: false,
     }), 'utf-8');
@@ -113,9 +113,9 @@ describe('config-ensure-section command', () => {
   test('merges nested workflow keys from defaults.json preserving unset keys', () => {
     // runGsdTools sandboxes HOME=tmpDir, so defaults.json is written there —
     // no real filesystem side effects, cleanup happens via afterEach.
-    const gsdDir = path.join(tmpDir, '.gsd');
-    fs.mkdirSync(gsdDir, { recursive: true });
-    fs.writeFileSync(path.join(gsdDir, 'defaults.json'), JSON.stringify({
+    const sddDir = path.join(tmpDir, '.sdd');
+    fs.mkdirSync(sddDir, { recursive: true });
+    fs.writeFileSync(path.join(sddDir, 'defaults.json'), JSON.stringify({
       workflow: { research: false },
     }), 'utf-8');
 
@@ -366,8 +366,8 @@ describe('config-new-project command', () => {
     // git section present with all three keys
     assert.ok(config.git && typeof config.git === 'object', 'git section should exist');
     assert.strictEqual(config.git.branching_strategy, 'none');
-    assert.strictEqual(config.git.phase_branch_template, 'gsd/phase-{phase}-{slug}');
-    assert.strictEqual(config.git.milestone_branch_template, 'gsd/{milestone}-{slug}');
+    assert.strictEqual(config.git.phase_branch_template, 'sdd/phase-{phase}-{slug}');
+    assert.strictEqual(config.git.milestone_branch_template, 'sdd/{milestone}-{slug}');
 
     // workflow section present with all keys
     assert.ok(config.workflow && typeof config.workflow === 'object', 'workflow section should exist');

@@ -1,6 +1,6 @@
-# Arquitetura do GSD
+# Arquitetura do SDD
 
-Visão arquitetural do Get Shit Done (GSD) em Português.  
+Visão arquitetural do Spec-Driven Development (SDD) em Português.  
 Para detalhes de implementação linha a linha, consulte [ARCHITECTURE.md em inglês](../ARCHITECTURE.md).
 
 ---
@@ -16,7 +16,7 @@ Para detalhes de implementação linha a linha, consulte [ARCHITECTURE.md em ing
 ## Componentes centrais
 
 1. **Camada de comando**  
-   Recebe entrada do usuário (`/gsd:*`) e roteia fluxo.
+   Recebe entrada do usuário (`/sdd:*`) e roteia fluxo.
 
 2. **Camada de orquestração**  
    Coordena pesquisadores, planejadores, executores e verificadores.
@@ -33,7 +33,7 @@ Para detalhes de implementação linha a linha, consulte [ARCHITECTURE.md em ing
 ## Fluxo arquitetural (alto nível)
 
 ```text
-Entrada (/gsd:comando)
+Entrada (/sdd:comando)
   -> Orquestrador
   -> Subagentes especializados
   -> Artefatos em .planning/
@@ -64,7 +64,7 @@ Entrada (/gsd:comando)
 
 ## Extensibilidade
 
-GSD suporta evolução por:
+SDD suporta evolução por:
 
 - novos comandos
 - novos tipos de agente

@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - UAT Audit
+ * SDD Tools Tests - UAT Audit
  */
 
 'use strict';
