@@ -5,7 +5,7 @@ Use this procedure when `npx @bhargavvc/sdd-cc@latest` is unavailable — e.g. d
 ## Prerequisites
 
 - Node.js installed
-- This repo cloned locally (`git clone https://github.com/gsd-build/sdd`)
+- This repo cloned locally (`git clone https://github.com/bhargavvc/sdd-cc`)
 
 ## Steps
 

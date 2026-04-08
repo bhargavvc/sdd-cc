@@ -1,6 +1,6 @@
 <div align="center">
 
-# GET SHIT DONE
+# SPEC-DRIVEN DEVELOPMENT
 
 [English](README.md) · **Português** · [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md)
 
@@ -10,11 +10,11 @@
 
 [![npm version](https://img.shields.io/npm/v/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
 [![npm downloads](https://img.shields.io/npm/dm/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
-[![Tests](https://img.shields.io/github/actions/workflow/status/gsd-build/sdd/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/gsd-build/sdd/actions/workflows/test.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/bhargavvc/sdd-cc/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/bhargavvc/sdd-cc/actions/workflows/test.yml)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mYgfVNfA2r)
 [![X (Twitter)](https://img.shields.io/badge/X-@sdd__foundation-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/sdd_foundation)
 [![$SDD Token](https://img.shields.io/badge/$SDD-Dexscreener-1C1C1C?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwRkYwMCIvPjwvc3ZnPg==&logoColor=00FF00)](https://dexscreener.com/solana/dwudwjvan7bzkw9zwlbyv6kspdlvhwzrqy6ebk8xzxkv)
-[![GitHub stars](https://img.shields.io/github/stars/gsd-build/sdd?style=for-the-badge&logo=github&color=181717)](https://github.com/gsd-build/sdd)
+[![GitHub stars](https://img.shields.io/github/stars/bhargavvc/sdd-cc?style=for-the-badge&logo=github&color=181717)](https://github.com/bhargavvc/sdd-cc)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
 
 <br>
@@ -467,11 +467,11 @@ OpenCode, Gemini CLI, Kilo e Codex agora são suportados nativamente via `npx @b
 
 ## Star History
 
-<a href="https://star-history.com/#gsd-build/sdd&Date">
+<a href="https://star-history.com/#bhargavvc/sdd-cc&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date" />
  </picture>
 </a>
 

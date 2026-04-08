@@ -1,5 +1,5 @@
 {
-  "name": "@gsd-build/sdk",
+  "name": "@bhargavvc/sdk",
   "version": "0.1.0",
   "description": "SDD SDK — programmatic interface for running SDD plans via the Agent SDK",
   "type": "module",
@@ -20,12 +20,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/sdd.git",
+    "url": "git+https://github.com/bhargavvc/sdd-cc.git",
     "directory": "sdk"
   },
-  "homepage": "https://github.com/gsd-build/sdd/tree/main/sdk",
+  "homepage": "https://github.com/bhargavvc/sdd-cc/tree/main/sdk",
   "bugs": {
-    "url": "https://github.com/gsd-build/sdd/issues"
+    "url": "https://github.com/bhargavvc/sdd-cc/issues"
   },
   "author": "TÂCHES",
   "license": "MIT",

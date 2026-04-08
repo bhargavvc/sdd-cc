@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Release monitor for gsd-build/sdd
+# Release monitor for bhargavvc/sdd-cc
 # Checks every 15 minutes, writes new release info to a signal file
 
-REPO="gsd-build/sdd"
+REPO="bhargavvc/sdd-cc"
 SIGNAL_FILE="/tmp/sdd-new-release.json"
 STATE_FILE="/tmp/sdd-monitor-last-tag"
 LOG_FILE="/tmp/sdd-monitor.log"

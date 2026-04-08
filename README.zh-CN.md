@@ -1,6 +1,6 @@
 <div align="center">
 
-# GET SHIT DONE
+# SPEC-DRIVEN DEVELOPMENT
 
 [English](README.md) · [Português](README.pt-BR.md) · **简体中文** · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md)
 
@@ -10,11 +10,11 @@
 
 [![npm version](https://img.shields.io/npm/v/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
 [![npm downloads](https://img.shields.io/npm/dm/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
-[![Tests](https://img.shields.io/github/actions/workflow/status/gsd-build/sdd/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/gsd-build/sdd/actions/workflows/test.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/bhargavvc/sdd-cc/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/bhargavvc/sdd-cc/actions/workflows/test.yml)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mYgfVNfA2r)
 [![X (Twitter)](https://img.shields.io/badge/X-@sdd__foundation-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/sdd_foundation)
 [![$SDD Token](https://img.shields.io/badge/$SDD-Dexscreener-1C1C1C?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwRkYwMCIvPjwvc3ZnPg==&logoColor=00FF00)](https://dexscreener.com/solana/dwudwjvan7bzkw9zwlbyv6kspdlvhwzrqy6ebk8xzxkv)
-[![GitHub stars](https://img.shields.io/github/stars/gsd-build/sdd?style=for-the-badge&logo=github&color=181717)](https://github.com/gsd-build/sdd)
+[![GitHub stars](https://img.shields.io/github/stars/bhargavvc/sdd-cc?style=for-the-badge&logo=github&color=181717)](https://github.com/bhargavvc/sdd-cc)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
 
 <br>
@@ -53,7 +53,7 @@ npx @bhargavvc/sdd-cc@latest
 
 市面上已经有其他规格驱动开发工具，比如 BMAD、Speckit……但它们要么把事情搞得比必要的复杂得多了些（冲刺仪式、故事点、利益相关方同步、复盘、Jira 流程），要么根本缺少对你到底在构建什么的整体理解。我不是一家 50 人的软件公司。我不想演企业流程。我只是个想把好东西真正做出来的创作者。
 
-所以我做了 GSD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
+所以我做了 SDD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
 
 这套系统会把 Claude 完成工作 *以及* 验证结果所需的一切上下文都准备好。我信任这个工作流，因为它确实能把事情做好。
 
@@ -176,7 +176,7 @@ npx @bhargavvc/sdd-cc --all --global      # 安装到所有目录
 克隆仓库并在本地运行安装器：
 
 ```bash
-git clone https://github.com/gsd-build/sdd.git
+git clone https://github.com/bhargavvc/sdd-cc.git
 cd sdd
 node bin/install.js --claude --local
 ```
@@ -570,7 +570,7 @@ lmn012o feat(08-02): create registration endpoint
 | `/sdd-progress` | 我现在在哪？下一步是什么？ |
 | `/sdd-next` | 自动检测状态并执行下一步 |
 | `/sdd-help` | 显示全部命令和使用指南 |
-| `/sdd-update` | 更新 GSD，并预览变更日志 |
+| `/sdd-update` | 更新 SDD，并预览变更日志 |
 | `/sdd-join-discord` | 加入 SDD Discord 社区 |
 
 ### Brownfield
@@ -764,7 +764,7 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ### 卸载
 
-如果你想彻底移除 GSD：
+如果你想彻底移除 SDD：
 
 ```bash
 # 全局安装
@@ -813,11 +813,11 @@ OpenCode、Gemini CLI、Kilo 和 Codex 现在都已经通过 `npx @bhargavvc/sdd
 
 ## Star History
 
-<a href="https://star-history.com/#gsd-build/sdd&Date">
+<a href="https://star-history.com/#bhargavvc/sdd-cc&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=gsd-build/sdd&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=bhargavvc/sdd-cc&type=Date" />
  </picture>
 </a>
 

@@ -439,7 +439,7 @@ Format completion message (changelog was already shown in confirmation step):
 
 ⚠️  Restart your runtime to pick up the new commands.
 
-[View full changelog](https://github.com/gsd-build/sdd/blob/main/CHANGELOG.md)
+[View full changelog](https://github.com/bhargavvc/sdd-cc/blob/main/CHANGELOG.md)
 ```
 </step>
 

@@ -20,13 +20,13 @@ All changes in `bin/install.js` unless noted.
 **Line 4972** — Change filter from `file.endsWith('.js')` to `(file.endsWith('.js') || file.endsWith('.sh'))`.
 
 ### Fix 5: Add sdd-workflow-guard.js to uninstall hook list (MEDIUM)
-**Line 4404** — Add `'sdd-workflow-guard.js'` to the `gsdHooks` array.
+**Line 4404** — Add `'sdd-workflow-guard.js'` to the `sddHooks` array.
 
 ### Fix 6: Add community hooks to uninstall settings.json cleanup (MEDIUM)
 **Lines 4453-4520** — Add filters for `sdd-session-state`, `sdd-validate-commit`, `sdd-phase-boundary` in the appropriate event cleanup blocks (SessionStart, PreToolUse, PostToolUse).
 
 ### Fix 7: Remove phantom sdd-check-update.sh from uninstall list (LOW)
-**Line 4404** — Remove `'sdd-check-update.sh'` from `gsdHooks` array.
+**Line 4404** — Remove `'sdd-check-update.sh'` from `sddHooks` array.
 
 ### Fix 8: Remove dead isCursor/isWindsurf branches in uninstall (LOW)
 Remove the unreachable duplicate `else if (isCursor)` and `else if (isWindsurf)` branches.

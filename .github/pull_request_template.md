@@ -17,7 +17,7 @@ Select the template that matches your PR:
 - If it **corrects broken behavior** → Fix
 - If it **improves existing behavior** without adding new commands or concepts → Enhancement
 - If it **adds something that doesn't exist today** → Feature
-- If you are not sure → open a [Discussion](https://github.com/gsd-build/sdd/discussions) first
+- If you are not sure → open a [Discussion](https://github.com/bhargavvc/sdd-cc/discussions) first
 
 ---
 

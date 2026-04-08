@@ -171,7 +171,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.30.0] - 2026-03-26
 
 ### Added
-- **SDD SDK** — Headless TypeScript SDK (`@gsd-build/sdk`) with `sdd-sdk init` and `sdd-sdk auto` CLI commands for autonomous project execution
+- **SDD SDK** — Headless TypeScript SDK (`@bhargavvc/sdk`) with `sdd-sdk init` and `sdd-sdk auto` CLI commands for autonomous project execution
 - **`--sdk` installer flag** — Optionally install the SDD SDK during setup (interactive prompt or `--sdk` flag)
 
 ## [1.29.0] - 2026-03-25
@@ -1864,14 +1864,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - YOLO mode for autonomous execution
 - Interactive mode with checkpoints
 
-[Unreleased]: https://github.com/gsd-build/sdd/compare/v1.34.2...HEAD
-[1.34.2]: https://github.com/gsd-build/sdd/releases/tag/v1.34.2
-[1.34.1]: https://github.com/gsd-build/sdd/releases/tag/v1.34.1
-[1.34.0]: https://github.com/gsd-build/sdd/releases/tag/v1.34.0
-[1.33.0]: https://github.com/gsd-build/sdd/releases/tag/v1.33.0
-[1.30.0]: https://github.com/gsd-build/sdd/releases/tag/v1.30.0
-[1.29.0]: https://github.com/gsd-build/sdd/releases/tag/v1.29.0
-[1.28.0]: https://github.com/gsd-build/sdd/releases/tag/v1.28.0
+[Unreleased]: https://github.com/bhargavvc/sdd-cc/compare/v1.34.2...HEAD
+[1.34.2]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.34.2
+[1.34.1]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.34.1
+[1.34.0]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.34.0
+[1.33.0]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.33.0
+[1.30.0]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.30.0
+[1.29.0]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.29.0
+[1.28.0]: https://github.com/bhargavvc/sdd-cc/releases/tag/v1.28.0
 [1.27.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.27.0
 [1.26.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.26.0
 [1.25.0]: https://github.com/glittercowboy/sdd/releases/tag/v1.25.0
