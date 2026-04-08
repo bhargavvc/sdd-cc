@@ -34,7 +34,7 @@ const TEST_ENV_BASE = {
  *   Pass { HOME: cwd } to sandbox ~/.sdd/ lookups in tests that assert concrete
  *   config values that could be overridden by a developer's defaults.json.
  */
-function runSddTools(args, cwd = process.cwd(), env = {}) {
+function runGsdTools(args, cwd = process.cwd(), env = {}) {
   try {
     let result;
     const childEnv = { ...process.env, ...TEST_ENV_BASE, ...env };
@@ -107,4 +107,4 @@ function cleanup(tmpDir) {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }
 
-module.exports = { runSddTools, createTempDir, createTempProject, createTempGitProject, cleanup, TOOLS_PATH };
+module.exports = { runGsdTools, createTempDir, createTempProject, createTempGitProject, cleanup, TOOLS_PATH };

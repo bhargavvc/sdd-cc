@@ -11,7 +11,7 @@
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('unknown flag guard (bug #1818)', () => {
   let tmpDir;
@@ -27,29 +27,29 @@ describe('unknown flag guard (bug #1818)', () => {
   // ── --help flag ────────────────────────────────────────────────────────────
 
   test('phases clear --help is rejected with non-zero exit', () => {
-    const result = runSddTools(['phases', 'clear', '--help'], tmpDir);
+    const result = runGsdTools(['phases', 'clear', '--help'], tmpDir);
     assert.strictEqual(result.success, false, 'should fail, not run destructive clear');
     assert.match(result.error, /--help/);
   });
 
   test('generate-slug hello --help is rejected', () => {
     // Non-destructive baseline: generate-slug hello succeeds without --help
-    const ok = runSddTools(['generate-slug', 'hello'], tmpDir);
+    const ok = runGsdTools(['generate-slug', 'hello'], tmpDir);
     assert.strictEqual(ok.success, true, 'control: generate-slug without --help must succeed');
 
-    const result = runSddTools(['generate-slug', 'hello', '--help'], tmpDir);
+    const result = runGsdTools(['generate-slug', 'hello', '--help'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /--help/);
   });
 
   test('phase complete --help is rejected', () => {
-    const result = runSddTools(['phase', 'complete', '--help'], tmpDir);
+    const result = runGsdTools(['phase', 'complete', '--help'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /--help/);
   });
 
   test('state load --help is rejected', () => {
-    const result = runSddTools(['state', 'load', '--help'], tmpDir);
+    const result = runGsdTools(['state', 'load', '--help'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /--help/);
   });
@@ -57,13 +57,13 @@ describe('unknown flag guard (bug #1818)', () => {
   // ── -h shorthand ──────────────────────────────────────────────────────────
 
   test('phases clear -h is rejected', () => {
-    const result = runSddTools(['phases', 'clear', '-h'], tmpDir);
+    const result = runGsdTools(['phases', 'clear', '-h'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /-h/);
   });
 
   test('generate-slug hello -h is rejected', () => {
-    const result = runSddTools(['generate-slug', 'hello', '-h'], tmpDir);
+    const result = runGsdTools(['generate-slug', 'hello', '-h'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /-h/);
   });
@@ -71,13 +71,13 @@ describe('unknown flag guard (bug #1818)', () => {
   // ── other common hallucinated flags ───────────────────────────────────────
 
   test('generate-slug hello --version is rejected', () => {
-    const result = runSddTools(['generate-slug', 'hello', '--version'], tmpDir);
+    const result = runGsdTools(['generate-slug', 'hello', '--version'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /--version/);
   });
 
   test('current-timestamp --help is rejected', () => {
-    const result = runSddTools(['current-timestamp', '--help'], tmpDir);
+    const result = runGsdTools(['current-timestamp', '--help'], tmpDir);
     assert.strictEqual(result.success, false);
     assert.match(result.error, /--help/);
   });

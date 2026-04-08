@@ -19,7 +19,7 @@ const {
   convertClaudeAgentToCodexAgent,
   generateCodexAgentToml,
   generateCodexConfigBlock,
-  stripGsdFromCodexConfig,
+  stripSddFromCodexConfig,
   mergeCodexConfig,
   install,
   SDD_CODEX_MARKER,
@@ -308,18 +308,18 @@ describe('generateCodexConfigBlock', () => {
   });
 });
 
-// ─── stripGsdFromCodexConfig ────────────────────────────────────────────────────
+// ─── stripSddFromCodexConfig ────────────────────────────────────────────────────
 
-describe('stripGsdFromCodexConfig', () => {
+describe('stripSddFromCodexConfig', () => {
   test('returns null for SDD-only config', () => {
     const content = `${SDD_CODEX_MARKER}\n[features]\nmulti_agent = true\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.strictEqual(result, null, 'returns null when SDD-only');
   });
 
   test('preserves user content before marker', () => {
     const content = `[model]\nname = "o3"\n\n${SDD_CODEX_MARKER}\n[features]\nmulti_agent = true\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.ok(result.includes('[model]'), 'preserves user section');
     assert.ok(result.includes('name = "o3"'), 'preserves user values');
     assert.ok(!result.includes('multi_agent'), 'removes SDD content');
@@ -328,7 +328,7 @@ describe('stripGsdFromCodexConfig', () => {
 
   test('strips injected feature keys without marker', () => {
     const content = `[features]\nmulti_agent = true\ndefault_mode_request_user_input = true\nother_feature = false\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.ok(!result.includes('multi_agent'), 'removes multi_agent');
     assert.ok(!result.includes('default_mode_request_user_input'), 'removes request_user_input');
     assert.ok(result.includes('other_feature = false'), 'preserves user features');
@@ -336,7 +336,7 @@ describe('stripGsdFromCodexConfig', () => {
 
   test('removes empty [features] section', () => {
     const content = `[features]\nmulti_agent = true\n[model]\nname = "o3"\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.ok(!result.includes('[features]'), 'removes empty features section');
     assert.ok(result.includes('[model]'), 'preserves other sections');
   });
@@ -344,7 +344,7 @@ describe('stripGsdFromCodexConfig', () => {
   test('strips injected keys above marker on uninstall', () => {
     // Case 3 install injects keys into [features] AND appends marker block
     const content = `[model]\nname = "o3"\n\n[features]\nmulti_agent = true\ndefault_mode_request_user_input = true\nsome_custom_flag = true\n\n${SDD_CODEX_MARKER}\n[agents]\nmax_threads = 4\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.ok(result.includes('[model]'), 'preserves user model section');
     assert.ok(result.includes('some_custom_flag = true'), 'preserves user feature');
     assert.ok(!result.includes('multi_agent'), 'strips injected multi_agent');
@@ -354,7 +354,7 @@ describe('stripGsdFromCodexConfig', () => {
 
   test('removes [agents.sdd-*] sections', () => {
     const content = `[agents.sdd-executor]\ndescription = "test"\nconfig_file = "agents/sdd-executor.toml"\n\n[agents.custom-agent]\ndescription = "user agent"\n`;
-    const result = stripGsdFromCodexConfig(content);
+    const result = stripSddFromCodexConfig(content);
     assert.ok(!result.includes('[agents.sdd-executor]'), 'removes SDD agent section');
     assert.ok(result.includes('[agents.custom-agent]'), 'preserves user agent section');
   });
@@ -1387,7 +1387,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
   test('fresh install removes the SDD-added codex_hooks feature on uninstall', () => {
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.strictEqual(cleaned, null, 'fresh SDD-only config strips back to nothing');
   });
 
@@ -1408,7 +1408,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
 
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned, 'preserves user config after uninstall cleanup');
     assert.strictEqual(countMatches(cleaned, /^\[features\](?:\s*#.*)?$/gm), 1, 'keeps the existing features table');
     assert.strictEqual(countMatches(cleaned, /^codex_hooks = true$/gm), 0, 'removes the SDD-added codex_hooks key');
@@ -1435,7 +1435,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
 
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned.includes('features.other_feature = true'), 'preserves other dotted feature keys');
     assert.strictEqual(countMatches(cleaned, /^features\.codex_hooks = true$/gm), 0, 'removes the dotted SDD codex_hooks key');
     assert.strictEqual(countMatches(cleaned, /^\[features\]\s*$/gm), 0, 'does not leave behind a [features] table');
@@ -1456,7 +1456,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
 
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned.includes('[features]\ncodex_hooks = true\nother_feature = true'), 'preserves the user-authored codex_hooks assignment');
     assert.strictEqual(countMatches(cleaned, /^codex_hooks = true$/gm), 1, 'keeps the pre-existing codex_hooks key');
     assert.strictEqual(countMatches(cleaned, /sdd-check-update\.js/g), 0, 'removes the SDD update hook');
@@ -1476,7 +1476,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
 
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned.includes('[features]\n"codex_hooks" = true\nother_feature = true'), 'preserves the user-authored quoted codex_hooks assignment');
     assert.strictEqual(countMatches(cleaned, /^"codex_hooks" = true$/gm), 1, 'keeps the pre-existing quoted codex_hooks key');
     assert.strictEqual(countMatches(cleaned, /sdd-check-update\.js/g), 0, 'removes the SDD update hook');
@@ -1495,7 +1495,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
 
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned.includes('features.codex_hooks = true\nfeatures.other_feature = true'), 'preserves the user-authored dotted codex_hooks assignment');
     assert.strictEqual(countMatches(cleaned, /^features\.codex_hooks = true$/gm), 1, 'keeps the pre-existing dotted codex_hooks key');
     assert.strictEqual(countMatches(cleaned, /sdd-check-update\.js/g), 0, 'removes the SDD update hook');
@@ -1512,7 +1512,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
       writeCodexConfig(codexHome, initialContent);
       runCodexInstall(codexHome);
 
-      const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+      const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
       assert.strictEqual(cleaned, initialContent, `preserves short-circuited root features assignment: ${initialContent.split('\n')[0]}`);
 
       fs.rmSync(codexHome, { recursive: true, force: true });
@@ -1534,7 +1534,7 @@ describe('Codex uninstall symmetry for hook-enabled configs', () => {
     writeCodexConfig(codexHome, initialContent);
     runCodexInstall(codexHome);
 
-    const cleaned = stripGsdFromCodexConfig(readCodexConfig(codexHome));
+    const cleaned = stripSddFromCodexConfig(readCodexConfig(codexHome));
     assert.ok(cleaned.includes('# first line wins\n[features]\r\nother_feature = true\r\n\r\n[model]\r\nname = "o3"'), 'preserves the original mixed-EOL user content');
     assert.strictEqual(countMatches(cleaned, /^codex_hooks = true$/gm), 0, 'removes the injected codex_hooks key');
     assert.strictEqual(countMatches(cleaned, /sdd-check-update\.js/g), 0, 'removes the SDD update hook');

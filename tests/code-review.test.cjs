@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // --- Test Environment Setup ---
 
@@ -298,7 +298,7 @@ describe('CR-CONFIG: config key registration', () => {
         }
       }, null, 2), 'utf-8');
 
-      const result = runSddTools(['config-get', 'workflow.code_review'], tmpDir);
+      const result = runGsdTools(['config-get', 'workflow.code_review'], tmpDir);
 
       assert.ok(result.success,
         'config-get workflow.code_review failed — key not recognized');
@@ -322,7 +322,7 @@ describe('CR-CONFIG: config key registration', () => {
         }
       }, null, 2), 'utf-8');
 
-      const result = runSddTools(['config-get', 'workflow.code_review_depth'], tmpDir);
+      const result = runGsdTools(['config-get', 'workflow.code_review_depth'], tmpDir);
 
       assert.ok(result.success,
         'config-get workflow.code_review_depth failed — key not recognized');

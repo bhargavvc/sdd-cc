@@ -11,7 +11,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, cleanup, runSddTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
 
 const {
   intelQuery,
@@ -570,14 +570,14 @@ describe('sdd-tools intel subcommands', () => {
   });
 
   test('intel status returns disabled message when not enabled', () => {
-    const result = runSddTools(['intel', 'status'], tmpDir);
+    const result = runGsdTools(['intel', 'status'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.disabled, true);
   });
 
   test('intel query returns disabled message when not enabled', () => {
-    const result = runSddTools(['intel', 'query', 'test'], tmpDir);
+    const result = runGsdTools(['intel', 'query', 'test'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.disabled, true);
@@ -585,7 +585,7 @@ describe('sdd-tools intel subcommands', () => {
 
   test('intel status returns file status when enabled', () => {
     enableIntel(path.join(tmpDir, '.planning'));
-    const result = runSddTools(['intel', 'status'], tmpDir);
+    const result = runGsdTools(['intel', 'status'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.ok(output.files);
@@ -594,7 +594,7 @@ describe('sdd-tools intel subcommands', () => {
 
   test('intel validate reports errors for missing files when enabled', () => {
     enableIntel(path.join(tmpDir, '.planning'));
-    const result = runSddTools(['intel', 'validate'], tmpDir);
+    const result = runGsdTools(['intel', 'validate'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.valid, false);

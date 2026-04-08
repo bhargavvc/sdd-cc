@@ -12,7 +12,7 @@ Analyze freeform natural language input and dispatch to the most appropriate SDD
 
 Acts as a smart dispatcher — never does the work itself. Matches intent to the best SDD command using routing rules, confirms the match, then hands off.
 
-Use when you know what you want but don't know which `/sdd:*` command to run.
+Use when you know what you want but don't know which `/sdd-*` command to run.
 </objective>
 
 <execution_context>

@@ -1,6 +1,6 @@
 {
   "name": "@bhargavvc/sdd-cc",
-  "version": "1.34.2",
+  "version": "1.34.3",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
   "bin": {
     "sdd-cc": "bin/install.js"
