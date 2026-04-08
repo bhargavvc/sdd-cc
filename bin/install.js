@@ -2788,7 +2788,7 @@ function mergeCopilotInstructions(filePath, sddContent) {
  * @param {string} content - File content
  * @returns {string|null} - Cleaned content or null if empty
  */
-function stripGsdFromCopilotInstructions(content) {
+function stripSddFromCopilotInstructions(content) {
   const openIndex = content.indexOf(SDD_COPILOT_INSTRUCTIONS_MARKER);
   const closeIndex = content.indexOf(SDD_COPILOT_INSTRUCTIONS_CLOSE_MARKER);
 
@@ -4232,7 +4232,7 @@ function uninstall(isGlobal, runtime = 'claude') {
     const instructionsPath = path.join(targetDir, 'copilot-instructions.md');
     if (fs.existsSync(instructionsPath)) {
       const content = fs.readFileSync(instructionsPath, 'utf8');
-      const cleaned = stripGsdFromCopilotInstructions(content);
+      const cleaned = stripSddFromCopilotInstructions(content);
       if (cleaned === null) {
         fs.unlinkSync(instructionsPath);
         removedCount++;
@@ -6138,7 +6138,7 @@ if (process.env.SDD_TEST_MODE) {
     SDD_COPILOT_INSTRUCTIONS_MARKER,
     SDD_COPILOT_INSTRUCTIONS_CLOSE_MARKER,
     mergeCopilotInstructions,
-    stripGsdFromCopilotInstructions,
+    stripSddFromCopilotInstructions,
     convertClaudeToAntigravityContent,
     convertClaudeCommandToAntigravitySkill,
     convertClaudeAgentToAntigravityAgent,
