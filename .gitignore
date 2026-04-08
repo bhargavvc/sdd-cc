@@ -63,3 +63,6 @@ vendor/
 .cache/
 tmp/
 .worktrees
+
+# ── GSD baseline (auto-generated) ──
+.gsd-id
