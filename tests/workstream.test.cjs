@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ describe('planningDir workstream awareness via env var', () => {
   after(() => cleanup(tmpDir));
 
   test('state json returns workstream-scoped state when SDD_WORKSTREAM is set', () => {
-    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { SDD_WORKSTREAM: 'alpha' });
+    const result = runSddTools(['state', 'json', '--raw'], tmpDir, { SDD_WORKSTREAM: 'alpha' });
     assert.ok(result.success, `state json failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.ok(data.status || data.current_phase !== undefined, 'should return state data');
@@ -95,7 +95,7 @@ describe('planningDir workstream awareness via env var', () => {
   test('state json reads from flat .planning when no workstream set', () => {
     // Clear active-workstream so no auto-detection
     try { fs.unlinkSync(path.join(tmpDir, '.planning', 'active-workstream')); } catch {}
-    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { SDD_WORKSTREAM: '' });
+    const result = runSddTools(['state', 'json', '--raw'], tmpDir, { SDD_WORKSTREAM: '' });
     // Should fail or return empty state since flat .planning/ has no STATE.md
     assert.ok(!result.success || result.output.includes('not found') || result.output === '{}',
       'should read from flat .planning/');
@@ -109,7 +109,7 @@ describe('planningDir workstream awareness via env var', () => {
     fs.mkdirSync(path.join(betaDir, 'phases'), { recursive: true });
     fs.writeFileSync(path.join(betaDir, 'STATE.md'), '# State\n**Status:** Beta active\n');
 
-    const result = runGsdTools(['state', 'json', '--raw', '--ws', 'beta'], tmpDir, { SDD_WORKSTREAM: 'alpha' });
+    const result = runSddTools(['state', 'json', '--raw', '--ws', 'beta'], tmpDir, { SDD_WORKSTREAM: 'alpha' });
     assert.ok(result.success, `state json --ws beta failed: ${result.error}`);
   });
 });
@@ -130,8 +130,8 @@ describe('session-scoped active workstream routing', () => {
   after(() => cleanup(tmpDir));
 
   test('stores active workstream per session instead of mutating shared pointer', () => {
-    const alphaSet = runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const betaSet = runGsdTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const alphaSet = runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const betaSet = runSddTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(alphaSet.success, `alpha set failed: ${alphaSet.error}`);
     assert.ok(betaSet.success, `beta set failed: ${betaSet.error}`);
@@ -140,8 +140,8 @@ describe('session-scoped active workstream routing', () => {
   });
 
   test('different sessions resolve different active workstreams without --ws', () => {
-    const alpha = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const beta = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const alpha = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const beta = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(alpha.success, `alpha get failed: ${alpha.error}`);
     assert.ok(beta.success, `beta get failed: ${beta.error}`);
@@ -152,8 +152,8 @@ describe('session-scoped active workstream routing', () => {
   test('session-scoped pointer ignores legacy shared active-workstream file', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'active-workstream'), 'beta\n');
 
-    const alpha = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const shared = runGsdTools(['workstream', 'get', '--raw'], tmpDir);
+    const alpha = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const shared = runSddTools(['workstream', 'get', '--raw'], tmpDir);
 
     assert.ok(alpha.success, `session-scoped get failed: ${alpha.error}`);
     assert.ok(shared.success, `legacy get failed: ${shared.error}`);
@@ -162,8 +162,8 @@ describe('session-scoped active workstream routing', () => {
   });
 
   test('state commands route to the session-scoped workstream automatically', () => {
-    const alpha = runGsdTools(['state', 'json', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const beta = runGsdTools(['state', 'json', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const alpha = runSddTools(['state', 'json', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const beta = runSddTools(['state', 'json', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(alpha.success, `alpha state failed: ${alpha.error}`);
     assert.ok(beta.success, `beta state failed: ${beta.error}`);
@@ -174,9 +174,9 @@ describe('session-scoped active workstream routing', () => {
   });
 
   test('clearing one session does not clear another session pointer', () => {
-    const clearAlpha = runGsdTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const alpha = runGsdTools(['workstream', 'get'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const beta = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const clearAlpha = runSddTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const alpha = runSddTools(['workstream', 'get'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const beta = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(clearAlpha.success, `clear alpha failed: ${clearAlpha.error}`);
     assert.ok(alpha.success, `alpha get after clear failed: ${alpha.error}`);
@@ -205,8 +205,8 @@ describe('session resolution hardening', () => {
 
   test('headless runs skip tty probing and use the shared active-workstream fallback', () => {
     const { markerFile, env } = createFailingTtyEnv(tmpDir);
-    const set = runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, env);
-    const get = runGsdTools(['workstream', 'get', '--raw'], tmpDir, env);
+    const set = runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, env);
+    const get = runSddTools(['workstream', 'get', '--raw'], tmpDir, env);
 
     assert.ok(set.success, `headless set failed: ${set.error}`);
     assert.ok(get.success, `headless get failed: ${get.error}`);
@@ -220,11 +220,11 @@ describe('session resolution hardening', () => {
   });
 
   test('explicit runtime session ids outrank tty-derived identities', () => {
-    const set = runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, {
+    const set = runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, {
       SDD_SESSION_KEY: 'shared-session',
       TTY: '/dev/pts/42',
     });
-    const get = runGsdTools(['workstream', 'get', '--raw'], tmpDir, {
+    const get = runSddTools(['workstream', 'get', '--raw'], tmpDir, {
       SDD_SESSION_KEY: 'shared-session',
       TTY: '/dev/pts/99',
     });
@@ -238,8 +238,8 @@ describe('session resolution hardening', () => {
   test('TTY environment variables provide a session-scoped pointer without spawning tty', () => {
     const { markerFile, env } = createFailingTtyEnv(tmpDir);
     const ttyEnv = { ...env, TTY: '/dev/pts/42' };
-    const set = runGsdTools(['workstream', 'set', 'beta', '--raw'], tmpDir, ttyEnv);
-    const get = runGsdTools(['workstream', 'get', '--raw'], tmpDir, ttyEnv);
+    const set = runSddTools(['workstream', 'set', 'beta', '--raw'], tmpDir, ttyEnv);
+    const get = runSddTools(['workstream', 'get', '--raw'], tmpDir, ttyEnv);
 
     assert.ok(set.success, `TTY set failed: ${set.error}`);
     assert.ok(get.success, `TTY get failed: ${get.error}`);
@@ -269,11 +269,11 @@ describe('pointer lifecycle hardening', () => {
     const alphaFile = getSessionPointerFileName('SDD_SESSION_KEY', 'session-alpha');
     const betaFile = getSessionPointerFileName('SDD_SESSION_KEY', 'session-beta');
 
-    runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    runGsdTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    runSddTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
-    const clearAlpha = runGsdTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const beta = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const clearAlpha = runSddTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const beta = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(clearAlpha.success, `clear alpha failed: ${clearAlpha.error}`);
     assert.ok(beta.success, `beta get failed: ${beta.error}`);
@@ -287,12 +287,12 @@ describe('pointer lifecycle hardening', () => {
     const sessionDir = getSessionPointerDir(tmpDir);
     const betaFile = getSessionPointerFileName('SDD_SESSION_KEY', 'session-beta');
 
-    runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    runGsdTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    runSddTools(['workstream', 'set', 'beta', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
     fs.rmSync(path.join(tmpDir, '.planning', 'workstreams', 'alpha'), { recursive: true, force: true });
 
-    const alpha = runGsdTools(['workstream', 'get'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
-    const beta = runGsdTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
+    const alpha = runSddTools(['workstream', 'get'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const beta = runSddTools(['workstream', 'get', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-beta' });
 
     assert.ok(alpha.success, `stale alpha get failed: ${alpha.error}`);
     assert.ok(beta.success, `beta get after stale cleanup failed: ${beta.error}`);
@@ -304,12 +304,12 @@ describe('pointer lifecycle hardening', () => {
 
   test('clearing the last session pointer removes the empty session tmp directory', () => {
     const sessionDir = getSessionPointerDir(tmpDir);
-    const set = runGsdTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const set = runSddTools(['workstream', 'set', 'alpha', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
 
     assert.ok(set.success, `set alpha failed: ${set.error}`);
     assert.ok(fs.existsSync(sessionDir), 'session tmp directory should exist after storing a session-scoped pointer');
 
-    const clear = runGsdTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
+    const clear = runSddTools(['workstream', 'set', '--clear', '--raw'], tmpDir, { SDD_SESSION_KEY: 'session-alpha' });
 
     assert.ok(clear.success, `clear alpha failed: ${clear.error}`);
     assert.ok(!fs.existsSync(sessionDir), 'last-pointer cleanup should remove the empty session tmp directory');
@@ -329,7 +329,7 @@ describe('workstream create', () => {
   after(() => cleanup(tmpDir));
 
   test('creates a new workstream in clean project', () => {
-    const result = runGsdTools(['workstream', 'create', 'feature-x', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'create', 'feature-x', '--raw'], tmpDir);
     assert.ok(result.success, `create failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.created, true);
@@ -344,7 +344,7 @@ describe('workstream create', () => {
   });
 
   test('rejects duplicate workstream', () => {
-    const result = runGsdTools(['workstream', 'create', 'feature-x', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'create', 'feature-x', '--raw'], tmpDir);
     assert.ok(result.success); // returns success with error field
     const data = JSON.parse(result.output);
     assert.strictEqual(data.created, false);
@@ -352,7 +352,7 @@ describe('workstream create', () => {
   });
 
   test('creates second workstream', () => {
-    const result = runGsdTools(['workstream', 'create', 'feature-y', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'create', 'feature-y', '--raw'], tmpDir);
     assert.ok(result.success);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.created, true);
@@ -374,7 +374,7 @@ describe('workstream create with migration', () => {
   after(() => cleanup(tmpDir));
 
   test('migrates existing flat work to named workstream', () => {
-    const result = runGsdTools(['workstream', 'create', 'new-feature', '--migrate-name', 'existing-work', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'create', 'new-feature', '--migrate-name', 'existing-work', '--raw'], tmpDir);
     assert.ok(result.success, `create with migration failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.created, true);
@@ -404,7 +404,7 @@ describe('workstream list', () => {
   after(() => cleanup(tmpDir));
 
   test('lists all workstreams', () => {
-    const result = runGsdTools(['workstream', 'list', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'list', '--raw'], tmpDir);
     assert.ok(result.success, `list failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.mode, 'workstream');
@@ -425,7 +425,7 @@ describe('workstream list', () => {
     });
 
     test('reports flat mode when no workstreams exist', () => {
-      const result = runGsdTools(['workstream', 'list', '--raw'], flatDir);
+      const result = runSddTools(['workstream', 'list', '--raw'], flatDir);
       assert.ok(result.success);
       const data = JSON.parse(result.output);
       assert.strictEqual(data.mode, 'flat');
@@ -448,7 +448,7 @@ describe('workstream status', () => {
   after(() => cleanup(tmpDir));
 
   test('returns detailed status for workstream', () => {
-    const result = runGsdTools(['workstream', 'status', 'alpha', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'status', 'alpha', '--raw'], tmpDir);
     assert.ok(result.success, `status failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.found, true);
@@ -459,7 +459,7 @@ describe('workstream status', () => {
   });
 
   test('returns not found for missing workstream', () => {
-    const result = runGsdTools(['workstream', 'status', 'nonexistent', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'status', 'nonexistent', '--raw'], tmpDir);
     assert.ok(result.success);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.found, false);
@@ -480,7 +480,7 @@ describe('workstream complete', () => {
   after(() => cleanup(tmpDir));
 
   test('archives workstream to milestones/', () => {
-    const result = runGsdTools(['workstream', 'complete', 'done-ws', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'complete', 'done-ws', '--raw'], tmpDir);
     assert.ok(result.success, `complete failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.completed, true);
@@ -509,28 +509,28 @@ describe('workstream set/get', () => {
   after(() => cleanup(tmpDir));
 
   test('sets active workstream', () => {
-    const result = runGsdTools(['workstream', 'set', 'ws-a', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'set', 'ws-a', '--raw'], tmpDir);
     assert.ok(result.success);
     assert.strictEqual(result.output, 'ws-a');
   });
 
   test('gets active workstream', () => {
-    const result = runGsdTools(['workstream', 'get', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'get', '--raw'], tmpDir);
     assert.ok(result.success);
     assert.strictEqual(result.output, 'ws-a');
   });
 
   test('errors when set called with no name (#1527)', () => {
-    const result = runGsdTools(['workstream', 'set', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'set', '--raw'], tmpDir);
     assert.ok(!result.success, 'should fail when no name provided');
     assert.ok(result.error.includes('name required'), 'error should mention name required');
   });
 
   test('--clear explicitly unsets active workstream', () => {
     // First set one
-    runGsdTools(['workstream', 'set', 'ws-b', '--raw'], tmpDir);
+    runSddTools(['workstream', 'set', 'ws-b', '--raw'], tmpDir);
     // Then clear
-    const result = runGsdTools(['workstream', 'set', '--clear', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'set', '--clear', '--raw'], tmpDir);
     assert.ok(result.success);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.active, null);
@@ -562,7 +562,7 @@ describe('getOtherActiveWorkstreams', () => {
   after(() => cleanup(tmpDir));
 
   test('workstream list excludes completed workstreams from active count', () => {
-    const result = runGsdTools(['workstream', 'list', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'list', '--raw'], tmpDir);
     assert.ok(result.success);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.count, 3); // all listed
@@ -589,7 +589,7 @@ describe('workstream progress', () => {
   after(() => cleanup(tmpDir));
 
   test('returns progress summary', () => {
-    const result = runGsdTools(['workstream', 'progress', '--raw'], tmpDir);
+    const result = runSddTools(['workstream', 'progress', '--raw'], tmpDir);
     assert.ok(result.success, `progress failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.mode, 'workstream');
@@ -620,13 +620,13 @@ describe('sdd-tools --ws flag integration', () => {
   after(() => cleanup(tmpDir));
 
   test('find-phase resolves to workstream-scoped phases via --ws', () => {
-    const result = runGsdTools(['find-phase', '1', '--raw', '--ws', 'test-ws'], tmpDir);
+    const result = runSddTools(['find-phase', '1', '--raw', '--ws', 'test-ws'], tmpDir);
     assert.ok(result.success, `find-phase failed: ${result.error}`);
     assert.ok(result.output.includes('workstreams/test-ws'), `path should be workstream-scoped: ${result.output}`);
   });
 
   test('find-phase returns JSON with workstream path when not raw', () => {
-    const result = runGsdTools(['find-phase', '1', '--ws', 'test-ws'], tmpDir);
+    const result = runSddTools(['find-phase', '1', '--ws', 'test-ws'], tmpDir);
     assert.ok(result.success, `find-phase failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.ok(data.found, 'phase should be found');
@@ -663,7 +663,7 @@ describe('path traversal rejection', () => {
   describe('--ws flag rejects traversal attempts', () => {
     for (const name of maliciousNames) {
       test(`rejects --ws=${name}`, () => {
-        const result = runGsdTools(['workstream', 'list', '--raw', '--ws', name], tmpDir);
+        const result = runSddTools(['workstream', 'list', '--raw', '--ws', name], tmpDir);
         assert.ok(!result.success, `should reject --ws=${name}`);
         assert.ok(result.error.includes('Invalid workstream name'), `error should mention invalid name for: ${name}`);
       });
@@ -673,7 +673,7 @@ describe('path traversal rejection', () => {
   describe('SDD_WORKSTREAM env var rejects traversal attempts', () => {
     for (const name of maliciousNames) {
       test(`rejects SDD_WORKSTREAM=${name}`, () => {
-        const result = runGsdTools(['workstream', 'list', '--raw'], tmpDir, { SDD_WORKSTREAM: name });
+        const result = runSddTools(['workstream', 'list', '--raw'], tmpDir, { SDD_WORKSTREAM: name });
         assert.ok(!result.success, `should reject SDD_WORKSTREAM=${name}`);
         assert.ok(result.error.includes('Invalid workstream name'), `error should mention invalid name for: ${name}`);
       });
@@ -683,7 +683,7 @@ describe('path traversal rejection', () => {
   describe('cmdWorkstreamSet rejects traversal attempts', () => {
     for (const name of maliciousNames) {
       test(`rejects set ${name}`, () => {
-        const result = runGsdTools(['workstream', 'set', name, '--raw'], tmpDir);
+        const result = runSddTools(['workstream', 'set', name, '--raw'], tmpDir);
         // cmdWorkstreamSet validates the positional arg and returns invalid_name error
         assert.ok(result.success, `command should exit cleanly for: ${name}`);
         const data = JSON.parse(result.output);
@@ -698,7 +698,7 @@ describe('path traversal rejection', () => {
       test(`rejects poisoned file containing ${name}`, () => {
         // Write malicious name directly to the active-workstream file
         fs.writeFileSync(path.join(tmpDir, '.planning', 'active-workstream'), name + '\n');
-        const result = runGsdTools(['workstream', 'get'], tmpDir, { SDD_WORKSTREAM: '' });
+        const result = runSddTools(['workstream', 'get'], tmpDir, { SDD_WORKSTREAM: '' });
         assert.ok(result.success, 'get should succeed');
         const data = JSON.parse(result.output);
         // getActiveWorkstream should return null for invalid names

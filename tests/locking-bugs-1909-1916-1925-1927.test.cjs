@@ -19,7 +19,7 @@ const { execFileSync, execSync } = require('child_process');
 const { promisify } = require('util');
 const { exec } = require('child_process');
 
-const { runGsdTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
 const execAsync = promisify(exec);
 
@@ -113,7 +113,7 @@ describe('#1916 lock cleanup on process.exit()', () => {
     ].join('\n') + '\n');
 
     // Run a state update — even if it fails, the lock must not remain
-    runGsdTools('state update Status "In progress"', tmpDir);
+    runSddTools('state update Status "In progress"', tmpDir);
 
     const lockPath = path.join(tmpDir, '.planning', 'STATE.md.lock');
     assert.ok(

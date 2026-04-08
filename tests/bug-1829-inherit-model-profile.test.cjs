@@ -22,7 +22,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const { resolveModelInternal } = require('../sdd/bin/lib/core.cjs');
 
@@ -137,7 +137,7 @@ describe('bug #1829: model_profile "inherit" — resolve-model CLI', () => {
       JSON.stringify({ model_profile: 'inherit' }, null, 2)
     );
 
-    const result = runGsdTools('resolve-model sdd-executor', tmpDir);
+    const result = runSddTools('resolve-model sdd-executor', tmpDir);
     assert.ok(result.success, `resolve-model failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -151,7 +151,7 @@ describe('bug #1829: model_profile "inherit" — resolve-model CLI', () => {
       JSON.stringify({ model_profile: 'inherit' }, null, 2)
     );
 
-    const result = runGsdTools('resolve-model sdd-planner', tmpDir);
+    const result = runSddTools('resolve-model sdd-planner', tmpDir);
     assert.ok(result.success, `resolve-model failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -190,7 +190,7 @@ describe('bug #1829: model_profile "inherit" — validate health does not warn W
       }, null, 2)
     );
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runSddTools('validate health', tmpDir);
     assert.ok(result.success, `validate health failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -206,7 +206,7 @@ describe('bug #1829: model_profile "inherit" — validate health does not warn W
       JSON.stringify({ model_profile: 'invalid-profile' }, null, 2)
     );
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runSddTools('validate health', tmpDir);
     assert.ok(result.success, `validate health failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

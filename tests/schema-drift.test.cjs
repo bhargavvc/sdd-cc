@@ -9,7 +9,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, createTempGitProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, createTempGitProject, cleanup, runSddTools } = require('./helpers.cjs');
 
 // ─── Unit: detectSchemaFiles ─────────────────────────────────────────────────
 
@@ -274,7 +274,7 @@ describe('verify schema-drift CLI command', () => {
       'Plan content',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runSddTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, false);
@@ -303,7 +303,7 @@ describe('verify schema-drift CLI command', () => {
       '- npm run test',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runSddTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, true);
@@ -331,7 +331,7 @@ describe('verify schema-drift CLI command', () => {
       '- npm run build',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runSddTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, false);
@@ -350,7 +350,7 @@ describe('verify schema-drift CLI command', () => {
     ].join('\n'));
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Summary\n');
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup', '--skip'], tmpDir);
+    const result = runSddTools(['verify', 'schema-drift', '01-setup', '--skip'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.blocking, false);

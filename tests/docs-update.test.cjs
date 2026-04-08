@@ -12,7 +12,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runSddTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── JSON output shape ────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ describe('docs-init command', () => {
   });
 
   test('returns expected JSON shape', () => {
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -67,7 +67,7 @@ describe('docs-init command', () => {
   });
 
   test('bare project returns all false signals', () => {
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -111,7 +111,7 @@ describe('project type detection', () => {
       'utf-8'
     );
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -122,7 +122,7 @@ describe('project type detection', () => {
   test('detects open source from LICENSE file', () => {
     fs.writeFileSync(path.join(tmpDir, 'LICENSE'), 'MIT License', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -136,7 +136,7 @@ describe('project type detection', () => {
       'utf-8'
     );
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -147,7 +147,7 @@ describe('project type detection', () => {
   test('detects tests from tests directory', () => {
     fs.mkdirSync(path.join(tmpDir, 'tests'), { recursive: true });
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -157,7 +157,7 @@ describe('project type detection', () => {
   test('detects deploy config from Dockerfile', () => {
     fs.writeFileSync(path.join(tmpDir, 'Dockerfile'), 'FROM node:20', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -167,7 +167,7 @@ describe('project type detection', () => {
   test('detects API routes from src/app/api directory', () => {
     fs.mkdirSync(path.join(tmpDir, 'src', 'app', 'api'), { recursive: true });
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -192,7 +192,7 @@ describe('existing doc scanning', () => {
     fs.writeFileSync(path.join(tmpDir, 'README.md'), '# README\n', 'utf-8');
     fs.writeFileSync(path.join(tmpDir, 'ARCHITECTURE.md'), '# Architecture\n', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -211,7 +211,7 @@ describe('existing doc scanning', () => {
     );
     fs.writeFileSync(path.join(tmpDir, 'NOTES.md'), '# Notes\n', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -242,7 +242,7 @@ describe('doc tooling detection', () => {
   test('detects Docusaurus config', () => {
     fs.writeFileSync(path.join(tmpDir, 'docusaurus.config.js'), 'module.exports = {};', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -253,7 +253,7 @@ describe('doc tooling detection', () => {
     fs.mkdirSync(path.join(tmpDir, '.vitepress'), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, '.vitepress', 'config.ts'), 'export default {};', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -263,7 +263,7 @@ describe('doc tooling detection', () => {
   test('detects MkDocs config', () => {
     fs.writeFileSync(path.join(tmpDir, 'mkdocs.yml'), 'site_name: test', 'utf-8');
 
-    const result = runGsdTools(['docs-init'], tmpDir);
+    const result = runSddTools(['docs-init'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
