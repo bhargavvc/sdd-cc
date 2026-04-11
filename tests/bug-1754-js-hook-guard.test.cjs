@@ -22,7 +22,7 @@ const path = require('path');
 const INSTALL_SRC = path.join(__dirname, '..', 'bin', 'install.js');
 
 const JS_HOOKS = [
-  { name: 'sdd-check-update.js',      registrationAnchor: 'hasGsdUpdateHook' },
+  { name: 'sdd-check-update.js',      registrationAnchor: 'hasSddUpdateHook' },
   { name: 'sdd-context-monitor.js',   registrationAnchor: 'hasContextMonitorHook' },
   { name: 'sdd-prompt-guard.js',      registrationAnchor: 'hasPromptGuardHook' },
   { name: 'sdd-read-guard.js',        registrationAnchor: 'hasReadGuardHook' },

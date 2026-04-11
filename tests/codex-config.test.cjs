@@ -17,6 +17,7 @@ const os = require('os');
 const {
   getCodexSkillAdapterHeader,
   convertClaudeAgentToCodexAgent,
+  convertClaudeCommandToCodexSkill,
   generateCodexAgentToml,
   generateCodexConfigBlock,
   stripSddFromCodexConfig,
@@ -183,6 +184,86 @@ node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs: resolve"`;
     const result = convertClaudeAgentToCodexAgent(input);
     assert.ok(result.includes('$HOME/.codex/sdd/bin/sdd-tools.cjs'), 'replaces $HOME/.claude/ with $HOME/.codex/');
     assert.ok(!result.includes('$HOME/.claude/'), 'no .claude paths remain');
+  });
+});
+
+// ─── Codex command prefix conversion ────────────────────────────────────────────
+
+describe('Codex hyphen-style command prefix conversion', () => {
+  test('converts /sdd-command in workflow output to $sdd-command', () => {
+    const input = `---
+name: sdd-test
+description: Test
+tools: Read
+---
+
+/sdd-discuss-phase 1 — gather context
+/sdd-plan-phase 2 — create plan
+/sdd-execute-phase 3 — run it`;
+
+    const result = convertClaudeCommandToCodexSkill(input, 'sdd-test');
+    assert.ok(result.includes('$sdd-discuss-phase'), 'converts /sdd-discuss-phase');
+    assert.ok(result.includes('$sdd-plan-phase'), 'converts /sdd-plan-phase');
+    assert.ok(result.includes('$sdd-execute-phase'), 'converts /sdd-execute-phase');
+    assert.ok(!result.includes('/sdd-discuss-phase'), 'no /sdd-discuss-phase remains');
+  });
+
+  test('converts backtick-wrapped /sdd- commands', () => {
+    const input = `---
+name: sdd-test
+description: Test
+tools: Read
+---
+
+Run \`/sdd-plan-phase 1\` to plan.`;
+
+    const result = convertClaudeCommandToCodexSkill(input, 'sdd-test');
+    assert.ok(result.includes('$sdd-plan-phase'), 'converts backtick-wrapped command');
+  });
+
+  test('does not convert /sdd- in file paths', () => {
+    const input = `---
+name: sdd-test
+description: Test
+tools: Read
+---
+
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init`;
+
+    const result = convertClaudeCommandToCodexSkill(input, 'sdd-test');
+    assert.ok(result.includes('sdd-tools.cjs'), 'sdd-tools.cjs preserved in path');
+    assert.ok(!result.includes('$sdd-tools'), 'no $sdd-tools in file path');
+  });
+
+  test('removes /clear then: for Codex', () => {
+    const input = `---
+name: sdd-test
+description: Test
+tools: Read
+---
+
+\`/clear\` then:
+
+\`$sdd-plan-phase 1\``;
+
+    const result = convertClaudeCommandToCodexSkill(input, 'sdd-test');
+    assert.ok(!result.includes('/clear'), 'no /clear remains');
+    assert.ok(result.includes('$sdd-plan-phase'), 'command preserved after /clear removal');
+  });
+
+  test('removes bare /clear then: for Codex', () => {
+    const input = `---
+name: sdd-test
+description: Test
+tools: Read
+---
+
+/clear then:
+/sdd-execute-phase 2`;
+
+    const result = convertClaudeCommandToCodexSkill(input, 'sdd-test');
+    assert.ok(!result.includes('/clear'), 'no /clear remains');
+    assert.ok(result.includes('$sdd-execute-phase'), 'command converted');
   });
 });
 

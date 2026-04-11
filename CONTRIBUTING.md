@@ -160,7 +160,7 @@ test('does the thing', () => {
 Import helpers from `tests/helpers.cjs` instead of inlining temp directory creation:
 
 ```javascript
-const { createTempProject, createTempGitProject, createTempDir, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, createTempGitProject, createTempDir, cleanup, runSddTools } = require('./helpers.cjs');
 ```
 
 | Helper | Creates | Use When |
@@ -169,7 +169,7 @@ const { createTempProject, createTempGitProject, createTempDir, cleanup, runGsdT
 | `createTempGitProject(prefix?)` | Same + git init + initial commit | Testing git-dependent features |
 | `createTempDir(prefix?)` | Bare temp directory | Testing features that don't need `.planning/` |
 | `cleanup(tmpDir)` | Removes directory recursively | Always use in `afterEach` |
-| `runGsdTools(args, cwd, env?)` | Executes sdd-tools.cjs | Testing CLI commands |
+| `runSddTools(args, cwd, env?)` | Executes sdd-tools.cjs | Testing CLI commands |
 
 ### Test Structure
 

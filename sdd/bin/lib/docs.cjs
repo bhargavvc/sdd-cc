@@ -29,7 +29,7 @@ const SKIP_DIRS = new Set([
  * @param {string} filePath - Absolute path to the file
  * @returns {boolean}
  */
-function hasGsdMarker(filePath) {
+function hasSddMarker(filePath) {
   try {
     const buf = Buffer.alloc(500);
     const fd = fs.openSync(filePath, 'r');
@@ -68,7 +68,7 @@ function scanExistingDocs(cwd) {
           walkDir(abs, depth + 1);
         } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
           const rel = toPosixPath(path.relative(cwd, abs));
-          results.push({ path: rel, has_sdd_marker: hasGsdMarker(abs) });
+          results.push({ path: rel, has_sdd_marker: hasSddMarker(abs) });
         }
       }
     } catch { /* directory may not exist — best-effort */ }
@@ -81,7 +81,7 @@ function scanExistingDocs(cwd) {
       if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
         const abs = path.join(cwd, entry.name);
         const rel = toPosixPath(path.relative(cwd, abs));
-        results.push({ path: rel, has_sdd_marker: hasGsdMarker(abs) });
+        results.push({ path: rel, has_sdd_marker: hasSddMarker(abs) });
       }
     }
   } catch { /* best-effort */ }

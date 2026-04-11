@@ -70,6 +70,9 @@ const hasCursor = args.includes('--cursor');
 const hasWindsurf = args.includes('--windsurf');
 const hasAugment = args.includes('--augment');
 const hasTrae = args.includes('--trae');
+const hasQwen = args.includes('--qwen');
+const hasCodebuddy = args.includes('--codebuddy');
+const hasCline = args.includes('--cline');
 const hasBoth = args.includes('--both'); // Legacy flag, keeps working
 const hasAll = args.includes('--all');
 const hasUninstall = args.includes('--uninstall') || args.includes('-u');
@@ -77,7 +80,7 @@ const hasUninstall = args.includes('--uninstall') || args.includes('-u');
 // Runtime selection - can be set by flags or interactive prompt
 let selectedRuntimes = [];
 if (hasAll) {
-  selectedRuntimes = ['claude', 'kilo', 'opencode', 'gemini', 'codex', 'copilot', 'antigravity', 'cursor', 'windsurf', 'augment', 'trae'];
+  selectedRuntimes = ['claude', 'kilo', 'opencode', 'gemini', 'codex', 'copilot', 'antigravity', 'cursor', 'windsurf', 'augment', 'trae', 'qwen', 'codebuddy', 'cline'];
 } else if (hasBoth) {
   selectedRuntimes = ['claude', 'opencode'];
 } else {
@@ -92,6 +95,9 @@ if (hasAll) {
   if (hasWindsurf) selectedRuntimes.push('windsurf');
   if (hasAugment) selectedRuntimes.push('augment');
   if (hasTrae) selectedRuntimes.push('trae');
+  if (hasQwen) selectedRuntimes.push('qwen');
+  if (hasCodebuddy) selectedRuntimes.push('codebuddy');
+  if (hasCline) selectedRuntimes.push('cline');
 }
 
 // WSL + Windows Node.js detection
@@ -140,6 +146,9 @@ function getDirName(runtime) {
   if (runtime === 'windsurf') return '.windsurf';
   if (runtime === 'augment') return '.augment';
   if (runtime === 'trae') return '.trae';
+  if (runtime === 'qwen') return '.qwen';
+  if (runtime === 'codebuddy') return '.codebuddy';
+  if (runtime === 'cline') return '.cline';
   return '.claude';
 }
 
@@ -172,6 +181,9 @@ function getConfigDirFromHome(runtime, isGlobal) {
   if (runtime === 'windsurf') return "'.windsurf'";
   if (runtime === 'augment') return "'.augment'";
   if (runtime === 'trae') return "'.trae'";
+  if (runtime === 'qwen') return "'.qwen'";
+  if (runtime === 'codebuddy') return "'.codebuddy'";
+  if (runtime === 'cline') return "'.cline'";
   return "'.claude'";
 }
 
@@ -334,6 +346,37 @@ function getGlobalDir(runtime, explicitDir = null) {
     return path.join(os.homedir(), '.trae');
   }
 
+  if (runtime === 'qwen') {
+    if (explicitDir) {
+      return expandTilde(explicitDir);
+    }
+    if (process.env.QWEN_CONFIG_DIR) {
+      return expandTilde(process.env.QWEN_CONFIG_DIR);
+    }
+    return path.join(os.homedir(), '.qwen');
+  }
+
+  if (runtime === 'codebuddy') {
+    // CodeBuddy: --config-dir > CODEBUDDY_CONFIG_DIR > ~/.codebuddy
+    if (explicitDir) {
+      return expandTilde(explicitDir);
+    }
+    if (process.env.CODEBUDDY_CONFIG_DIR) {
+      return expandTilde(process.env.CODEBUDDY_CONFIG_DIR);
+    }
+    return path.join(os.homedir(), '.codebuddy');
+  }
+
+  if (runtime === 'cline') {
+    // Cline: --config-dir > CLINE_CONFIG_DIR > ~/.cline
+    if (explicitDir) {
+      return expandTilde(explicitDir);
+    }
+    if (process.env.CLINE_CONFIG_DIR) {
+      return expandTilde(process.env.CLINE_CONFIG_DIR);
+    }
+    return path.join(os.homedir(), '.cline');
+  }
 
   // Claude Code: --config-dir > CLAUDE_CONFIG_DIR > ~/.claude
   if (explicitDir) {
@@ -355,7 +398,7 @@ const banner = '\n' +
   '\n' +
   '  Spec-Driven Development ' + dim + 'v' + pkg.version + reset + '\n' +
   '  A meta-prompting, context engineering and spec-driven\n' +
-  '  development system for Claude Code, OpenCode, Gemini, Kilo, Codex, Copilot, Antigravity, Cursor, Windsurf, Augment and Trae by TÂCHES.\n';
+  '  development system for Claude Code, OpenCode, Gemini, Kilo, Codex, Copilot, Antigravity, Cursor, Windsurf, Augment, Trae, Qwen Code, Cline and CodeBuddy by TÂCHES.\n';
 
 // Parse --config-dir argument
 function parseConfigDirArg() {
@@ -393,7 +436,7 @@ if (hasUninstall) {
 
 // Show help if requested
 if (hasHelp) {
-  console.log(`  ${yellow}Usage:${reset} npx @bhargavvc/sdd-cc [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--kilo${reset}                    Install for Kilo only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only\n    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--trae${reset}                    Install for Trae only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}-u, --uninstall${reset}           Uninstall SDD (remove all SDD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    npx @bhargavvc/sdd-cc\n\n    ${dim}# Install for Claude Code globally${reset}\n    npx @bhargavvc/sdd-cc --claude --global\n\n    ${dim}# Install for Gemini globally${reset}\n    npx @bhargavvc/sdd-cc --gemini --global\n\n    ${dim}# Install for Kilo globally${reset}\n    npx @bhargavvc/sdd-cc --kilo --global\n\n    ${dim}# Install for Codex globally${reset}\n    npx @bhargavvc/sdd-cc --codex --global\n\n    ${dim}# Install for Copilot globally${reset}\n    npx @bhargavvc/sdd-cc --copilot --global\n\n    ${dim}# Install for Copilot locally${reset}\n    npx @bhargavvc/sdd-cc --copilot --local\n\n    ${dim}# Install for Antigravity globally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --global\n\n    ${dim}# Install for Antigravity locally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --local\n\n    ${dim}# Install for Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global\n\n    ${dim}# Install for Cursor locally${reset}\n    npx @bhargavvc/sdd-cc --cursor --local\n\n    ${dim}# Install for Windsurf globally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --global\n\n    ${dim}# Install for Windsurf locally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --local\n\n    ${dim}# Install for Augment globally${reset}\n    npx @bhargavvc/sdd-cc --augment --global\n\n    ${dim}# Install for Augment locally${reset}\n    npx @bhargavvc/sdd-cc --augment --local\n\n    ${dim}# Install for Trae globally${reset}\n    npx @bhargavvc/sdd-cc --trae --global\n\n    ${dim}# Install for Trae locally${reset}\n    npx @bhargavvc/sdd-cc --trae --local\n\n    ${dim}# Install for all runtimes globally${reset}\n    npx @bhargavvc/sdd-cc --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx @bhargavvc/sdd-cc --kilo --global --config-dir ~/.kilo-work\n\n    ${dim}# Install to current project only${reset}\n    npx @bhargavvc/sdd-cc --claude --local\n\n    ${dim}# Uninstall SDD from Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over CLAUDE_CONFIG_DIR / OPENCODE_CONFIG_DIR / GEMINI_CONFIG_DIR / KILO_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR / TRAE_CONFIG_DIR environment variables.\n`);
+  console.log(`  ${yellow}Usage:${reset} npx @bhargavvc/sdd-cc [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--kilo${reset}                    Install for Kilo only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only\n    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--trae${reset}                    Install for Trae only\n    ${cyan}--qwen${reset}                    Install for Qwen Code only\n    ${cyan}--cline${reset}                   Install for Cline only\n    ${cyan}--codebuddy${reset}              Install for CodeBuddy only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}-u, --uninstall${reset}           Uninstall SDD (remove all SDD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    npx @bhargavvc/sdd-cc\n\n    ${dim}# Install for Claude Code globally${reset}\n    npx @bhargavvc/sdd-cc --claude --global\n\n    ${dim}# Install for Gemini globally${reset}\n    npx @bhargavvc/sdd-cc --gemini --global\n\n    ${dim}# Install for Kilo globally${reset}\n    npx @bhargavvc/sdd-cc --kilo --global\n\n    ${dim}# Install for Codex globally${reset}\n    npx @bhargavvc/sdd-cc --codex --global\n\n    ${dim}# Install for Copilot globally${reset}\n    npx @bhargavvc/sdd-cc --copilot --global\n\n    ${dim}# Install for Copilot locally${reset}\n    npx @bhargavvc/sdd-cc --copilot --local\n\n    ${dim}# Install for Antigravity globally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --global\n\n    ${dim}# Install for Antigravity locally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --local\n\n    ${dim}# Install for Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global\n\n    ${dim}# Install for Cursor locally${reset}\n    npx @bhargavvc/sdd-cc --cursor --local\n\n    ${dim}# Install for Windsurf globally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --global\n\n    ${dim}# Install for Windsurf locally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --local\n\n    ${dim}# Install for Augment globally${reset}\n    npx @bhargavvc/sdd-cc --augment --global\n\n    ${dim}# Install for Augment locally${reset}\n    npx @bhargavvc/sdd-cc --augment --local\n\n    ${dim}# Install for Trae globally${reset}\n    npx @bhargavvc/sdd-cc --trae --global\n\n    ${dim}# Install for Trae locally${reset}\n    npx @bhargavvc/sdd-cc --trae --local\n\n    ${dim}# Install for Cline locally${reset}\n    npx @bhargavvc/sdd-cc --cline --local\n\n    ${dim}# Install for CodeBuddy globally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --global\n\n    ${dim}# Install for CodeBuddy locally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --local\n\n    ${dim}# Install for all runtimes globally${reset}\n    npx @bhargavvc/sdd-cc --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx @bhargavvc/sdd-cc --kilo --global --config-dir ~/.kilo-work\n\n    ${dim}# Install to current project only${reset}\n    npx @bhargavvc/sdd-cc --claude --local\n\n    ${dim}# Uninstall SDD from Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over CLAUDE_CONFIG_DIR / OPENCODE_CONFIG_DIR / GEMINI_CONFIG_DIR / KILO_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR / TRAE_CONFIG_DIR / QWEN_CONFIG_DIR / CLINE_CONFIG_DIR / CODEBUDDY_CONFIG_DIR environment variables.\n`);
   process.exit(0);
 }
 
@@ -414,7 +457,13 @@ function expandTilde(filePath) {
 function buildHookCommand(configDir, hookName) {
   // Use forward slashes for Node.js compatibility on all platforms
   const hooksPath = configDir.replace(/\\/g, '/') + '/hooks/' + hookName;
-  return `node "${hooksPath}"`;
+  // .sh hooks use bash; .js hooks use node. Both wrap the path in double quotes
+  // so that paths with spaces (e.g. Windows "C:/Users/First Last/") work correctly
+  // (fixes #2045). Routing .sh hooks through this function also ensures they always
+  // receive an absolute path rather than the bare relative string that the old manual
+  // concatenation produced (fixes #2046).
+  const runner = hookName.endsWith('.sh') ? 'bash' : 'node';
+  return `${runner} "${hooksPath}"`;
 }
 
 /**
@@ -1476,17 +1525,113 @@ function convertClaudeAgentToTraeAgent(content) {
   return `${cleanFrontmatter}\n${body}`;
 }
 
+function convertSlashCommandsToCodebuddySkillMentions(content) {
+  return content.replace(/\/sdd:([a-z0-9-]+)/g, (_, commandName) => {
+    return `/sdd-${commandName}`;
+  });
+}
+
+function convertClaudeToCodebuddyMarkdown(content) {
+  let converted = convertSlashCommandsToCodebuddySkillMentions(content);
+  // CodeBuddy uses the same tool names as Claude Code (Bash, Edit, Read, Write, etc.)
+  // No tool name conversion needed
+  converted = converted.replace(/\$ARGUMENTS\b/g, '{{SDD_ARGS}}');
+  converted = converted.replace(/`\.\/CLAUDE\.md`/g, '`CODEBUDDY.md`');
+  converted = converted.replace(/\.\/CLAUDE\.md/g, 'CODEBUDDY.md');
+  converted = converted.replace(/`CLAUDE\.md`/g, '`CODEBUDDY.md`');
+  converted = converted.replace(/\bCLAUDE\.md\b/g, 'CODEBUDDY.md');
+  converted = converted.replace(/\.claude\/skills\//g, '.codebuddy/skills/');
+  converted = converted.replace(/\.\/\.claude\//g, './.codebuddy/');
+  converted = converted.replace(/\.claude\//g, '.codebuddy/');
+  converted = converted.replace(/\*\*Known Claude Code bug \(classifyHandoffIfNeeded\):\*\*[^\n]*\n/g, '');
+  converted = converted.replace(/- \*\*classifyHandoffIfNeeded false failure:\*\*[^\n]*\n/g, '');
+  converted = converted.replace(/\bClaude Code\b/g, 'CodeBuddy');
+  return converted;
+}
+
+function convertClaudeCommandToCodebuddySkill(content, skillName) {
+  const converted = convertClaudeToCodebuddyMarkdown(content);
+  const { frontmatter, body } = extractFrontmatterAndBody(converted);
+  let description = `Run SDD workflow ${skillName}.`;
+  if (frontmatter) {
+    const maybeDescription = extractFrontmatterField(frontmatter, 'description');
+    if (maybeDescription) {
+      description = maybeDescription;
+    }
+  }
+  description = toSingleLine(description);
+  const shortDescription = description.length > 180 ? `${description.slice(0, 177)}...` : description;
+  return `---\nname: ${yamlIdentifier(skillName)}\ndescription: ${shortDescription}\n---\n${body}`;
+}
+
+function convertClaudeAgentToCodebuddyAgent(content) {
+  let converted = convertClaudeToCodebuddyMarkdown(content);
+
+  const { frontmatter, body } = extractFrontmatterAndBody(converted);
+  if (!frontmatter) return converted;
+
+  const name = extractFrontmatterField(frontmatter, 'name') || 'unknown';
+  const description = extractFrontmatterField(frontmatter, 'description') || '';
+
+  const cleanFrontmatter = `---\nname: ${yamlIdentifier(name)}\ndescription: ${yamlQuote(toSingleLine(description))}\n---`;
+
+  return `${cleanFrontmatter}\n${body}`;
+}
+
+// ── Cline converters ────────────────────────────────────────────────────────
+
+function convertClaudeToCliineMarkdown(content) {
+  let converted = content;
+  // Cline uses the same tool names as Claude Code — no tool name conversion needed
+  converted = converted.replace(/`\.\/CLAUDE\.md`/g, '`.clinerules`');
+  converted = converted.replace(/\.\/CLAUDE\.md/g, '.clinerules');
+  converted = converted.replace(/`CLAUDE\.md`/g, '`.clinerules`');
+  converted = converted.replace(/\bCLAUDE\.md\b/g, '.clinerules');
+  converted = converted.replace(/\.claude\/skills\//g, '.cline/skills/');
+  converted = converted.replace(/\.\/\.claude\//g, './.cline/');
+  converted = converted.replace(/\.claude\//g, '.cline/');
+  converted = converted.replace(/\*\*Known Claude Code bug \(classifyHandoffIfNeeded\):\*\*[^\n]*\n/g, '');
+  converted = converted.replace(/- \*\*classifyHandoffIfNeeded false failure:\*\*[^\n]*\n/g, '');
+  converted = converted.replace(/\bClaude Code\b/g, 'Cline');
+  return converted;
+}
+
+function convertClaudeAgentToClineAgent(content) {
+  let converted = convertClaudeToCliineMarkdown(content);
+  const { frontmatter, body } = extractFrontmatterAndBody(converted);
+  if (!frontmatter) return converted;
+  const name = extractFrontmatterField(frontmatter, 'name') || 'unknown';
+  const description = extractFrontmatterField(frontmatter, 'description') || '';
+  const cleanFrontmatter = `---\nname: ${yamlIdentifier(name)}\ndescription: ${yamlQuote(toSingleLine(description))}\n---`;
+  return `${cleanFrontmatter}\n${body}`;
+}
+
+// ── End Cline converters ─────────────────────────────────────────────────────
+
 function convertSlashCommandsToCodexSkillMentions(content) {
+  // Convert colon-style skill invocations to Codex $ prefix
   let converted = content.replace(/\/sdd:([a-z0-9-]+)/gi, (_, commandName) => {
     return `$sdd-${String(commandName).toLowerCase()}`;
   });
-  converted = converted.replace(/\/sdd-help\b/g, '$sdd-help');
+  // Convert hyphen-style command references (workflow output) to Codex $ prefix.
+  // Negative lookbehind excludes file paths like bin/sdd-tools.cjs where
+  // the slash is preceded by a word char, dot, or another slash.
+  converted = converted.replace(/(?<![a-zA-Z0-9./])\/sdd-([a-z0-9-]+)/gi, (_, commandName) => {
+    return `$sdd-${String(commandName).toLowerCase()}`;
+  });
   return converted;
 }
 
 function convertClaudeToCodexMarkdown(content) {
   let converted = convertSlashCommandsToCodexSkillMentions(content);
   converted = converted.replace(/\$ARGUMENTS\b/g, '{{SDD_ARGS}}');
+  // Remove /clear references — Codex has no equivalent command
+  // Handle backtick-wrapped: `\/clear` then: → (removed)
+  converted = converted.replace(/`\/clear`\s*,?\s*then:?\s*\n?/gi, '');
+  // Handle bare: /clear then: → (removed)
+  converted = converted.replace(/\/clear\s*,?\s*then:?\s*\n?/gi, '');
+  // Handle standalone /clear on its own line
+  converted = converted.replace(/^\s*`?\/clear`?\s*$/gm, '');
   // Path replacement: .claude → .codex (#1430)
   converted = converted.replace(/\$HOME\/\.claude\//g, '$HOME/.codex/');
   converted = converted.replace(/~\/\.claude\//g, '~/.codex/');
@@ -1635,7 +1780,7 @@ function generateCodexConfigBlock(agents, targetDir) {
   return lines.join('\n');
 }
 
-function stripCodexGsdAgentSections(content) {
+function stripCodexSddAgentSections(content) {
   return content.replace(/^\[agents\.sdd-[^\]]+\]\n(?:(?!\[)[^\n]*\n?)*/gm, '');
 }
 
@@ -1643,7 +1788,7 @@ function stripCodexGsdAgentSections(content) {
  * Strip SDD sections from Codex config.toml content.
  * Returns cleaned content, or null if file would be empty.
  */
-function stripGsdFromCodexConfig(content) {
+function stripSddFromCodexConfig(content) {
   const eol = detectLineEnding(content);
   const markerIndex = content.indexOf(SDD_CODEX_MARKER);
   const codexHooksOwnership = getManagedCodexHooksOwnership(content);
@@ -1669,7 +1814,7 @@ function stripGsdFromCodexConfig(content) {
   cleaned = cleaned.replace(/^default_mode_request_user_input\s*=\s*true\s*(?:\r?\n)?/m, '');
 
   // Remove [agents.sdd-*] sections (from header to next section or EOF)
-  cleaned = stripCodexGsdAgentSections(cleaned);
+  cleaned = stripCodexSddAgentSections(cleaned);
 
   // Remove [features] section if now empty (only header, no keys before next section)
   cleaned = cleaned.replace(/^\[features\]\s*\n(?=\[|$)/m, '');
@@ -2303,7 +2448,7 @@ function setManagedCodexHooksOwnership(content, ownership) {
     remainder;
 }
 
-function isLegacyGsdAgentsSection(body) {
+function isLegacySddAgentsSection(body) {
   const lineRecords = getTomlLineRecords(body);
   const legacyKeys = new Set(['max_threads', 'max_depth']);
   let sawLegacyKey = false;
@@ -2332,13 +2477,13 @@ function isLegacyGsdAgentsSection(body) {
   return sawLegacyKey;
 }
 
-function stripLeakedGsdCodexSections(content) {
+function stripLeakedSddCodexSections(content) {
   const leakedSections = getTomlTableSections(content)
     .filter((section) =>
       section.path.startsWith('agents.sdd-') ||
       (
         section.path === 'agents' &&
-        isLegacyGsdAgentsSection(content.slice(section.headerEnd, section.end))
+        isLegacySddAgentsSection(content.slice(section.headerEnd, section.end))
       )
     );
 
@@ -2508,7 +2653,7 @@ function mergeCodexConfig(configPath, sddBlock) {
 
   const existing = fs.readFileSync(configPath, 'utf8');
   const eol = detectLineEnding(existing);
-  const normalizedGsdBlock = sddBlock.replace(/\r?\n/g, eol);
+  const normalizedSddBlock = sddBlock.replace(/\r?\n/g, eol);
   const markerIndex = existing.indexOf(SDD_CODEX_MARKER);
 
   // Case 2: Has SDD marker — truncate and re-append
@@ -2516,21 +2661,21 @@ function mergeCodexConfig(configPath, sddBlock) {
     let before = existing.substring(0, markerIndex).trimEnd();
     if (before) {
       // Strip any SDD-managed sections that leaked above the marker from previous installs
-      before = stripLeakedGsdCodexSections(before).trimEnd();
+      before = stripLeakedSddCodexSections(before).trimEnd();
 
-      fs.writeFileSync(configPath, before + eol + eol + normalizedGsdBlock + eol);
+      fs.writeFileSync(configPath, before + eol + eol + normalizedSddBlock + eol);
     } else {
-      fs.writeFileSync(configPath, normalizedGsdBlock + eol);
+      fs.writeFileSync(configPath, normalizedSddBlock + eol);
     }
     return;
   }
 
   // Case 3: No marker — append SDD block
-  let content = stripLeakedGsdCodexSections(existing).trimEnd();
+  let content = stripLeakedSddCodexSections(existing).trimEnd();
   if (content) {
-    content = content + eol + eol + normalizedGsdBlock + eol;
+    content = content + eol + eol + normalizedSddBlock + eol;
   } else {
-    content = normalizedGsdBlock + eol;
+    content = normalizedSddBlock + eol;
   }
 
   fs.writeFileSync(configPath, content);
@@ -2817,13 +2962,13 @@ function installCodexConfig(targetDir, agentsSrc) {
   const agents = [];
 
   // Compute the Codex SDD install path (absolute, so subagents with empty $HOME work — #820)
-  const codexGsdPath = `${path.resolve(targetDir, 'sdd').replace(/\\/g, '/')}/`;
+  const codexSddPath = `${path.resolve(targetDir, 'sdd').replace(/\\/g, '/')}/`;
 
   for (const file of agentEntries) {
     let content = fs.readFileSync(path.join(agentsSrc, file), 'utf8');
     // Replace full .claude/sdd prefix so path resolves to codex SDD install
-    content = content.replace(/~\/\.claude\/sdd\//g, codexGsdPath);
-    content = content.replace(/\$HOME\/\.claude\/sdd\//g, codexGsdPath);
+    content = content.replace(/~\/\.claude\/sdd\//g, codexSddPath);
+    content = content.replace(/\$HOME\/\.claude\/sdd\//g, codexSddPath);
     const { frontmatter } = extractFrontmatterAndBody(content);
     const name = extractFrontmatterField(frontmatter, 'name') || file.replace('.md', '');
     const description = extractFrontmatterField(frontmatter, 'description') || '';
@@ -3647,6 +3792,69 @@ function copyCommandsAsTraeSkills(srcDir, skillsDir, prefix, pathPrefix, runtime
 }
 
 /**
+ * Copy Claude commands as CodeBuddy skills — one folder per skill with SKILL.md.
+ * CodeBuddy uses the same tool names as Claude Code, but has its own config directory structure.
+ */
+function copyCommandsAsCodebuddySkills(srcDir, skillsDir, prefix, pathPrefix, runtime) {
+  if (!fs.existsSync(srcDir)) {
+    return;
+  }
+
+  fs.mkdirSync(skillsDir, { recursive: true });
+
+  const existing = fs.readdirSync(skillsDir, { withFileTypes: true });
+  for (const entry of existing) {
+    if (entry.isDirectory() && entry.name.startsWith(`${prefix}-`)) {
+      fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
+    }
+  }
+
+  function recurse(currentSrcDir, currentPrefix) {
+    const entries = fs.readdirSync(currentSrcDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const srcPath = path.join(currentSrcDir, entry.name);
+      if (entry.isDirectory()) {
+        recurse(srcPath, `${currentPrefix}-${entry.name}`);
+        continue;
+      }
+
+      if (!entry.name.endsWith('.md')) {
+        continue;
+      }
+
+      const baseName = entry.name.replace('.md', '');
+      const skillName = `${currentPrefix}-${baseName}`;
+      const skillDir = path.join(skillsDir, skillName);
+      fs.mkdirSync(skillDir, { recursive: true });
+
+      let content = fs.readFileSync(srcPath, 'utf8');
+      const globalClaudeRegex = /~\/\.claude\//g;
+      const globalClaudeHomeRegex = /\$HOME\/\.claude\//g;
+      const localClaudeRegex = /\.\/\.claude\//g;
+      const bareGlobalClaudeRegex = /~\/\.claude\b/g;
+      const bareGlobalClaudeHomeRegex = /\$HOME\/\.claude\b/g;
+      const bareLocalClaudeRegex = /\.\/\.claude\b/g;
+      const codebuddyDirRegex = /~\/\.codebuddy\//g;
+      const normalizedPathPrefix = pathPrefix.replace(/\/$/, '');
+      content = content.replace(globalClaudeRegex, pathPrefix);
+      content = content.replace(globalClaudeHomeRegex, pathPrefix);
+      content = content.replace(localClaudeRegex, `./${getDirName(runtime)}/`);
+      content = content.replace(bareGlobalClaudeRegex, normalizedPathPrefix);
+      content = content.replace(bareGlobalClaudeHomeRegex, normalizedPathPrefix);
+      content = content.replace(bareLocalClaudeRegex, `./${getDirName(runtime)}`);
+      content = content.replace(codebuddyDirRegex, pathPrefix);
+      content = processAttribution(content, getCommitAttribution(runtime));
+      content = convertClaudeCommandToCodebuddySkill(content, skillName);
+
+      fs.writeFileSync(path.join(skillDir, 'SKILL.md'), content);
+    }
+  }
+
+  recurse(srcDir, prefix);
+}
+
+/**
  * Copy Claude commands as Copilot skills — one folder per skill with SKILL.md.
  * Applies CONV-01 (structure), CONV-02 (allowed-tools), CONV-06 (paths), CONV-07 (command names).
  */
@@ -3745,7 +3953,10 @@ function copyCommandsAsClaudeSkills(srcDir, skillsDir, prefix, pathPrefix, runti
       content = content.replace(/~\/\.claude\//g, pathPrefix);
       content = content.replace(/\$HOME\/\.claude\//g, pathPrefix);
       content = content.replace(/\.\/\.claude\//g, `./${getDirName(runtime)}/`);
-      content = processAttribution(content, getCommitAttribution('claude'));
+      content = content.replace(/~\/\.qwen\//g, pathPrefix);
+      content = content.replace(/\$HOME\/\.qwen\//g, pathPrefix);
+      content = content.replace(/\.\/\.qwen\//g, `./${getDirName(runtime)}/`);
+      content = processAttribution(content, getCommitAttribution(runtime));
       content = convertClaudeCommandToClaudeSkill(content, skillName);
 
       fs.writeFileSync(path.join(skillDir, 'SKILL.md'), content);
@@ -3863,6 +4074,8 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
   const isWindsurf = runtime === 'windsurf';
   const isAugment = runtime === 'augment';
   const isTrae = runtime === 'trae';
+  const isQwen = runtime === 'qwen';
+  const isCline = runtime === 'cline';
   const dirName = getDirName(runtime);
 
   // Clean install: remove existing destination to prevent orphaned files
@@ -3890,6 +4103,9 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
         content = content.replace(globalClaudeRegex, pathPrefix);
         content = content.replace(globalClaudeHomeRegex, pathPrefix);
         content = content.replace(localClaudeRegex, `./${dirName}/`);
+        content = content.replace(/~\/\.qwen\//g, pathPrefix);
+        content = content.replace(/\$HOME\/\.qwen\//g, pathPrefix);
+        content = content.replace(/\.\/\.qwen\//g, `./${dirName}/`);
       }
       content = processAttribution(content, getCommitAttribution(runtime));
 
@@ -3930,6 +4146,9 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
       } else if (isTrae) {
         content = convertClaudeToTraeMarkdown(content);
         fs.writeFileSync(destPath, content);
+      } else if (isCline) {
+        content = convertClaudeToCliineMarkdown(content);
+        fs.writeFileSync(destPath, content);
       } else {
         fs.writeFileSync(destPath, content);
       }
@@ -3967,6 +4186,12 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
       jsContent = jsContent.replace(/\.claude\/skills\//g, '.trae/skills/');
       jsContent = jsContent.replace(/CLAUDE\.md/g, '.trae/rules/');
       jsContent = jsContent.replace(/\bClaude Code\b/g, 'Trae');
+      fs.writeFileSync(destPath, jsContent);
+    } else if (isCline && (entry.name.endsWith('.cjs') || entry.name.endsWith('.js'))) {
+      let jsContent = fs.readFileSync(srcPath, 'utf8');
+      jsContent = jsContent.replace(/\.claude\/skills\//g, '.cline/skills/');
+      jsContent = jsContent.replace(/CLAUDE\.md/g, '.clinerules');
+      jsContent = jsContent.replace(/\bClaude Code\b/g, 'Cline');
       fs.writeFileSync(destPath, jsContent);
     } else {
       fs.copyFileSync(srcPath, destPath);
@@ -4145,6 +4370,8 @@ function uninstall(isGlobal, runtime = 'claude') {
   const isWindsurf = runtime === 'windsurf';
   const isAugment = runtime === 'augment';
   const isTrae = runtime === 'trae';
+  const isQwen = runtime === 'qwen';
+  const isCodebuddy = runtime === 'codebuddy';
   const dirName = getDirName(runtime);
 
   // Get the target directory based on runtime and install type
@@ -4167,6 +4394,8 @@ function uninstall(isGlobal, runtime = 'claude') {
   if (runtime === 'windsurf') runtimeLabel = 'Windsurf';
   if (runtime === 'augment') runtimeLabel = 'Augment';
   if (runtime === 'trae') runtimeLabel = 'Trae';
+  if (runtime === 'qwen') runtimeLabel = 'Qwen Code';
+  if (runtime === 'codebuddy') runtimeLabel = 'CodeBuddy';
 
   console.log(`  Uninstalling SDD from ${cyan}${runtimeLabel}${reset} at ${cyan}${locationLabel}${reset}\n`);
 
@@ -4193,8 +4422,8 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
       console.log(`  ${green}✓${reset} Removed SDD commands from command/`);
     }
-  } else if (isCodex || isCursor || isWindsurf || isTrae) {
-    // Codex/Cursor/Windsurf/Trae: remove skills/sdd-*/SKILL.md skill directories
+  } else if (isCodex || isCursor || isWindsurf || isTrae || isCodebuddy) {
+    // Codex/Cursor/Windsurf/Trae/CodeBuddy: remove skills/sdd-*/SKILL.md skill directories
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
@@ -4233,7 +4462,7 @@ function uninstall(isGlobal, runtime = 'claude') {
       const configPath = path.join(targetDir, 'config.toml');
       if (fs.existsSync(configPath)) {
         const content = fs.readFileSync(configPath, 'utf8');
-        const cleaned = stripGsdFromCodexConfig(content);
+        const cleaned = stripSddFromCodexConfig(content);
         if (cleaned === null) {
           // File is empty after stripping — delete it
           fs.unlinkSync(configPath);
@@ -4295,6 +4524,31 @@ function uninstall(isGlobal, runtime = 'claude') {
         removedCount++;
         console.log(`  ${green}✓${reset} Removed ${skillCount} Antigravity skills`);
       }
+    }
+  } else if (isQwen) {
+    const skillsDir = path.join(targetDir, 'skills');
+    if (fs.existsSync(skillsDir)) {
+      let skillCount = 0;
+      const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name.startsWith('sdd-')) {
+          fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
+          skillCount++;
+        }
+      }
+      if (skillCount > 0) {
+        removedCount++;
+        console.log(`  ${green}✓${reset} Removed ${skillCount} Qwen Code skills`);
+      }
+    }
+
+    const legacyCommandsDir = path.join(targetDir, 'commands', 'sdd');
+    if (fs.existsSync(legacyCommandsDir)) {
+      const savedLegacyArtifacts = preserveUserArtifacts(legacyCommandsDir, ['dev-preferences.md']);
+      fs.rmSync(legacyCommandsDir, { recursive: true });
+      removedCount++;
+      console.log(`  ${green}✓${reset} Removed legacy commands/sdd/`);
+      restoreUserArtifacts(legacyCommandsDir, savedLegacyArtifacts);
     }
   } else if (isGemini) {
     // Gemini: still uses commands/sdd/
@@ -4478,7 +4732,7 @@ function uninstall(isGlobal, runtime = 'claude') {
 
     // Remove SDD hooks from settings — per-hook granularity to preserve
     // user hooks that share an entry with a SDD hook (#1755 followup)
-    const isGsdHookCommand = (cmd) =>
+    const isSddHookCommand = (cmd) =>
       cmd && (cmd.includes('sdd-check-update') || cmd.includes('sdd-statusline') ||
         cmd.includes('sdd-session-state') || cmd.includes('sdd-context-monitor') ||
         cmd.includes('sdd-phase-boundary') || cmd.includes('sdd-prompt-guard') ||
@@ -4492,7 +4746,7 @@ function uninstall(isGlobal, runtime = 'claude') {
           .map(entry => {
             if (!entry.hooks || !Array.isArray(entry.hooks)) return entry;
             // Filter out individual SDD hooks, keep user hooks
-            entry.hooks = entry.hooks.filter(h => !isGsdHookCommand(h.command));
+            entry.hooks = entry.hooks.filter(h => !isSddHookCommand(h.command));
             return entry.hooks.length > 0 ? entry : null;
           })
           .filter(Boolean);
@@ -4921,6 +5175,7 @@ function writeManifest(configDir, runtime = 'claude') {
   const isCursor = runtime === 'cursor';
   const isWindsurf = runtime === 'windsurf';
   const isTrae = runtime === 'trae';
+  const isCline = runtime === 'cline';
   const sddDir = path.join(configDir, 'sdd');
   const commandsDir = path.join(configDir, 'commands', 'sdd');
   const opencodeCommandDir = path.join(configDir, 'command');
@@ -4961,9 +5216,17 @@ function writeManifest(configDir, runtime = 'claude') {
       }
     }
   }
+  // Track .clinerules file in manifest for Cline installs
+  if (isCline) {
+    const clinerulesDest = path.join(configDir, '.clinerules');
+    if (fs.existsSync(clinerulesDest)) {
+      manifest.files['.clinerules'] = fileHash(clinerulesDest);
+    }
+  }
+
   // Track hook files so saveLocalPatches() can detect user modifications
-  // Hooks are only installed for runtimes that use settings.json (not Codex/Copilot)
-  if (!isCodex && !isCopilot) {
+  // Hooks are only installed for runtimes that use settings.json (not Codex/Copilot/Cline)
+  if (!isCodex && !isCopilot && !isCline) {
     const hooksDir = path.join(configDir, 'hooks');
     if (fs.existsSync(hooksDir)) {
       for (const file of fs.readdirSync(hooksDir)) {
@@ -5083,13 +5346,20 @@ function install(isGlobal, runtime = 'claude') {
   const isWindsurf = runtime === 'windsurf';
   const isAugment = runtime === 'augment';
   const isTrae = runtime === 'trae';
+  const isQwen = runtime === 'qwen';
+  const isCodebuddy = runtime === 'codebuddy';
+  const isCline = runtime === 'cline';
   const dirName = getDirName(runtime);
   const src = path.join(__dirname, '..');
 
-  // Get the target directory based on runtime and install type
+  // Get the target directory based on runtime and install type.
+  // Cline local installs write to the project root (like Claude Code) — .clinerules
+  // lives at the root, not inside a .cline/ subdirectory.
   const targetDir = isGlobal
     ? getGlobalDir(runtime, explicitConfigDir)
-    : path.join(process.cwd(), dirName);
+    : isCline
+      ? process.cwd()
+      : path.join(process.cwd(), dirName);
 
   const locationLabel = isGlobal
     ? targetDir.replace(os.homedir(), '~')
@@ -5117,6 +5387,9 @@ function install(isGlobal, runtime = 'claude') {
   if (isWindsurf) runtimeLabel = 'Windsurf';
   if (isAugment) runtimeLabel = 'Augment';
   if (isTrae) runtimeLabel = 'Trae';
+  if (isQwen) runtimeLabel = 'Qwen Code';
+  if (isCodebuddy) runtimeLabel = 'CodeBuddy';
+  if (isCline) runtimeLabel = 'Cline';
 
   console.log(`  Installing for ${cyan}${runtimeLabel}${reset} to ${cyan}${locationLabel}${reset}\n`);
 
@@ -5224,6 +5497,43 @@ function install(isGlobal, runtime = 'claude') {
     } else {
       failures.push('skills/sdd-*');
     }
+  } else if (isQwen) {
+    const skillsDir = path.join(targetDir, 'skills');
+    const sddSrc = path.join(src, 'commands', 'sdd');
+    copyCommandsAsClaudeSkills(sddSrc, skillsDir, 'sdd', pathPrefix, runtime, isGlobal);
+    if (fs.existsSync(skillsDir)) {
+      const count = fs.readdirSync(skillsDir, { withFileTypes: true })
+        .filter(e => e.isDirectory() && e.name.startsWith('sdd-')).length;
+      if (count > 0) {
+        console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
+      } else {
+        failures.push('skills/sdd-*');
+      }
+    } else {
+      failures.push('skills/sdd-*');
+    }
+
+    const legacyCommandsDir = path.join(targetDir, 'commands', 'sdd');
+    if (fs.existsSync(legacyCommandsDir)) {
+      const savedLegacyArtifacts = preserveUserArtifacts(legacyCommandsDir, ['dev-preferences.md']);
+      fs.rmSync(legacyCommandsDir, { recursive: true });
+      console.log(`  ${green}✓${reset} Removed legacy commands/sdd/ directory`);
+      restoreUserArtifacts(legacyCommandsDir, savedLegacyArtifacts);
+    }
+  } else if (isCodebuddy) {
+    const skillsDir = path.join(targetDir, 'skills');
+    const sddSrc = path.join(src, 'commands', 'sdd');
+    copyCommandsAsCodebuddySkills(sddSrc, skillsDir, 'sdd', pathPrefix, runtime);
+    const installedSkillNames = listCodexSkillNames(skillsDir);
+    if (installedSkillNames.length > 0) {
+      console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
+    } else {
+      failures.push('skills/sdd-*');
+    }
+  } else if (isCline) {
+    // Cline is rules-based — commands are embedded in .clinerules (generated below).
+    // No skills/commands directory needed. Engine is installed via copyWithPathReplacement.
+    console.log(`  ${green}✓${reset} Cline: commands will be available via .clinerules`);
   } else if (isGemini) {
     const commandsDir = path.join(targetDir, 'commands');
     fs.mkdirSync(commandsDir, { recursive: true });
@@ -5294,9 +5604,9 @@ function install(isGlobal, runtime = 'claude') {
   // Preserve user-generated files before the wipe-and-copy so they survive re-install
   const skillSrc = path.join(src, 'sdd');
   const skillDest = path.join(targetDir, 'sdd');
-  const savedGsdArtifacts = preserveUserArtifacts(skillDest, ['USER-PROFILE.md']);
+  const savedSddArtifacts = preserveUserArtifacts(skillDest, ['USER-PROFILE.md']);
   copyWithPathReplacement(skillSrc, skillDest, pathPrefix, runtime, false, isGlobal);
-  restoreUserArtifacts(skillDest, savedGsdArtifacts);
+  restoreUserArtifacts(skillDest, savedSddArtifacts);
   if (verifyInstalled(skillDest, 'sdd')) {
     console.log(`  ${green}✓${reset} Installed sdd`);
   } else {
@@ -5357,6 +5667,10 @@ function install(isGlobal, runtime = 'claude') {
           content = convertClaudeAgentToAugmentAgent(content);
         } else if (isTrae) {
           content = convertClaudeAgentToTraeAgent(content);
+        } else if (isCodebuddy) {
+          content = convertClaudeAgentToCodebuddyAgent(content);
+        } else if (isCline) {
+          content = convertClaudeAgentToClineAgent(content);
         }
         const destName = isCopilot ? entry.name.replace('.md', '.agent.md') : entry.name;
         fs.writeFileSync(path.join(agentsDest, destName), content);
@@ -5390,7 +5704,7 @@ function install(isGlobal, runtime = 'claude') {
     failures.push('VERSION');
   }
 
-  if (!isCodex && !isCopilot && !isCursor && !isWindsurf && !isTrae) {
+  if (!isCodex && !isCopilot && !isCursor && !isWindsurf && !isTrae && !isCline) {
     // Write package.json to force CommonJS mode for SDD scripts
     // Prevents "require is not defined" errors when project has "type": "module"
     // Node.js walks up looking for package.json - this stops inheritance from project
@@ -5579,6 +5893,26 @@ function install(isGlobal, runtime = 'claude') {
     return { settingsPath: null, settings: null, statuslineCommand: null, runtime, configDir: targetDir };
   }
 
+  if (isCline) {
+    // Cline uses .clinerules — generate a rules file with SDD system instructions
+    const clinerulesDest = path.join(targetDir, '.clinerules');
+    const clinerules = [
+      '# SDD — Spec-Driven Development',
+      '',
+      '- SDD workflows live in `sdd/workflows/`. Load the relevant workflow when',
+      '  the user runs a `/sdd-*` command.',
+      '- SDD agents live in `agents/`. Use the matching agent when spawning subagents.',
+      '- SDD tools are at `sdd/bin/sdd-tools.cjs`. Run with `node`.',
+      '- Planning artifacts live in `.planning/`. Never edit them outside a SDD workflow.',
+      '- Do not apply SDD workflows unless the user explicitly asks for them.',
+      '- When a SDD command triggers a deliverable (feature, fix, docs), offer the next',
+      '  step to the user using Cline\'s ask_user tool after completing it.',
+    ].join('\n') + '\n';
+    fs.writeFileSync(clinerulesDest, clinerules);
+    console.log(`  ${green}✓${reset} Wrote .clinerules`);
+    return { settingsPath: null, settings: null, statuslineCommand: null, runtime, configDir: targetDir };
+  }
+
   // Configure statusline and hooks in settings.json
   // Gemini and Antigravity use AfterTool instead of PostToolUse for post-tool hooks
   const postToolEvent = (runtime === 'gemini' || runtime === 'antigravity') ? 'AfterTool' : 'PostToolUse';
@@ -5628,7 +5962,7 @@ function install(isGlobal, runtime = 'claude') {
       settings.hooks.SessionStart = [];
     }
 
-    const hasGsdUpdateHook = settings.hooks.SessionStart.some(entry =>
+    const hasSddUpdateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-check-update'))
     );
 
@@ -5637,7 +5971,7 @@ function install(isGlobal, runtime = 'claude') {
     // copy step produces no files but the registration step ran unconditionally,
     // causing "hook error" on every tool invocation.
     const checkUpdateFile = path.join(targetDir, 'hooks', 'sdd-check-update.js');
-    if (!hasGsdUpdateHook && fs.existsSync(checkUpdateFile)) {
+    if (!hasSddUpdateHook && fs.existsSync(checkUpdateFile)) {
       settings.hooks.SessionStart.push({
         hooks: [
           {
@@ -5647,7 +5981,7 @@ function install(isGlobal, runtime = 'claude') {
         ]
       });
       console.log(`  ${green}✓${reset} Configured update check hook`);
-    } else if (!hasGsdUpdateHook && !fs.existsSync(checkUpdateFile)) {
+    } else if (!hasSddUpdateHook && !fs.existsSync(checkUpdateFile)) {
       console.warn(`  ${yellow}⚠${reset}  Skipped update check hook — sdd-check-update.js not found at target`);
     }
 
@@ -5783,7 +6117,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure commit validation hook (Conventional Commits enforcement, opt-in)
     const validateCommitCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/sdd-validate-commit.sh'
+      ? buildHookCommand(targetDir, 'sdd-validate-commit.sh')
       : 'bash ' + localPrefix + '/hooks/sdd-validate-commit.sh';
     const hasValidateCommitHook = settings.hooks[preToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-validate-commit'))
@@ -5810,7 +6144,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure session state orientation hook (opt-in)
     const sessionStateCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/sdd-session-state.sh'
+      ? buildHookCommand(targetDir, 'sdd-session-state.sh')
       : 'bash ' + localPrefix + '/hooks/sdd-session-state.sh';
     const hasSessionStateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-session-state'))
@@ -5832,7 +6166,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure phase boundary detection hook (opt-in)
     const phaseBoundaryCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/sdd-phase-boundary.sh'
+      ? buildHookCommand(targetDir, 'sdd-phase-boundary.sh')
       : 'bash ' + localPrefix + '/hooks/sdd-phase-boundary.sh';
     const hasPhaseBoundaryHook = settings.hooks[postToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-phase-boundary'))
@@ -5869,6 +6203,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   const isCursor = runtime === 'cursor';
   const isWindsurf = runtime === 'windsurf';
   const isTrae = runtime === 'trae';
+  const isCline = runtime === 'cline';
 
   if (shouldInstallStatusline && !isOpencode && !isKilo && !isCodex && !isCopilot && !isCursor && !isWindsurf && !isTrae) {
     settings.statusLine = {
@@ -5879,7 +6214,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   }
 
   // Write settings when runtime supports settings.json
-  if (!isCodex && !isCopilot && !isKilo && !isCursor && !isWindsurf && !isTrae) {
+  if (!isCodex && !isCopilot && !isKilo && !isCursor && !isWindsurf && !isTrae && !isCline) {
     writeSettings(settingsPath, settings);
   }
 
@@ -5925,6 +6260,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   if (runtime === 'windsurf') program = 'Windsurf';
   if (runtime === 'augment') program = 'Augment';
   if (runtime === 'trae') program = 'Trae';
+  if (runtime === 'cline') program = 'Cline';
 
   let command = '/sdd-new-project';
   if (runtime === 'opencode') command = '/sdd-new-project';
@@ -5936,6 +6272,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   if (runtime === 'windsurf') command = '/sdd-new-project';
   if (runtime === 'augment') command = '/sdd-new-project';
   if (runtime === 'trae') command = '/sdd-new-project';
+  if (runtime === 'cline') command = '/sdd-new-project';
   console.log(`
   ${green}Done!${reset} Open a blank directory in ${program} and run ${cyan}${command}${reset}.
 
@@ -6017,29 +6354,35 @@ function promptRuntime(callback) {
     '1': 'claude',
     '2': 'antigravity',
     '3': 'augment',
-    '4': 'codex',
-    '5': 'copilot',
-    '6': 'cursor',
-    '7': 'gemini',
-    '8': 'kilo',
-    '9': 'opencode',
-    '10': 'trae',
-    '11': 'windsurf'
+    '4': 'cline',
+    '5': 'codebuddy',
+    '6': 'codex',
+    '7': 'copilot',
+    '8': 'cursor',
+    '9': 'gemini',
+    '10': 'kilo',
+    '11': 'opencode',
+    '12': 'qwen',
+    '13': 'trae',
+    '14': 'windsurf'
   };
-  const allRuntimes = ['claude', 'antigravity', 'augment', 'codex', 'copilot', 'cursor', 'gemini', 'kilo', 'opencode', 'trae', 'windsurf'];
+  const allRuntimes = ['claude', 'antigravity', 'augment', 'cline', 'codebuddy', 'codex', 'copilot', 'cursor', 'gemini', 'kilo', 'opencode', 'qwen', 'trae', 'windsurf'];
 
   console.log(`  ${yellow}Which runtime(s) would you like to install for?${reset}\n\n  ${cyan}1${reset}) Claude Code  ${dim}(~/.claude)${reset}
   ${cyan}2${reset}) Antigravity  ${dim}(~/.gemini/antigravity)${reset}
   ${cyan}3${reset}) Augment      ${dim}(~/.augment)${reset}
-  ${cyan}4${reset}) Codex        ${dim}(~/.codex)${reset}
-  ${cyan}5${reset}) Copilot      ${dim}(~/.copilot)${reset}
-  ${cyan}6${reset}) Cursor       ${dim}(~/.cursor)${reset}
-  ${cyan}7${reset}) Gemini       ${dim}(~/.gemini)${reset}
-  ${cyan}8${reset}) Kilo         ${dim}(~/.config/kilo)${reset}
-  ${cyan}9${reset}) OpenCode     ${dim}(~/.config/opencode)${reset}
-  ${cyan}10${reset}) Trae         ${dim}(~/.trae)${reset}
-  ${cyan}11${reset}) Windsurf     ${dim}(~/.codeium/windsurf)${reset}
-  ${cyan}12${reset}) All
+  ${cyan}4${reset}) Cline        ${dim}(.clinerules)${reset}
+  ${cyan}5${reset}) CodeBuddy    ${dim}(~/.codebuddy)${reset}
+  ${cyan}6${reset}) Codex        ${dim}(~/.codex)${reset}
+  ${cyan}7${reset}) Copilot      ${dim}(~/.copilot)${reset}
+  ${cyan}8${reset}) Cursor       ${dim}(~/.cursor)${reset}
+  ${cyan}9${reset}) Gemini       ${dim}(~/.gemini)${reset}
+  ${cyan}10${reset}) Kilo         ${dim}(~/.config/kilo)${reset}
+  ${cyan}11${reset}) OpenCode     ${dim}(~/.config/opencode)${reset}
+  ${cyan}12${reset}) Qwen Code    ${dim}(~/.qwen)${reset}
+  ${cyan}13${reset}) Trae         ${dim}(~/.trae)${reset}
+  ${cyan}14${reset}) Windsurf     ${dim}(~/.codeium/windsurf)${reset}
+  ${cyan}15${reset}) All
 
   ${dim}Select multiple: 1,2,6 or 1 2 6${reset}
 `);
@@ -6050,7 +6393,7 @@ function promptRuntime(callback) {
     const input = answer.trim() || '1';
 
     // "All" shortcut
-    if (input === '12') {
+    if (input === '15') {
       callback(allRuntimes);
       return;
     }
@@ -6166,7 +6509,7 @@ if (process.env.SDD_TEST_MODE) {
     convertClaudeAgentToCodexAgent,
     generateCodexAgentToml,
     generateCodexConfigBlock,
-    stripGsdFromCodexConfig,
+    stripSddFromCodexConfig,
     mergeCodexConfig,
     installCodexConfig,
     install,
@@ -6211,11 +6554,18 @@ if (process.env.SDD_TEST_MODE) {
     convertClaudeCommandToTraeSkill,
     convertClaudeAgentToTraeAgent,
     copyCommandsAsTraeSkills,
+    convertClaudeToCodebuddyMarkdown,
+    convertClaudeCommandToCodebuddySkill,
+    convertClaudeAgentToCodebuddyAgent,
+    copyCommandsAsCodebuddySkills,
+    convertClaudeToCliineMarkdown,
+    convertClaudeAgentToClineAgent,
     writeManifest,
     reportLocalPatches,
     validateHookFields,
     preserveUserArtifacts,
     restoreUserArtifacts,
+    finishInstall,
   };
 } else {
 

@@ -345,7 +345,7 @@ Usage: `/sdd-ship 4` or `/sdd-ship 4 --draft`
 
 ---
 
-**`/sdd-review --phase N [--gemini] [--claude] [--codex] [--coderabbit] [--all]`**
+**`/sdd-review --phase N [--gemini] [--claude] [--codex] [--coderabbit] [--opencode] [--qwen] [--cursor] [--all]`**
 Cross-AI peer review — invoke external AI CLIs to independently review phase plans.
 
 - Detects available CLIs (gemini, claude, codex, coderabbit)

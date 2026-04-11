@@ -4,7 +4,7 @@
 
 **English** · [Português](README.pt-BR.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md)
 
-**A light-weight and powerful meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, and Cline.**
+**A light-weight and powerful meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, Qwen Code, Cline, and CodeBuddy.**
 
 **Solves context rot — the quality degradation that happens as Claude fills its context window.**
 
@@ -106,17 +106,17 @@ npx @bhargavvc/sdd-cc@latest
 ```
 
 The installer prompts you to choose:
-1. **Runtime** — Claude Code, OpenCode, Gemini, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, Cline, or all (interactive multi-select — pick multiple runtimes in a single install session)
+1. **Runtime** — Claude Code, OpenCode, Gemini, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, Qwen Code, CodeBuddy, Cline, or all (interactive multi-select — pick multiple runtimes in a single install session)
 2. **Location** — Global (all projects) or local (current project only)
 
 Verify with:
-- Claude Code / Gemini / Copilot / Antigravity: `/sdd-help`
-- OpenCode / Kilo / Augment / Trae: `/sdd-help`
+- Claude Code / Gemini / Copilot / Antigravity / Qwen Code: `/sdd-help`
+- OpenCode / Kilo / Augment / Trae / CodeBuddy: `/sdd-help`
 - Codex: `$sdd-help`
 - Cline: SDD installs via `.clinerules` — verify by checking `.clinerules` exists
 
 > [!NOTE]
-> Claude Code 2.1.88+ and Codex install as skills (`skills/sdd-*/SKILL.md`). Older Claude Code versions use `commands/sdd/`. Cline uses `.clinerules` for configuration. The installer handles all formats automatically.
+> Claude Code 2.1.88+, Qwen Code, and Codex install as skills (`skills/sdd-*/SKILL.md`). Older Claude Code versions use `commands/sdd/`. Cline uses `.clinerules` for configuration. The installer handles all formats automatically.
 
 > [!TIP]
 > For source-based installs or environments where npm is unavailable, see **[docs/manual-update.md](docs/manual-update.md)**.
@@ -175,6 +175,14 @@ npx @bhargavvc/sdd-cc --augment --local      # Install to ./.augment/
 npx @bhargavvc/sdd-cc --trae --global        # Install to ~/.trae/
 npx @bhargavvc/sdd-cc --trae --local         # Install to ./.trae/
 
+# Qwen Code
+npx @bhargavvc/sdd-cc --qwen --global        # Install to ~/.qwen/
+npx @bhargavvc/sdd-cc --qwen --local         # Install to ./.qwen/
+
+# CodeBuddy
+npx @bhargavvc/sdd-cc --codebuddy --global   # Install to ~/.codebuddy/
+npx @bhargavvc/sdd-cc --codebuddy --local    # Install to ./.codebuddy/
+
 # Cline
 npx @bhargavvc/sdd-cc --cline --global       # Install to ~/.cline/
 npx @bhargavvc/sdd-cc --cline --local        # Install to ./.clinerules
@@ -184,7 +192,7 @@ npx @bhargavvc/sdd-cc --all --global      # Install to all directories
 ```
 
 Use `--global` (`-g`) or `--local` (`-l`) to skip the location prompt.
-Use `--claude`, `--opencode`, `--gemini`, `--kilo`, `--codex`, `--copilot`, `--cursor`, `--windsurf`, `--antigravity`, `--augment`, `--trae`, `--cline`, or `--all` to skip the runtime prompt.
+Use `--claude`, `--opencode`, `--gemini`, `--kilo`, `--codex`, `--copilot`, `--cursor`, `--windsurf`, `--antigravity`, `--augment`, `--trae`, `--qwen`, `--codebuddy`, `--cline`, or `--all` to skip the runtime prompt.
 Use `--sdk` to also install the SDD SDK CLI (`sdd-sdk`) for headless autonomous execution.
 
 </details>
@@ -846,6 +854,8 @@ npx @bhargavvc/sdd-cc --windsurf --global --uninstall
 npx @bhargavvc/sdd-cc --antigravity --global --uninstall
 npx @bhargavvc/sdd-cc --augment --global --uninstall
 npx @bhargavvc/sdd-cc --trae --global --uninstall
+npx @bhargavvc/sdd-cc --qwen --global --uninstall
+npx @bhargavvc/sdd-cc --codebuddy --global --uninstall
 npx @bhargavvc/sdd-cc --cline --global --uninstall
 
 # Local installs (current project)
@@ -860,6 +870,8 @@ npx @bhargavvc/sdd-cc --windsurf --local --uninstall
 npx @bhargavvc/sdd-cc --antigravity --local --uninstall
 npx @bhargavvc/sdd-cc --augment --local --uninstall
 npx @bhargavvc/sdd-cc --trae --local --uninstall
+npx @bhargavvc/sdd-cc --qwen --local --uninstall
+npx @bhargavvc/sdd-cc --codebuddy --local --uninstall
 npx @bhargavvc/sdd-cc --cline --local --uninstall
 ```
 

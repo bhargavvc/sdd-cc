@@ -54,9 +54,9 @@ additionalContext -> 에이전트가 경고를 받음
 }
 ```
 
-## SDD와의 통합
+## GSD와의 통합
 
-SDD의 `/sdd-pause-work` 명령어는 실행 상태를 저장합니다. WARNING 메시지는 해당 명령어 사용을 권장하며 CRITICAL 메시지는 즉각적인 상태 저장을 지시합니다.
+GSD의 `/sdd-pause-work` 명령어는 실행 상태를 저장합니다. WARNING 메시지는 해당 명령어 사용을 권장하며 CRITICAL 메시지는 즉각적인 상태 저장을 지시합니다.
 
 ## 설정
 

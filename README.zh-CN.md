@@ -4,7 +4,7 @@
 
 [English](README.md) · [Português](README.pt-BR.md) · **简体中文** · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md)
 
-**一个轻量但强大的元提示、上下文工程与规格驱动开发系统，适用于 Claude Code、OpenCode、Gemini CLI、Kilo、Codex、Copilot、Cursor、Windsurf、Antigravity、Augment、Trae 和 Cline。**
+**一个轻量但强大的元提示、上下文工程与规格驱动开发系统，适用于 Claude Code、OpenCode、Gemini CLI、Kilo、Codex、Copilot、Cursor、Windsurf、Antigravity、Augment、Trae、CodeBuddy 和 Cline。**
 
 **它解决的是 context rot：随着 Claude 的上下文窗口被填满，输出质量逐步劣化的问题。**
 
@@ -53,7 +53,7 @@ npx @bhargavvc/sdd-cc@latest
 
 市面上已经有其他规格驱动开发工具，比如 BMAD、Speckit……但它们要么把事情搞得比必要的复杂得多了些（冲刺仪式、故事点、利益相关方同步、复盘、Jira 流程），要么根本缺少对你到底在构建什么的整体理解。我不是一家 50 人的软件公司。我不想演企业流程。我只是个想把好东西真正做出来的创作者。
 
-所以我做了 SDD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
+所以我做了 GSD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
 
 这套系统会把 Claude 完成工作 *以及* 验证结果所需的一切上下文都准备好。我信任这个工作流，因为它确实能把事情做好。
 
@@ -92,12 +92,12 @@ npx @bhargavvc/sdd-cc@latest
 ```
 
 安装器会提示你选择：
-1. **运行时**：Claude Code、OpenCode、Gemini、Kilo、Codex、Copilot、Cursor、Windsurf、Antigravity、Augment、Trae、Cline，或全部
+1. **运行时**：Claude Code、OpenCode、Gemini、Kilo、Codex、Copilot、Cursor、Windsurf、Antigravity、Augment、Trae、CodeBuddy、Cline，或全部
 2. **安装位置**：全局（所有项目）或本地（仅当前项目）
 
 安装后可这样验证：
 - Claude Code / Gemini / Copilot / Antigravity：`/sdd-help`
-- OpenCode / Kilo / Augment / Trae：`/sdd-help`
+- OpenCode / Kilo / Augment / Trae / CodeBuddy：`/sdd-help`
 - Codex：`$sdd-help`
 - Cline：SDD 通过 `.clinerules` 安装 — 检查 `.clinerules` 是否存在
 
@@ -157,6 +157,10 @@ npx @bhargavvc/sdd-cc --augment --local      # 安装到 ./.augment/
 npx @bhargavvc/sdd-cc --trae --global     # 安装到 ~/.trae/
 npx @bhargavvc/sdd-cc --trae --local      # 安装到 ./.trae/
 
+# CodeBuddy
+npx @bhargavvc/sdd-cc --codebuddy --global # 安装到 ~/.codebuddy/
+npx @bhargavvc/sdd-cc --codebuddy --local  # 安装到 ./.codebuddy/
+
 # Cline
 npx @bhargavvc/sdd-cc --cline --global       # 安装到 ~/.cline/
 npx @bhargavvc/sdd-cc --cline --local        # 安装到 ./.clinerules
@@ -166,7 +170,7 @@ npx @bhargavvc/sdd-cc --all --global      # 安装到所有目录
 ```
 
 使用 `--global`（`-g`）或 `--local`（`-l`）可以跳过安装位置提示。
-使用 `--claude`、`--opencode`、`--gemini`、`--kilo`、`--codex`、`--copilot`、`--cursor`、`--windsurf`、`--antigravity`、`--augment`、`--trae`、`--cline` 或 `--all` 可以跳过运行时提示。
+使用 `--claude`、`--opencode`、`--gemini`、`--kilo`、`--codex`、`--copilot`、`--cursor`、`--windsurf`、`--antigravity`、`--augment`、`--trae`、`--codebuddy`、`--cline` 或 `--all` 可以跳过运行时提示。
 
 </details>
 
@@ -570,7 +574,7 @@ lmn012o feat(08-02): create registration endpoint
 | `/sdd-progress` | 我现在在哪？下一步是什么？ |
 | `/sdd-next` | 自动检测状态并执行下一步 |
 | `/sdd-help` | 显示全部命令和使用指南 |
-| `/sdd-update` | 更新 SDD，并预览变更日志 |
+| `/sdd-update` | 更新 GSD，并预览变更日志 |
 | `/sdd-join-discord` | 加入 SDD Discord 社区 |
 
 ### Brownfield
@@ -764,7 +768,7 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ### 卸载
 
-如果你想彻底移除 SDD：
+如果你想彻底移除 GSD：
 
 ```bash
 # 全局安装

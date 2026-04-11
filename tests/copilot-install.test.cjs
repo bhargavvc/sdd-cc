@@ -139,8 +139,8 @@ describe('Source code integration (Copilot)', () => {
     assert.ok(src.includes('--copilot'), 'help text has --copilot option');
   });
 
-  test('CLI-02: promptRuntime runtimeMap has Copilot as option 5', () => {
-    assert.ok(src.includes("'5': 'copilot'"), 'runtimeMap has 5 -> copilot');
+  test('CLI-02: promptRuntime runtimeMap has Copilot as option 7', () => {
+    assert.ok(src.includes("'7': 'copilot'"), 'runtimeMap has 7 -> copilot');
   });
 
   test('CLI-02: promptRuntime allRuntimes array includes copilot', () => {
@@ -1180,6 +1180,7 @@ describe('E2E: Copilot full install verification', () => {
     const sddAgents = files.filter(f => f.startsWith('sdd-') && f.endsWith('.agent.md')).sort();
     const expected = [
       'sdd-advisor-researcher.agent.md',
+      'sdd-ai-researcher.agent.md',
       'sdd-assumptions-analyzer.agent.md',
       'sdd-code-fixer.agent.md',
       'sdd-code-reviewer.agent.md',
@@ -1187,7 +1188,11 @@ describe('E2E: Copilot full install verification', () => {
       'sdd-debugger.agent.md',
       'sdd-doc-verifier.agent.md',
       'sdd-doc-writer.agent.md',
+      'sdd-domain-researcher.agent.md',
+      'sdd-eval-auditor.agent.md',
+      'sdd-eval-planner.agent.md',
       'sdd-executor.agent.md',
+      'sdd-framework-selector.agent.md',
       'sdd-integration-checker.agent.md',
       'sdd-intel-updater.agent.md',
       'sdd-nyquist-auditor.agent.md',
