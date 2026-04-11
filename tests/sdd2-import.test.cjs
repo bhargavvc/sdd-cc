@@ -7,24 +7,24 @@ const path = require('node:path');
 const { createTempDir, cleanup, runSddTools } = require('./helpers.cjs');
 
 const {
-  findGsd2Root,
+  findSdd2Root,
   parseSlicesFromRoadmap,
   parseMilestoneTitle,
   parseTaskTitle,
   parseTaskDescription,
   parseTaskMustHaves,
-  parseGsd2,
+  parseSdd2,
   buildPlanningArtifacts,
   buildRoadmapMd,
   buildStateMd,
   slugify,
   zeroPad,
-} = require('../sdd/bin/lib/gsd2-import.cjs');
+} = require('../sdd/bin/lib/sdd2-import.cjs');
 
 // ─── Fixture Builders ──────────────────────────────────────────────────────
 
 /** Build a minimal but complete SDD-2 .sdd/ directory in tmpDir. */
-function makeGsd2Project(tmpDir, opts = {}) {
+function makeSdd2Project(tmpDir, opts = {}) {
   const sddDir = path.join(tmpDir, '.sdd');
   const m001Dir = path.join(sddDir, 'milestones', 'M001');
   const s01Dir = path.join(m001Dir, 'slices', 'S01');
@@ -270,21 +270,21 @@ describe('zeroPad', () => {
 
 // ─── Integration Tests ─────────────────────────────────────────────────────
 
-describe('parseGsd2', () => {
+describe('parseSdd2', () => {
   let tmpDir;
-  beforeEach(() => { tmpDir = createTempDir('gsd2-parse-'); });
+  beforeEach(() => { tmpDir = createTempDir('sdd2-parse-'); });
   afterEach(() => { cleanup(tmpDir); });
 
   test('reads project and requirements passthroughs', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     assert.ok(data.projectContent.includes('My Project'));
     assert.ok(data.requirements.includes('R001'));
   });
 
   test('parses milestone with slices', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     assert.strictEqual(data.milestones.length, 1);
     assert.strictEqual(data.milestones[0].id, 'M001');
     assert.strictEqual(data.milestones[0].title, 'Foundation');
@@ -292,22 +292,22 @@ describe('parseGsd2', () => {
   });
 
   test('marks S01 as done, S02 as not done', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const [s01, s02] = data.milestones[0].slices;
     assert.strictEqual(s01.done, true);
     assert.strictEqual(s02.done, false);
   });
 
   test('reads research for completed slice', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     assert.ok(data.milestones[0].slices[0].research.includes('Some research'));
   });
 
   test('reads tasks from tasks/ directory', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const tasks = data.milestones[0].slices[0].tasks;
     assert.strictEqual(tasks.length, 1);
     assert.strictEqual(tasks[0].id, 'T01');
@@ -316,8 +316,8 @@ describe('parseGsd2', () => {
   });
 
   test('parses task must-haves', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const mh = data.milestones[0].slices[0].tasks[0].mustHaves;
     assert.deepStrictEqual(mh, ['package.json exists', 'tsconfig.json exists']);
   });
@@ -326,13 +326,13 @@ describe('parseGsd2', () => {
     const sddDir = path.join(tmpDir, '.sdd');
     fs.mkdirSync(sddDir, { recursive: true });
     fs.writeFileSync(path.join(sddDir, 'PROJECT.md'), '# Empty\n');
-    const data = parseGsd2(sddDir);
+    const data = parseSdd2(sddDir);
     assert.strictEqual(data.milestones.length, 0);
   });
 
   test('slice with no directory has empty tasks list', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     // S02 has no slice directory in the default fixture
     const s02 = data.milestones[0].slices[1];
     assert.strictEqual(s02.tasks.length, 0);
@@ -342,12 +342,12 @@ describe('parseGsd2', () => {
 
 describe('buildPlanningArtifacts', () => {
   let tmpDir;
-  beforeEach(() => { tmpDir = createTempDir('gsd2-artifacts-'); });
+  beforeEach(() => { tmpDir = createTempDir('sdd2-artifacts-'); });
   afterEach(() => { cleanup(tmpDir); });
 
   test('produces PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md, config.json', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     assert.ok(artifacts.has('PROJECT.md'));
     assert.ok(artifacts.has('REQUIREMENTS.md'));
@@ -357,8 +357,8 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('S01 (done) maps to phase 01 with PLAN and SUMMARY', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     assert.ok(artifacts.has('phases/01-setup/01-CONTEXT.md'));
     assert.ok(artifacts.has('phases/01-setup/01-RESEARCH.md'));
@@ -367,8 +367,8 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('S02 (pending) maps to phase 02 with only CONTEXT and PLAN', () => {
-    const sddDir = makeGsd2Project(tmpDir, { withS02Dir: true });
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir, { withS02Dir: true });
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     assert.ok(artifacts.has('phases/02-auth-system/02-CONTEXT.md'));
     assert.ok(artifacts.has('phases/02-auth-system/02-01-PLAN.md'));
@@ -376,8 +376,8 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('ROADMAP.md marks S01 done, S02 pending', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     const roadmap = artifacts.get('ROADMAP.md');
     assert.ok(roadmap.includes('[x]'));
@@ -385,8 +385,8 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('PLAN.md includes frontmatter with phase and plan keys', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     const plan = artifacts.get('phases/01-setup/01-01-PLAN.md');
     assert.ok(plan.includes('phase: "01"'));
@@ -395,8 +395,8 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('SUMMARY.md strips SDD-2 frontmatter and adds v1 frontmatter', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     const summary = artifacts.get('phases/01-setup/01-01-SUMMARY.md');
     assert.ok(summary.includes('phase: "01"'));
@@ -408,15 +408,15 @@ describe('buildPlanningArtifacts', () => {
   });
 
   test('config.json is valid JSON', () => {
-    const sddDir = makeGsd2Project(tmpDir);
-    const data = parseGsd2(sddDir);
+    const sddDir = makeSdd2Project(tmpDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     assert.doesNotThrow(() => JSON.parse(artifacts.get('config.json')));
   });
 
   test('multi-milestone: slices numbered sequentially across milestones', () => {
     const sddDir = makeTwoMilestoneProject(tmpDir);
-    const data = parseGsd2(sddDir);
+    const data = parseSdd2(sddDir);
     const artifacts = buildPlanningArtifacts(data);
     // M001/S01 → phase 01, M001/S02 → phase 02, M002/S01 → phase 03
     assert.ok(artifacts.has('phases/01-core/01-CONTEXT.md'));
@@ -464,14 +464,14 @@ describe('buildStateMd', () => {
 
 // ─── CLI Integration Tests ──────────────────────────────────────────────────
 
-describe('sdd-tools from-gsd2 CLI', () => {
+describe('sdd-tools from-sdd2 CLI', () => {
   let tmpDir;
-  beforeEach(() => { tmpDir = createTempDir('gsd2-cli-'); });
+  beforeEach(() => { tmpDir = createTempDir('sdd2-cli-'); });
   afterEach(() => { cleanup(tmpDir); });
 
   test('--dry-run returns preview without writing files', () => {
-    makeGsd2Project(tmpDir);
-    const result = runSddTools(['from-gsd2', '--dry-run', '--raw'], tmpDir);
+    makeSdd2Project(tmpDir);
+    const result = runSddTools(['from-sdd2', '--dry-run', '--raw'], tmpDir);
     assert.ok(result.success, result.error);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.dryRun, true);
@@ -480,8 +480,8 @@ describe('sdd-tools from-gsd2 CLI', () => {
   });
 
   test('writes .planning/ directory with correct structure', () => {
-    makeGsd2Project(tmpDir);
-    const result = runSddTools(['from-gsd2', '--raw'], tmpDir);
+    makeSdd2Project(tmpDir);
+    const result = runSddTools(['from-sdd2', '--raw'], tmpDir);
     assert.ok(result.success, result.error);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.success, true);
@@ -493,26 +493,26 @@ describe('sdd-tools from-gsd2 CLI', () => {
   });
 
   test('errors when no .sdd/ directory present', () => {
-    const result = runSddTools(['from-gsd2', '--raw'], tmpDir);
+    const result = runSddTools(['from-sdd2', '--raw'], tmpDir);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.success, false);
     assert.ok(parsed.error.includes('No .sdd/'));
   });
 
   test('errors when .planning/ already exists without --force', () => {
-    makeGsd2Project(tmpDir);
+    makeSdd2Project(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning'), { recursive: true });
-    const result = runSddTools(['from-gsd2', '--raw'], tmpDir);
+    const result = runSddTools(['from-sdd2', '--raw'], tmpDir);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.success, false);
     assert.ok(parsed.error.includes('already exists'));
   });
 
   test('--force overwrites existing .planning/', () => {
-    makeGsd2Project(tmpDir);
+    makeSdd2Project(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning'), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, '.planning', 'OLD.md'), 'old content');
-    const result = runSddTools(['from-gsd2', '--force', '--raw'], tmpDir);
+    const result = runSddTools(['from-sdd2', '--force', '--raw'], tmpDir);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.success, true);
     assert.ok(fs.existsSync(path.join(tmpDir, '.planning', 'ROADMAP.md')));
@@ -521,9 +521,9 @@ describe('sdd-tools from-gsd2 CLI', () => {
   test('--path resolves target directory', () => {
     const projectDir = path.join(tmpDir, 'myproject');
     fs.mkdirSync(projectDir, { recursive: true });
-    makeGsd2Project(projectDir);
+    makeSdd2Project(projectDir);
     // Run from tmpDir but point at projectDir
-    const result = runSddTools(['from-gsd2', '--path', projectDir, '--dry-run', '--raw'], tmpDir);
+    const result = runSddTools(['from-sdd2', '--path', projectDir, '--dry-run', '--raw'], tmpDir);
     assert.ok(result.success, result.error);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.dryRun, true);
@@ -531,8 +531,8 @@ describe('sdd-tools from-gsd2 CLI', () => {
   });
 
   test('completion state: S01 done → [x] in ROADMAP.md', () => {
-    makeGsd2Project(tmpDir);
-    runSddTools(['from-gsd2', '--raw'], tmpDir);
+    makeSdd2Project(tmpDir);
+    runSddTools(['from-sdd2', '--raw'], tmpDir);
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf8');
     assert.ok(roadmap.includes('[x]'));
     // S02 is pending
@@ -540,8 +540,8 @@ describe('sdd-tools from-gsd2 CLI', () => {
   });
 
   test('SUMMARY.md written for completed task, not for pending', () => {
-    makeGsd2Project(tmpDir, { withS02Dir: true });
-    runSddTools(['from-gsd2', '--raw'], tmpDir);
+    makeSdd2Project(tmpDir, { withS02Dir: true });
+    runSddTools(['from-sdd2', '--raw'], tmpDir);
     // S01/T01 is done → SUMMARY exists
     assert.ok(fs.existsSync(path.join(tmpDir, '.planning', 'phases', '01-setup', '01-01-SUMMARY.md')));
     // S02/T01 is pending → no SUMMARY

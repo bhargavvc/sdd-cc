@@ -1,5 +1,5 @@
 ---
-name: sdd:from-gsd2
+name: sdd:from-sdd2
 description: Import a SDD-2 (.sdd/) project back to SDD v1 (.planning/) format
 argument-hint: "[--path <dir>] [--force]"
 allowed-tools:
@@ -19,7 +19,7 @@ Maps the SDD-2 hierarchy (Milestone → Slice → Task) to the SDD v1 hierarchy 
 
 1. **Locate the .sdd/ directory** — check the current working directory (or `--path` argument):
    ```bash
-   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-gsd2 --dry-run
+   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-sdd2 --dry-run
    ```
    If no `.sdd/` is found, report the error and stop.
 
@@ -27,7 +27,7 @@ Maps the SDD-2 hierarchy (Milestone → Slice → Task) to the SDD v1 hierarchy 
 
 3. **Run the migration** after confirmation:
    ```bash
-   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-gsd2
+   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-sdd2
    ```
    Use `--force` if `.planning/` already exists and the user has confirmed overwrite.
 

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * gsd2-import — Reverse migration from SDD-2 (.sdd/) to SDD v1 (.planning/)
+ * sdd2-import — Reverse migration from SDD-2 (.sdd/) to SDD v1 (.planning/)
  *
  * Reads a SDD-2 project directory structure and produces a complete
  * .planning/ artifact tree in SDD v1 format.
@@ -40,7 +40,7 @@ function slugify(title) {
  * Find the .sdd/ directory starting from a project root.
  * Returns the absolute path or null if not found.
  */
-function findGsd2Root(startPath) {
+function findSdd2Root(startPath) {
   if (path.basename(startPath) === '.sdd' && fs.existsSync(startPath)) {
     return startPath;
   }
@@ -135,7 +135,7 @@ function readTasksDir(tasksDir) {
 /**
  * Parse a complete SDD-2 .sdd/ directory into a structured representation.
  */
-function parseGsd2(sddDir) {
+function parseSdd2(sddDir) {
   const data = {
     projectContent: readOptional(path.join(sddDir, 'PROJECT.md')),
     requirements: readOptional(path.join(sddDir, 'REQUIREMENTS.md')),
@@ -339,13 +339,13 @@ function buildStateMd(phaseMap) {
  * Convert parsed SDD-2 data into a map of relative path → file content.
  * All paths are relative to the .planning/ root.
  */
-function buildPlanningArtifacts(gsd2Data) {
+function buildPlanningArtifacts(sdd2Data) {
   const artifacts = new Map();
 
   // Passthrough files
-  artifacts.set('PROJECT.md', gsd2Data.projectContent || '# Project\n\n(Migrated from SDD-2)\n');
-  if (gsd2Data.requirements) {
-    artifacts.set('REQUIREMENTS.md', gsd2Data.requirements);
+  artifacts.set('PROJECT.md', sdd2Data.projectContent || '# Project\n\n(Migrated from SDD-2)\n');
+  if (sdd2Data.requirements) {
+    artifacts.set('REQUIREMENTS.md', sdd2Data.requirements);
   }
 
   // Minimal valid v1 config
@@ -354,14 +354,14 @@ function buildPlanningArtifacts(gsd2Data) {
   // Build sequential phase map: flatten Milestones → Slices into numbered phases
   const phaseMap = [];
   let phaseNum = 1;
-  for (const milestone of gsd2Data.milestones) {
+  for (const milestone of sdd2Data.milestones) {
     for (const slice of milestone.slices) {
       phaseMap.push({ milestoneId: milestone.id, milestoneTitle: milestone.title, slice, phaseNum });
       phaseNum++;
     }
   }
 
-  artifacts.set('ROADMAP.md', buildRoadmapMd(gsd2Data.milestones, phaseMap));
+  artifacts.set('ROADMAP.md', buildRoadmapMd(sdd2Data.milestones, phaseMap));
   artifacts.set('STATE.md', buildStateMd(phaseMap));
 
   for (const { slice, phaseNum, milestoneTitle } of phaseMap) {
@@ -401,20 +401,20 @@ function buildPlanningArtifacts(gsd2Data) {
 /**
  * Format a dry-run preview string for display before writing.
  */
-function buildPreview(gsd2Data, artifacts) {
+function buildPreview(sdd2Data, artifacts) {
   const lines = ['Preview — files that will be created in .planning/:'];
 
   for (const rel of artifacts.keys()) {
     lines.push(`  ${rel}`);
   }
 
-  const totalSlices = gsd2Data.milestones.reduce((s, m) => s + m.slices.length, 0);
-  const doneSlices = gsd2Data.milestones.reduce((s, m) => s + m.slices.filter(sl => sl.done).length, 0);
-  const allTasks = gsd2Data.milestones.flatMap(m => m.slices.flatMap(sl => sl.tasks));
+  const totalSlices = sdd2Data.milestones.reduce((s, m) => s + m.slices.length, 0);
+  const doneSlices = sdd2Data.milestones.reduce((s, m) => s + m.slices.filter(sl => sl.done).length, 0);
+  const allTasks = sdd2Data.milestones.flatMap(m => m.slices.flatMap(sl => sl.tasks));
   const doneTasks = allTasks.filter(t => t.done).length;
 
   lines.push('');
-  lines.push(`Milestones: ${gsd2Data.milestones.length}`);
+  lines.push(`Milestones: ${sdd2Data.milestones.length}`);
   lines.push(`Phases (slices): ${totalSlices} (${doneSlices} completed)`);
   lines.push(`Plans (tasks): ${allTasks.length} (${doneTasks} completed)`);
   lines.push('');
@@ -445,7 +445,7 @@ function writePlanningDir(artifacts, planningRoot) {
  * Entry point called from sdd-tools.cjs.
  * Supports: --force, --dry-run, --path <dir>
  */
-function cmdFromGsd2(args, cwd, raw) {
+function cmdFromSdd2(args, cwd, raw) {
   const { output, error } = require('./core.cjs');
 
   const force = args.includes('--force');
@@ -456,7 +456,7 @@ function cmdFromGsd2(args, cwd, raw) {
     ? path.resolve(cwd, args[pathIdx + 1])
     : cwd;
 
-  const sddDir = findGsd2Root(projectDir);
+  const sddDir = findSdd2Root(projectDir);
   if (!sddDir) {
     return output({ success: false, error: `No .sdd/ directory found in ${projectDir}` }, raw);
   }
@@ -469,9 +469,9 @@ function cmdFromGsd2(args, cwd, raw) {
     }, raw);
   }
 
-  const gsd2Data = parseGsd2(sddDir);
-  const artifacts = buildPlanningArtifacts(gsd2Data);
-  const preview = buildPreview(gsd2Data, artifacts);
+  const sdd2Data = parseSdd2(sddDir);
+  const artifacts = buildPlanningArtifacts(sdd2Data);
+  const preview = buildPreview(sdd2Data, artifacts);
 
   if (dryRun) {
     return output({ success: true, dryRun: true, preview }, raw);
@@ -483,18 +483,18 @@ function cmdFromGsd2(args, cwd, raw) {
     success: true,
     planningDir: planningRoot,
     filesWritten: artifacts.size,
-    milestones: gsd2Data.milestones.length,
+    milestones: sdd2Data.milestones.length,
     preview,
   }, raw);
 }
 
 module.exports = {
-  findGsd2Root,
-  parseGsd2,
+  findSdd2Root,
+  parseSdd2,
   buildPlanningArtifacts,
   buildPreview,
   writePlanningDir,
-  cmdFromGsd2,
+  cmdFromSdd2,
   // Exported for unit tests
   parseSlicesFromRoadmap,
   parseMilestoneTitle,
