@@ -389,12 +389,12 @@ function getGlobalDir(runtime, explicitDir = null) {
 }
 
 const banner = '\n' +
-  cyan + '   ██████╗ ███████╗██████╗\n' +
-  '  ██╔════╝ ██╔════╝██╔══██╗\n' +
-  '  ██║  ███╗███████╗██║  ██║\n' +
-  '  ██║   ██║╚════██║██║  ██║\n' +
-  '  ╚██████╔╝███████║██████╔╝\n' +
-  '   ╚═════╝ ╚══════╝╚═════╝' + reset + '\n' +
+  cyan + '  ███████╗██████╗ ██████╗\n' +
+  '  ██╔════╝██╔══██╗██╔══██╗\n' +
+  '  ███████╗██║  ██║██║  ██║\n' +
+  '  ╚════██║██║  ██║██║  ██║\n' +
+  '  ███████║██████╔╝██████╔╝\n' +
+  '  ╚══════╝╚═════╝ ╚═════╝' + reset + '\n' +
   '\n' +
   '  Spec-Driven Development ' + dim + 'v' + pkg.version + reset + '\n' +
   '  A meta-prompting, context engineering and spec-driven\n' +
