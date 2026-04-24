@@ -16,15 +16,15 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_UI_REVIEWER=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" agent-skills sdd-ui-reviewer 2>/dev/null)
+AGENT_SKILLS_UI_REVIEWER=$(sdd-sdk query agent-skills sdd-ui-reviewer 2>/dev/null)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `commit_docs`.
 
 ```bash
-UI_AUDITOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-ui-auditor --raw)
+UI_AUDITOR_MODEL=$(sdd-sdk query resolve-model sdd-ui-auditor --raw)
 ```
 
 Display banner:
@@ -174,7 +174,7 @@ tools is detected at runtime.
 ## 5. Commit (if configured)
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(${padded_phase}): UI audit review" --files "${PHASE_DIR}/${PADDED_PHASE}-UI-REVIEW.md"
+sdd-sdk query commit "docs(${padded_phase}): UI audit review" "${PHASE_DIR}/${PADDED_PHASE}-UI-REVIEW.md"
 ```
 
 </process>

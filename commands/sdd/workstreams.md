@@ -34,30 +34,30 @@ If no subcommand given, default to `list`.
 ## Step 2: Execute Operation
 
 ### list
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream list --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.list --raw --cwd "$CWD"`
 Display the workstreams in a table format showing name, status, current phase, and progress.
 
 ### create
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream create <name> --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.create <name> --raw --cwd "$CWD"`
 After creation, display the new workstream path and suggest next steps:
 - `/sdd-new-milestone --ws <name>` to set up the milestone
 
 ### status
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream status <name> --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.status <name> --raw --cwd "$CWD"`
 Display detailed phase breakdown and state information.
 
 ### switch
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream set <name> --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.set <name> --raw --cwd "$CWD"`
 Also set `SDD_WORKSTREAM` for the current session when the runtime supports it.
 If the runtime exposes a session identifier, SDD also stores the active workstream
 session-locally so concurrent sessions do not overwrite each other.
 
 ### progress
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream progress --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.progress --raw --cwd "$CWD"`
 Display a progress overview across all workstreams.
 
 ### complete
-Run: `node "$HOME/.claude/sdd/bin/sdd-tools.cjs" workstream complete <name> --raw --cwd "$CWD"`
+Run: `sdd-sdk query workstream.complete <name> --raw --cwd "$CWD"`
 Archive the workstream to milestones/.
 
 ### resume
@@ -65,5 +65,5 @@ Set the workstream as active and suggest `/sdd-resume-work --ws <name>`.
 
 ## Step 3: Display Results
 
-Format the JSON output from sdd-tools into a human-readable display.
+Format the JSON output from sdd-sdk query into a human-readable display.
 Include the `${SDD_WS}` flag in any routing suggestions.

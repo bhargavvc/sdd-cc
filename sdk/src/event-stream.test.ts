@@ -1,25 +1,25 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GSDEventStream } from './event-stream.js';
+import { SDDEventStream } from './event-stream.js';
 import {
-  GSDEventType,
+  SDDEventType,
   PhaseType,
-  type GSDEvent,
-  type GSDSessionInitEvent,
-  type GSDSessionCompleteEvent,
-  type GSDSessionErrorEvent,
-  type GSDAssistantTextEvent,
-  type GSDToolCallEvent,
-  type GSDToolProgressEvent,
-  type GSDToolUseSummaryEvent,
-  type GSDTaskStartedEvent,
-  type GSDTaskProgressEvent,
-  type GSDTaskNotificationEvent,
-  type GSDAPIRetryEvent,
-  type GSDRateLimitEvent,
-  type GSDStatusChangeEvent,
-  type GSDCompactBoundaryEvent,
-  type GSDStreamEvent,
-  type GSDCostUpdateEvent,
+  type SDDEvent,
+  type SDDSessionInitEvent,
+  type SDDSessionCompleteEvent,
+  type SDDSessionErrorEvent,
+  type SDDAssistantTextEvent,
+  type SDDToolCallEvent,
+  type SDDToolProgressEvent,
+  type SDDToolUseSummaryEvent,
+  type SDDTaskStartedEvent,
+  type SDDTaskProgressEvent,
+  type SDDTaskNotificationEvent,
+  type SDDAPIRetryEvent,
+  type SDDRateLimitEvent,
+  type SDDStatusChangeEvent,
+  type SDDCompactBoundaryEvent,
+  type SDDStreamEvent,
+  type SDDCostUpdateEvent,
   type TransportHandler,
 } from './types.js';
 import type {
@@ -234,22 +234,22 @@ function makeCompactBoundary(): SDKCompactBoundaryMessage {
   } as SDKCompactBoundaryMessage;
 }
 
-// ─── SDKMessage → GSDEvent mapping tests ─────────────────────────────────────
+// ─── SDKMessage → SDDEvent mapping tests ─────────────────────────────────────
 
-describe('GSDEventStream', () => {
-  let stream: GSDEventStream;
+describe('SDDEventStream', () => {
+  let stream: SDDEventStream;
 
   beforeEach(() => {
-    stream = new GSDEventStream();
+    stream = new SDDEventStream();
   });
 
   describe('mapSDKMessage', () => {
     it('maps SDKSystemMessage init → SessionInit', () => {
       const event = stream.mapSDKMessage(makeSystemInit());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.SessionInit);
+      expect(event!.type).toBe(SDDEventType.SessionInit);
 
-      const init = event as GSDSessionInitEvent;
+      const init = event as SDDSessionInitEvent;
       expect(init.model).toBe('claude-sonnet-4-6');
       expect(init.tools).toEqual(['Read', 'Write', 'Bash']);
       expect(init.cwd).toBe('/test');
@@ -263,8 +263,8 @@ describe('GSDEventStream', () => {
       ]);
       const event = stream.mapSDKMessage(msg);
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.AssistantText);
-      expect((event as GSDAssistantTextEvent).text).toBe('Hello world');
+      expect(event!.type).toBe(SDDEventType.AssistantText);
+      expect((event as SDDAssistantTextEvent).text).toBe('Hello world');
     });
 
     it('maps assistant tool_use blocks → ToolCall', () => {
@@ -273,17 +273,17 @@ describe('GSDEventStream', () => {
       ]);
       const event = stream.mapSDKMessage(msg);
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.ToolCall);
+      expect(event!.type).toBe(SDDEventType.ToolCall);
 
-      const tc = event as GSDToolCallEvent;
+      const tc = event as SDDToolCallEvent;
       expect(tc.toolName).toBe('Read');
       expect(tc.toolUseId).toBe('tu-1');
       expect(tc.input).toEqual({ path: 'test.ts' });
     });
 
     it('handles multi-block assistant messages (text + tool_use)', () => {
-      const events: GSDEvent[] = [];
-      stream.on('event', (e: GSDEvent) => events.push(e));
+      const events: SDDEvent[] = [];
+      stream.on('event', (e: SDDEvent) => events.push(e));
 
       const msg = makeAssistantMsg([
         { type: 'text', text: 'Let me check that.' },
@@ -296,16 +296,16 @@ describe('GSDEventStream', () => {
 
       // Should have received 2 events total
       expect(events).toHaveLength(2);
-      expect(events[0]!.type).toBe(GSDEventType.AssistantText);
-      expect(events[1]!.type).toBe(GSDEventType.ToolCall);
+      expect(events[0]!.type).toBe(SDDEventType.AssistantText);
+      expect(events[1]!.type).toBe(SDDEventType.ToolCall);
     });
 
     it('maps SDKResultSuccess → SessionComplete', () => {
       const event = stream.mapSDKMessage(makeResultSuccess());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.SessionComplete);
+      expect(event!.type).toBe(SDDEventType.SessionComplete);
 
-      const complete = event as GSDSessionCompleteEvent;
+      const complete = event as SDDSessionCompleteEvent;
       expect(complete.success).toBe(true);
       expect(complete.totalCostUsd).toBe(0.05);
       expect(complete.durationMs).toBe(5000);
@@ -316,9 +316,9 @@ describe('GSDEventStream', () => {
     it('maps SDKResultError → SessionError', () => {
       const event = stream.mapSDKMessage(makeResultError());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.SessionError);
+      expect(event!.type).toBe(SDDEventType.SessionError);
 
-      const err = event as GSDSessionErrorEvent;
+      const err = event as SDDSessionErrorEvent;
       expect(err.success).toBe(false);
       expect(err.errorSubtype).toBe('error_max_turns');
       expect(err.errors).toContain('Max turns exceeded');
@@ -327,9 +327,9 @@ describe('GSDEventStream', () => {
     it('maps SDKToolProgressMessage → ToolProgress', () => {
       const event = stream.mapSDKMessage(makeToolProgress());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.ToolProgress);
+      expect(event!.type).toBe(SDDEventType.ToolProgress);
 
-      const tp = event as GSDToolProgressEvent;
+      const tp = event as SDDToolProgressEvent;
       expect(tp.toolName).toBe('Bash');
       expect(tp.toolUseId).toBe('tu-1');
       expect(tp.elapsedSeconds).toBe(5.2);
@@ -338,9 +338,9 @@ describe('GSDEventStream', () => {
     it('maps SDKToolUseSummaryMessage → ToolUseSummary', () => {
       const event = stream.mapSDKMessage(makeToolUseSummary());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.ToolUseSummary);
+      expect(event!.type).toBe(SDDEventType.ToolUseSummary);
 
-      const tus = event as GSDToolUseSummaryEvent;
+      const tus = event as SDDToolUseSummaryEvent;
       expect(tus.summary).toBe('Ran 3 bash commands');
       expect(tus.toolUseIds).toEqual(['tu-1', 'tu-2', 'tu-3']);
     });
@@ -348,9 +348,9 @@ describe('GSDEventStream', () => {
     it('maps SDKTaskStartedMessage → TaskStarted', () => {
       const event = stream.mapSDKMessage(makeTaskStarted());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.TaskStarted);
+      expect(event!.type).toBe(SDDEventType.TaskStarted);
 
-      const ts = event as GSDTaskStartedEvent;
+      const ts = event as SDDTaskStartedEvent;
       expect(ts.taskId).toBe('task-1');
       expect(ts.description).toBe('Running test suite');
       expect(ts.taskType).toBe('local_workflow');
@@ -359,9 +359,9 @@ describe('GSDEventStream', () => {
     it('maps SDKTaskProgressMessage → TaskProgress', () => {
       const event = stream.mapSDKMessage(makeTaskProgress());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.TaskProgress);
+      expect(event!.type).toBe(SDDEventType.TaskProgress);
 
-      const tp = event as GSDTaskProgressEvent;
+      const tp = event as SDDTaskProgressEvent;
       expect(tp.taskId).toBe('task-1');
       expect(tp.totalTokens).toBe(500);
       expect(tp.toolUses).toBe(3);
@@ -371,9 +371,9 @@ describe('GSDEventStream', () => {
     it('maps SDKTaskNotificationMessage → TaskNotification', () => {
       const event = stream.mapSDKMessage(makeTaskNotification());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.TaskNotification);
+      expect(event!.type).toBe(SDDEventType.TaskNotification);
 
-      const tn = event as GSDTaskNotificationEvent;
+      const tn = event as SDDTaskNotificationEvent;
       expect(tn.taskId).toBe('task-1');
       expect(tn.status).toBe('completed');
       expect(tn.summary).toBe('All tests passed');
@@ -382,9 +382,9 @@ describe('GSDEventStream', () => {
     it('maps SDKAPIRetryMessage → APIRetry', () => {
       const event = stream.mapSDKMessage(makeAPIRetry());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.APIRetry);
+      expect(event!.type).toBe(SDDEventType.APIRetry);
 
-      const retry = event as GSDAPIRetryEvent;
+      const retry = event as SDDAPIRetryEvent;
       expect(retry.attempt).toBe(2);
       expect(retry.maxRetries).toBe(5);
       expect(retry.retryDelayMs).toBe(1000);
@@ -394,9 +394,9 @@ describe('GSDEventStream', () => {
     it('maps SDKRateLimitEvent → RateLimit', () => {
       const event = stream.mapSDKMessage(makeRateLimitEvent());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.RateLimit);
+      expect(event!.type).toBe(SDDEventType.RateLimit);
 
-      const rl = event as GSDRateLimitEvent;
+      const rl = event as SDDRateLimitEvent;
       expect(rl.status).toBe('allowed_warning');
       expect(rl.utilization).toBe(0.85);
     });
@@ -404,16 +404,16 @@ describe('GSDEventStream', () => {
     it('maps SDKStatusMessage → StatusChange', () => {
       const event = stream.mapSDKMessage(makeStatusMessage());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.StatusChange);
-      expect((event as GSDStatusChangeEvent).status).toBe('compacting');
+      expect(event!.type).toBe(SDDEventType.StatusChange);
+      expect((event as SDDStatusChangeEvent).status).toBe('compacting');
     });
 
     it('maps SDKCompactBoundaryMessage → CompactBoundary', () => {
       const event = stream.mapSDKMessage(makeCompactBoundary());
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.CompactBoundary);
+      expect(event!.type).toBe(SDDEventType.CompactBoundary);
 
-      const cb = event as GSDCompactBoundaryEvent;
+      const cb = event as SDDCompactBoundaryEvent;
       expect(cb.trigger).toBe('auto');
       expect(cb.preTokens).toBe(95000);
     });
@@ -499,7 +499,7 @@ describe('GSDEventStream', () => {
 
   describe('transport management', () => {
     it('delivers events to subscribed transports', () => {
-      const received: GSDEvent[] = [];
+      const received: SDDEvent[] = [];
       const transport: TransportHandler = {
         onEvent: (event) => received.push(event),
         close: () => {},
@@ -509,12 +509,12 @@ describe('GSDEventStream', () => {
       stream.mapAndEmit(makeSystemInit());
 
       expect(received).toHaveLength(1);
-      expect(received[0]!.type).toBe(GSDEventType.SessionInit);
+      expect(received[0]!.type).toBe(SDDEventType.SessionInit);
     });
 
     it('delivers events to multiple transports', () => {
-      const received1: GSDEvent[] = [];
-      const received2: GSDEvent[] = [];
+      const received1: SDDEvent[] = [];
+      const received2: SDDEvent[] = [];
 
       stream.addTransport({
         onEvent: (e) => received1.push(e),
@@ -532,7 +532,7 @@ describe('GSDEventStream', () => {
     });
 
     it('stops delivering events after transport removal', () => {
-      const received: GSDEvent[] = [];
+      const received: SDDEvent[] = [];
       const transport: TransportHandler = {
         onEvent: (e) => received.push(e),
         close: () => {},
@@ -552,7 +552,7 @@ describe('GSDEventStream', () => {
         onEvent: () => { throw new Error('transport failed'); },
         close: () => {},
       };
-      const goodReceived: GSDEvent[] = [];
+      const goodReceived: SDDEvent[] = [];
       const goodTransport: TransportHandler = {
         onEvent: (e) => goodReceived.push(e),
         close: () => {},
@@ -581,8 +581,8 @@ describe('GSDEventStream', () => {
       expect(closeCalled).toHaveLength(2);
 
       // No more deliveries after closeAll
-      const events: GSDEvent[] = [];
-      stream.on('event', (e: GSDEvent) => events.push(e));
+      const events: SDDEvent[] = [];
+      stream.on('event', (e: SDDEvent) => events.push(e));
       stream.mapAndEmit(makeSystemInit());
       // EventEmitter listeners still work, but transports are gone
       expect(events).toHaveLength(1);
@@ -593,26 +593,26 @@ describe('GSDEventStream', () => {
 
   describe('EventEmitter integration', () => {
     it('emits typed events via "event" channel', () => {
-      const events: GSDEvent[] = [];
-      stream.on('event', (e: GSDEvent) => events.push(e));
+      const events: SDDEvent[] = [];
+      stream.on('event', (e: SDDEvent) => events.push(e));
 
       stream.mapAndEmit(makeSystemInit());
       stream.mapAndEmit(makeResultSuccess());
 
       expect(events).toHaveLength(2);
-      expect(events[0]!.type).toBe(GSDEventType.SessionInit);
-      expect(events[1]!.type).toBe(GSDEventType.SessionComplete);
+      expect(events[0]!.type).toBe(SDDEventType.SessionInit);
+      expect(events[1]!.type).toBe(SDDEventType.SessionComplete);
     });
 
     it('emits events on per-type channels', () => {
-      const initEvents: GSDEvent[] = [];
-      stream.on(GSDEventType.SessionInit, (e: GSDEvent) => initEvents.push(e));
+      const initEvents: SDDEvent[] = [];
+      stream.on(SDDEventType.SessionInit, (e: SDDEvent) => initEvents.push(e));
 
       stream.mapAndEmit(makeSystemInit());
       stream.mapAndEmit(makeResultSuccess());
 
       expect(initEvents).toHaveLength(1);
-      expect(initEvents[0]!.type).toBe(GSDEventType.SessionInit);
+      expect(initEvents[0]!.type).toBe(SDDEventType.SessionInit);
     });
   });
 
@@ -630,8 +630,8 @@ describe('GSDEventStream', () => {
 
       const event = stream.mapSDKMessage(msg);
       expect(event).not.toBeNull();
-      expect(event!.type).toBe(GSDEventType.StreamEvent);
-      expect((event as GSDStreamEvent).event).toEqual({ type: 'content_block_delta' });
+      expect(event!.type).toBe(SDDEventType.StreamEvent);
+      expect((event as SDDStreamEvent).event).toEqual({ type: 'content_block_delta' });
     });
   });
 

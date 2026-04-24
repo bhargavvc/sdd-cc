@@ -15,10 +15,12 @@ const DIST_DIR = path.join(HOOKS_DIR, 'dist');
 
 // Hooks to copy (pure Node.js, no bundling needed)
 const HOOKS_TO_COPY = [
+  'sdd-check-update-worker.js',
   'sdd-check-update.js',
   'sdd-context-monitor.js',
   'sdd-prompt-guard.js',
   'sdd-read-guard.js',
+  'sdd-read-injection-scanner.js',
   'sdd-statusline.js',
   'sdd-workflow-guard.js',
   // Community hooks (bash, opt-in via .planning/config.json hooks.community)

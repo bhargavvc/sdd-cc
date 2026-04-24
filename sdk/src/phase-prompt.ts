@@ -28,6 +28,7 @@ const PHASE_WORKFLOW_MAP: Record<PhaseType, string> = {
   [PhaseType.Plan]: 'plan-phase.md',
   [PhaseType.Verify]: 'verify-phase.md',
   [PhaseType.Discuss]: 'discuss-phase.md',
+  [PhaseType.Repair]: 'execute-plan.md',
 };
 
 // ─── XML block extraction ────────────────────────────────────────────────────
@@ -70,13 +71,13 @@ export class PromptFactory {
   private readonly sdkPromptsDir: string;
 
   constructor(options?: {
-    gsdInstallDir?: string;
+    sddInstallDir?: string;
     agentsDir?: string;
     projectAgentsDir?: string;
     sdkPromptsDir?: string;
   }) {
-    const gsdInstallDir = options?.gsdInstallDir ?? join(homedir(), '.claude', 'get-shit-done');
-    this.workflowsDir = join(gsdInstallDir, 'workflows');
+    const sddInstallDir = options?.sddInstallDir ?? join(homedir(), '.claude', 'get-shit-done');
+    this.workflowsDir = join(sddInstallDir, 'workflows');
     this.agentsDir = options?.agentsDir ?? join(homedir(), '.claude', 'agents');
     this.projectAgentsDir = options?.projectAgentsDir;
     // SDK prompts dir: explicit override → package-relative default via import.meta.url
@@ -156,7 +157,7 @@ export class PromptFactory {
   /**
    * Load the workflow file for a phase type.
    * Tries sdk/prompts/workflows/ first (headless versions), then
-   * falls back to GSD-1 originals in workflowsDir.
+   * falls back to SDD-1 originals in workflowsDir.
    * Returns the raw content, or undefined if not found.
    */
   async loadWorkflowFile(phaseType: PhaseType): Promise<string | undefined> {
@@ -167,10 +168,10 @@ export class PromptFactory {
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/prompts/, fall through to SDD-1 originals
     }
 
-    // Fall back to GSD-1 originals
+    // Fall back to SDD-1 originals
     const filePath = join(this.workflowsDir, filename);
     try {
       return await readFile(filePath, 'utf-8');

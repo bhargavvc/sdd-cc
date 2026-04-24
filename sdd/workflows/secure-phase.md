@@ -16,16 +16,16 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_AUDITOR=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" agent-skills sdd-security-auditor 2>/dev/null)
+AGENT_SKILLS_AUDITOR=$(sdd-sdk query agent-skills sdd-security-auditor 2>/dev/null)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`.
 
 ```bash
-AUDITOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-security-auditor --raw)
-SECURITY_CFG=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
+AUDITOR_MODEL=$(sdd-sdk query resolve-model sdd-security-auditor --raw)
+SECURITY_CFG=$(sdd-sdk query config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 ```
 
 If `SECURITY_CFG` is `false`: exit with "Security enforcement disabled. Enable via /sdd-settings."
@@ -134,7 +134,7 @@ Do NOT emit next-phase routing. Stop here.
 ## 7. Commit
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(phase-${PHASE}): add/update security threat verification"
+sdd-sdk query commit "docs(phase-${PHASE}): add/update security threat verification"
 ```
 
 ## 8. Results + Routing

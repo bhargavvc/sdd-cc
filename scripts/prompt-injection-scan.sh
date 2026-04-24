@@ -75,6 +75,8 @@ ALLOWLIST=(
   'tests/verify.test.cjs'
   'sdd/bin/lib/security.cjs'
   'hooks/sdd-prompt-guard.js'
+  'hooks/sdd-read-injection-scanner.js'
+  'tests/read-injection-scanner.test.cjs'
   'SECURITY.md'
 )
 

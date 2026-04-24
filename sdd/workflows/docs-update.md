@@ -14,9 +14,9 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 Load docs-update context:
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" docs-init)
+INIT=$(sdd-sdk query docs-init)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" agent-skills sdd-doc-writer 2>/dev/null)
+AGENT_SKILLS=$(sdd-sdk query agent-skills sdd-doc-writer 2>/dev/null)
 ```
 
 Extract from init JSON:
@@ -1054,7 +1054,7 @@ Only run this step if `commit_docs` is `true` from the init JSON. If `commit_doc
 Assemble the list of files that were actually generated (do not include files that failed or were skipped):
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs: generate project documentation" \
+sdd-sdk query commit "docs: generate project documentation" \
   --files README.md docs/ARCHITECTURE.md docs/CONFIGURATION.md docs/GETTING-STARTED.md docs/DEVELOPMENT.md docs/TESTING.md
 # Append any conditional docs that were generated:
 # --files ... docs/API.md docs/DEPLOYMENT.md CONTRIBUTING.md

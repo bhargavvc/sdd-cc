@@ -13,14 +13,14 @@ Use after /sdd-execute-phase to verify that the evaluation strategy from AI-SPEC
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `commit_docs`.
 
 ```bash
-AUDITOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-eval-auditor --raw)
+AUDITOR_MODEL=$(sdd-sdk query resolve-model sdd-eval-auditor 2>/dev/null | jq -r '.model' 2>/dev/null || true)
 ```
 
 Display banner:

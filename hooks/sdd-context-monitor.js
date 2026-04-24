@@ -21,6 +21,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const WARNING_THRESHOLD = 35;  // remaining_percentage <= 35%
 const CRITICAL_THRESHOLD = 25; // remaining_percentage <= 25%
@@ -127,6 +128,32 @@ process.stdin.on('end', () => {
 
     // Detect if SDD is active (has .planning/STATE.md in working directory)
     const isSddActive = fs.existsSync(path.join(cwd, '.planning', 'STATE.md'));
+
+    // On CRITICAL with active SDD project, auto-record session state as a
+    // breadcrumb for /sdd-resume-work (#1974). Fire-and-forget subprocess —
+    // doesn't block the hook or the agent. Fires ONCE per CRITICAL session,
+    // guarded by warnData.criticalRecorded to prevent repeated overwrites
+    // of the "crash moment" record on every debounce cycle.
+    if (isCritical && isSddActive && !warnData.criticalRecorded) {
+      try {
+        // Runtime-agnostic path: this hook lives at <runtime-config>/hooks/
+        // and sdd-tools.cjs lives at <runtime-config>/sdd/bin/.
+        // Using __dirname makes this work on Claude Code, OpenCode, Gemini,
+        // Kilo, etc. without hardcoding ~/.claude/.
+        const sddTools = path.join(__dirname, '..', 'sdd', 'bin', 'sdd-tools.cjs');
+        // Coerce usedPct to a safe number in case bridge file is malformed
+        const safeUsedPct = Number(usedPct) || 0;
+        const stoppedAt = `context exhaustion at ${safeUsedPct}% (${new Date().toISOString().split('T')[0]})`;
+        spawn(
+          process.execPath,
+          [sddTools, 'state', 'record-session', '--stopped-at', stoppedAt],
+          { cwd, detached: true, stdio: 'ignore' }
+        ).unref();
+        warnData.criticalRecorded = true;
+        // Persist the sentinel so subsequent debounce cycles don't re-fire
+        fs.writeFileSync(warnPath, JSON.stringify(warnData));
+      } catch { /* non-critical — don't let state recording break the hook */ }
+    }
 
     // Build advisory warning message (never use imperative commands that
     // override user preferences — see #884)

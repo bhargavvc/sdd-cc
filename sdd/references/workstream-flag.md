@@ -93,19 +93,19 @@ This ensures workstream scope chains automatically through the workflow:
 ## CLI Usage
 
 ```bash
-# All sdd-tools commands accept --ws
-node sdd-tools.cjs state json --ws feature-a
-node sdd-tools.cjs find-phase 3 --ws feature-b
+# All sdd-sdk query commands accept --ws
+sdd-sdk query state.json --ws feature-a
+sdd-sdk query find-phase 3 --ws feature-b
 
 # Session-local switching without --ws on every command
-SDD_SESSION_KEY=my-terminal-a node sdd-tools.cjs workstream set feature-a
-SDD_SESSION_KEY=my-terminal-a node sdd-tools.cjs state json
-SDD_SESSION_KEY=my-terminal-b node sdd-tools.cjs workstream set feature-b
-SDD_SESSION_KEY=my-terminal-b node sdd-tools.cjs state json
+SDD_SESSION_KEY=my-terminal-a sdd-sdk query workstream.set feature-a
+SDD_SESSION_KEY=my-terminal-a sdd-sdk query state.json
+SDD_SESSION_KEY=my-terminal-b sdd-sdk query workstream.set feature-b
+SDD_SESSION_KEY=my-terminal-b sdd-sdk query state.json
 
 # Workstream CRUD
-node sdd-tools.cjs workstream create <name>
-node sdd-tools.cjs workstream list
-node sdd-tools.cjs workstream status <name>
-node sdd-tools.cjs workstream complete <name>
+sdd-sdk query workstream.create <name>
+sdd-sdk query workstream.list
+sdd-sdk query workstream.status <name>
+sdd-sdk query workstream.complete <name>
 ```

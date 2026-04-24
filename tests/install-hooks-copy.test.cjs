@@ -35,6 +35,7 @@ const EXPECTED_ALL_HOOKS = [
   'sdd-context-monitor.js',
   'sdd-prompt-guard.js',
   'sdd-read-guard.js',
+  'sdd-read-injection-scanner.js',
   'sdd-statusline.js',
   'sdd-workflow-guard.js',
   ...EXPECTED_SH_HOOKS,

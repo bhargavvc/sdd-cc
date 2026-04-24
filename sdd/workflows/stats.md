@@ -12,7 +12,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 Gather project statistics:
 
 ```bash
-STATS=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" stats json)
+STATS=$(sdd-sdk query stats.json)
 if [[ "$STATS" == @file:* ]]; then STATS=$(cat "${STATS#@file:}"); fi
 ```
 

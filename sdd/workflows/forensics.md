@@ -259,7 +259,7 @@ gh issue create \
 ## Step 8: Update STATE.md
 
 ```bash
-sdd-tools.cjs state record-session \
-  --stopped-at "Forensic investigation complete" \
-  --resume-file ".planning/forensics/report-{timestamp}.md"
+sdd-sdk query state.record-session "" \
+  "Forensic investigation complete" \
+  ".planning/forensics/report-{timestamp}.md"
 ```

@@ -31,6 +31,7 @@ const {
   findProjectRoot,
   detectSubRepos,
   planningDir,
+  timeAgo,
 } = require('../sdd/bin/lib/core.cjs');
 
 // ─── loadConfig ────────────────────────────────────────────────────────────────
@@ -1070,8 +1071,10 @@ describe('stale hook filter', () => {
 
 describe('stale hook path', () => {
   test('sdd-check-update.js checks configDir/hooks/ where hooks are actually installed (#1421)', () => {
+    // The stale-hook scan logic lives in the worker (moved from inline -e template literal).
+    // The worker receives configDir via env and constructs the hooksDir path.
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'sdd-check-update.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'sdd-check-update-worker.js'), 'utf-8'
     );
     // Hooks are installed at configDir/hooks/ (e.g. ~/.claude/hooks/),
     // not configDir/sdd/hooks/ which doesn't exist (#1421)
@@ -1629,9 +1632,11 @@ describe('findProjectRoot', () => {
 // ─── reapStaleTempFiles ─────────────────────────────────────────────────────
 
 describe('reapStaleTempFiles', () => {
+  const sddTmpDir = path.join(os.tmpdir(), 'sdd');
+
   test('removes stale sdd-*.json files older than maxAgeMs', () => {
-    const tmpDir = os.tmpdir();
-    const stalePath = path.join(tmpDir, `sdd-reap-test-${Date.now()}.json`);
+    fs.mkdirSync(sddTmpDir, { recursive: true });
+    const stalePath = path.join(sddTmpDir, `sdd-reap-test-${Date.now()}.json`);
     fs.writeFileSync(stalePath, '{}');
     // Set mtime to 10 minutes ago
     const oldTime = new Date(Date.now() - 10 * 60 * 1000);
@@ -1643,8 +1648,8 @@ describe('reapStaleTempFiles', () => {
   });
 
   test('preserves fresh sdd-*.json files', () => {
-    const tmpDir = os.tmpdir();
-    const freshPath = path.join(tmpDir, `sdd-reap-fresh-${Date.now()}.json`);
+    fs.mkdirSync(sddTmpDir, { recursive: true });
+    const freshPath = path.join(sddTmpDir, `sdd-reap-fresh-${Date.now()}.json`);
     fs.writeFileSync(freshPath, '{}');
 
     reapStaleTempFiles('sdd-reap-fresh-', { maxAgeMs: 5 * 60 * 1000 });
@@ -1655,8 +1660,8 @@ describe('reapStaleTempFiles', () => {
   });
 
   test('removes stale temp directories when present', () => {
-    const tmpDir = os.tmpdir();
-    const staleDir = fs.mkdtempSync(path.join(tmpDir, 'sdd-reap-dir-'));
+    fs.mkdirSync(sddTmpDir, { recursive: true });
+    const staleDir = fs.mkdtempSync(path.join(sddTmpDir, 'sdd-reap-dir-'));
     fs.writeFileSync(path.join(staleDir, 'data.jsonl'), 'test');
     // Set mtime to 10 minutes ago
     const oldTime = new Date(Date.now() - 10 * 60 * 1000);
@@ -1746,5 +1751,105 @@ describe('planningDir', () => {
       () => planningDir(cwd, '../../../tmp', null),
       /invalid path characters/
     );
+  });
+});
+
+// ─── timeAgo ──────────────────────────────────────────────────────────────────
+
+describe('timeAgo', () => {
+  const now = () => Date.now();
+  const dateAt = (msAgo) => new Date(now() - msAgo);
+
+  // ─── seconds boundary ───
+  test('returns "just now" for dates under 5 seconds old', () => {
+    assert.strictEqual(timeAgo(dateAt(0)), 'just now');
+    assert.strictEqual(timeAgo(dateAt(4_000)), 'just now');
+  });
+
+  test('returns "N seconds ago" between 5 and 59 seconds', () => {
+    assert.strictEqual(timeAgo(dateAt(5_000)), '5 seconds ago');
+    assert.strictEqual(timeAgo(dateAt(30_000)), '30 seconds ago');
+    assert.strictEqual(timeAgo(dateAt(59_000)), '59 seconds ago');
+  });
+
+  // ─── minutes boundary ───
+  test('transitions to minutes at 60 seconds', () => {
+    assert.strictEqual(timeAgo(dateAt(60_000)), '1 minute ago');
+  });
+
+  test('uses singular "1 minute ago" for exactly one minute', () => {
+    assert.strictEqual(timeAgo(dateAt(60_000)), '1 minute ago');
+    assert.strictEqual(timeAgo(dateAt(119_000)), '1 minute ago');
+  });
+
+  test('uses plural "N minutes ago" for 2-59 minutes', () => {
+    assert.strictEqual(timeAgo(dateAt(120_000)), '2 minutes ago');
+    assert.strictEqual(timeAgo(dateAt(5 * 60_000)), '5 minutes ago');
+    assert.strictEqual(timeAgo(dateAt(59 * 60_000)), '59 minutes ago');
+  });
+
+  // ─── hours boundary ───
+  test('transitions to hours at 60 minutes', () => {
+    assert.strictEqual(timeAgo(dateAt(60 * 60_000)), '1 hour ago');
+  });
+
+  test('uses singular "1 hour ago" for exactly one hour', () => {
+    assert.strictEqual(timeAgo(dateAt(60 * 60_000)), '1 hour ago');
+    assert.strictEqual(timeAgo(dateAt(119 * 60_000)), '1 hour ago');
+  });
+
+  test('uses plural "N hours ago" for 2-23 hours', () => {
+    assert.strictEqual(timeAgo(dateAt(2 * 3600_000)), '2 hours ago');
+    assert.strictEqual(timeAgo(dateAt(23 * 3600_000)), '23 hours ago');
+  });
+
+  // ─── days boundary ───
+  test('transitions to days at 24 hours', () => {
+    assert.strictEqual(timeAgo(dateAt(24 * 3600_000)), '1 day ago');
+  });
+
+  test('uses singular "1 day ago" for exactly one day', () => {
+    assert.strictEqual(timeAgo(dateAt(24 * 3600_000)), '1 day ago');
+  });
+
+  test('uses plural "N days ago" for 2-29 days', () => {
+    assert.strictEqual(timeAgo(dateAt(2 * 86400_000)), '2 days ago');
+    assert.strictEqual(timeAgo(dateAt(29 * 86400_000)), '29 days ago');
+  });
+
+  // ─── months boundary ───
+  test('transitions to months at 30 days', () => {
+    assert.strictEqual(timeAgo(dateAt(30 * 86400_000)), '1 month ago');
+  });
+
+  test('uses singular "1 month ago" for exactly one month (30 days)', () => {
+    assert.strictEqual(timeAgo(dateAt(30 * 86400_000)), '1 month ago');
+    assert.strictEqual(timeAgo(dateAt(59 * 86400_000)), '1 month ago');
+  });
+
+  test('uses plural "N months ago" for 2-11 months', () => {
+    assert.strictEqual(timeAgo(dateAt(60 * 86400_000)), '2 months ago');
+    assert.strictEqual(timeAgo(dateAt(180 * 86400_000)), '6 months ago');
+  });
+
+  // ─── years boundary ───
+  test('transitions to years at 365 days', () => {
+    assert.strictEqual(timeAgo(dateAt(365 * 86400_000)), '1 year ago');
+  });
+
+  test('uses singular "1 year ago" for exactly one year', () => {
+    assert.strictEqual(timeAgo(dateAt(365 * 86400_000)), '1 year ago');
+  });
+
+  test('uses plural "N years ago" for 2+ years', () => {
+    assert.strictEqual(timeAgo(dateAt(2 * 365 * 86400_000)), '2 years ago');
+    assert.strictEqual(timeAgo(dateAt(10 * 365 * 86400_000)), '10 years ago');
+  });
+
+  // ─── edge cases ───
+  test('handles future dates as "just now" (negative elapsed)', () => {
+    // A date 5 seconds in the future has negative elapsed time, which floors to a negative
+    // number of seconds and hits the "under 5 seconds" branch.
+    assert.strictEqual(timeAgo(new Date(Date.now() + 5_000)), 'just now');
   });
 });

@@ -8,6 +8,7 @@ A detailed reference for workflows, troubleshooting, and configuration. For quic
 
 - [Workflow Diagrams](#workflow-diagrams)
 - [UI Design Contract](#ui-design-contract)
+- [Spiking & Sketching](#spiking--sketching)
 - [Backlog & Threads](#backlog--threads)
 - [Workstreams](#workstreams)
 - [Security](#security)
@@ -256,6 +257,59 @@ Controlled by `workflow.ui_safety_gate` config toggle.
 ### Screenshot Storage
 
 `/sdd-ui-review` captures screenshots via Playwright CLI to `.planning/ui-reviews/`. A `.gitignore` is created automatically to prevent binary files from reaching git. Screenshots are cleaned up during `/sdd-complete-milestone`.
+
+---
+
+## Spiking & Sketching
+
+Use `/sdd-spike` to validate technical feasibility before planning, and `/sdd-sketch` to explore visual direction before designing. Both store artifacts in `.planning/` and integrate with the project-skills system via their wrap-up companions.
+
+### When to Spike
+
+Spike when you're uncertain whether a technical approach is feasible or want to compare two implementations before committing a phase to one of them.
+
+```
+/sdd-spike                              # Interactive intake — describes the question, you confirm
+/sdd-spike "can we stream LLM tokens through SSE"
+/sdd-spike --quick "websocket vs SSE latency"
+```
+
+Each spike runs 2–5 experiments. Every experiment has:
+- A **Given / When / Then** hypothesis written before any code
+- **Working code** (not pseudocode)
+- A **VALIDATED / INVALIDATED / PARTIAL** verdict with evidence
+
+Results land in `.planning/spikes/NNN-name/README.md` and are indexed in `.planning/spikes/MANIFEST.md`.
+
+Once you have signal, run `/sdd-spike-wrap-up` to package the findings into `.claude/skills/spike-findings-[project]/` — future sessions will load them automatically via project-skills discovery.
+
+### When to Sketch
+
+Sketch when you need to compare layout structures, interaction models, or visual treatments before writing any real component code.
+
+```
+/sdd-sketch                             # Mood intake — explores feel, references, core action
+/sdd-sketch "dashboard layout"
+/sdd-sketch --quick "sidebar navigation"
+/sdd-sketch --text "onboarding flow"    # For non-Claude runtimes (Codex, Gemini, etc.)
+```
+
+Each sketch answers **one design question** with 2–3 variants in a single `index.html` you open directly in a browser — no build step. Variants use tab navigation and shared CSS variables from `themes/default.css`. All interactive elements (hover, click, transitions) are functional.
+
+After picking a winner, run `/sdd-sketch-wrap-up` to capture the visual decisions into `.claude/skills/sketch-findings-[project]/`.
+
+### Spike → Sketch → Phase Flow
+
+```
+/sdd-spike "SSE vs WebSocket"     # Validate the approach
+/sdd-spike-wrap-up                # Package learnings
+
+/sdd-sketch "real-time feed UI"   # Explore the design
+/sdd-sketch-wrap-up               # Package decisions
+
+/sdd-discuss-phase N              # Lock in preferences (now informed by spike + sketch)
+/sdd-plan-phase N                 # Plan with confidence
+```
 
 ---
 
@@ -798,14 +852,20 @@ Each workspace gets:
 
 ## Troubleshooting
 
+### Programmatic CLI (`sdd-sdk query` vs `sdd-tools.cjs`)
+
+For automation and copy-paste from docs, prefer **`sdd-sdk query`** with a registered subcommand (see [CLI-TOOLS.md](CLI-TOOLS.md) and [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md)). The legacy **`node $HOME/.claude/sdd/bin/sdd-tools.cjs`** CLI remains supported for dual-mode operation.
+
+**Not yet on `sdd-sdk query` (use CJS):** `state validate`, `state sync`, `audit-open`, `graphify`, `from-gsd2`, and any subcommand not listed in the registry.
+
 ### STATE.md Out of Sync
 
-If STATE.md shows incorrect phase status or position, use the state consistency commands:
+If STATE.md shows incorrect phase status or position, use the state consistency commands (**CJS-only** until ported to the query layer):
 
 ```bash
-node sdd-tools.cjs state validate          # Detect drift between STATE.md and filesystem
-node sdd-tools.cjs state sync --verify     # Preview what sync would change
-node sdd-tools.cjs state sync              # Reconstruct STATE.md from disk
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" state validate          # Detect drift between STATE.md and filesystem
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" state sync --verify     # Preview what sync would change
+node "$HOME/.claude/sdd/bin/sdd-tools.cjs" state sync              # Reconstruct STATE.md from disk
 ```
 
 These commands are new in v1.32 and replace manual STATE.md editing.
@@ -830,6 +890,12 @@ Clear your context window between major commands: `/clear` in Claude Code. SDD i
 ### Plans Seem Wrong or Misaligned
 
 Run `/sdd-discuss-phase [N]` before planning. Most plan quality issues come from Claude making assumptions that `CONTEXT.md` would have prevented. You can also run `/sdd-list-phase-assumptions [N]` to see what Claude intends to do before committing to a plan.
+
+### Discuss-Phase Uses Technical Jargon I Don't Understand
+
+`/sdd-discuss-phase` adapts its language based on your `USER-PROFILE.md`. If the profile indicates a non-technical owner — `learning_style: guided`, `jargon` listed as a frustration trigger, or `explanation_depth: high-level` — gray area questions are automatically reframed in product-outcome language instead of implementation terminology.
+
+To enable this: run `/sdd-profile-user` to generate your profile. The profile is stored at `~/.claude/sdd/USER-PROFILE.md` and is read automatically on every `/sdd-discuss-phase` invocation. No other configuration is required.
 
 ### Execution Fails or Produces Stubs
 
@@ -868,6 +934,40 @@ The installer auto-configures `resolve_model_ids: "omit"` for Gemini CLI, OpenCo
 
 See the [Configuration Reference](CONFIGURATION.md#non-claude-runtimes-codex-opencode-gemini-cli-kilo) for the full explanation.
 
+### Installing for Cline
+
+Cline uses a rules-based integration — SDD installs as `.clinerules` rather than slash commands.
+
+```bash
+# Global install (applies to all projects)
+npx @bhargavvc/sdd-cc --cline --global
+
+# Local install (this project only)
+npx @bhargavvc/sdd-cc --cline --local
+```
+
+Global installs write to `~/.cline/`. Local installs write to `./.cline/`. No custom slash commands are registered — SDD rules are loaded automatically by Cline from the rules file.
+
+### Installing for CodeBuddy
+
+CodeBuddy uses a skills-based integration.
+
+```bash
+npx @bhargavvc/sdd-cc --codebuddy --global
+```
+
+Skills are installed to `~/.codebuddy/skills/sdd-*/SKILL.md`.
+
+### Installing for Qwen Code
+
+Qwen Code uses the same open skills standard as Claude Code 2.1.88+.
+
+```bash
+npx @bhargavvc/sdd-cc --qwen --global
+```
+
+Skills are installed to `~/.qwen/skills/sdd-*/SKILL.md`. Use the `QWEN_CONFIG_DIR` environment variable to override the default install path.
+
 ### Using Claude Code with Non-Anthropic Providers (OpenRouter, Local)
 
 If SDD subagents call Anthropic models and you're paying through OpenRouter or a local provider, switch to the `inherit` profile: `/sdd-set-profile inherit`. This makes all agents use your current session model instead of specific Anthropic models. See also `/sdd-settings` → Model Profile → Inherit.
@@ -894,6 +994,111 @@ When a workflow fails in a way that isn't obvious -- plans reference nonexistent
 - State inconsistencies (ROADMAP status vs. actual file presence, config drift)
 
 **Output:** A diagnostic report written to `.planning/forensics/` with findings and suggested remediation steps.
+
+### Executor Subagent Gets "Permission denied" on Bash Commands
+
+SDD's `sdd-executor` subagents need write-capable Bash access to a project's standard tooling — `git commit`, `bin/rails`, `bundle exec`, `npm run`, `uv run`, and similar commands. Claude Code's default `~/.claude/settings.json` only allows a narrow set of read-only git commands, so a fresh install will hit "Permission to use Bash has been denied" the first time an executor tries to make a commit or run a build tool.
+
+**Fix: add the required patterns to `~/.claude/settings.json`.**
+
+The patterns you need depend on your stack. Copy the block for your stack and add it to the `permissions.allow` array.
+
+#### Required for all stacks (git + gh)
+
+```json
+"Bash(git add:*)",
+"Bash(git commit:*)",
+"Bash(git merge:*)",
+"Bash(git worktree:*)",
+"Bash(git rebase:*)",
+"Bash(git reset:*)",
+"Bash(git checkout:*)",
+"Bash(git switch:*)",
+"Bash(git restore:*)",
+"Bash(git stash:*)",
+"Bash(git rm:*)",
+"Bash(git mv:*)",
+"Bash(git fetch:*)",
+"Bash(git cherry-pick:*)",
+"Bash(git apply:*)",
+"Bash(gh:*)"
+```
+
+#### Rails / Ruby
+
+```json
+"Bash(bin/rails:*)",
+"Bash(bin/brakeman:*)",
+"Bash(bin/bundler-audit:*)",
+"Bash(bin/importmap:*)",
+"Bash(bundle:*)",
+"Bash(rubocop:*)",
+"Bash(erb_lint:*)"
+```
+
+#### Python / uv
+
+```json
+"Bash(uv:*)",
+"Bash(python:*)",
+"Bash(pytest:*)",
+"Bash(ruff:*)",
+"Bash(mypy:*)"
+```
+
+#### Node / npm / pnpm / bun
+
+```json
+"Bash(npm:*)",
+"Bash(npx:*)",
+"Bash(pnpm:*)",
+"Bash(bun:*)",
+"Bash(node:*)"
+```
+
+#### Rust / Cargo
+
+```json
+"Bash(cargo:*)"
+```
+
+**Example `~/.claude/settings.json` snippet (Rails project):**
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git merge:*)",
+      "Bash(git worktree:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git fetch:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git apply:*)",
+      "Bash(gh:*)",
+      "Bash(bin/rails:*)",
+      "Bash(bin/brakeman:*)",
+      "Bash(bin/bundler-audit:*)",
+      "Bash(bundle:*)",
+      "Bash(rubocop:*)"
+    ]
+  }
+}
+```
+
+**Per-project permissions (scoped to one repo):** If you prefer to allow these patterns for a single project rather than globally, add the same `permissions.allow` block to `.claude/settings.local.json` in your project root instead of `~/.claude/settings.json`. Claude Code checks project-local settings first.
+
+**Interactive guidance:** When an executor is blocked mid-phase, it will identify the exact pattern needed (e.g. `"Bash(bin/rails:*)"`) so you can add it and re-run `/sdd-execute-phase`.
 
 ### Subagent Appears to Fail but Work Was Done
 
@@ -957,6 +1162,14 @@ For reference, here is what SDD creates in your project:
     done/                 # Completed todos
   debug/                  # Active debug sessions
     resolved/             # Archived debug sessions
+  spikes/                 # Feasibility experiments (from /sdd-spike)
+    NNN-name/             # Experiment code + README with verdict
+    MANIFEST.md           # Index of all spikes
+  sketches/               # HTML mockups (from /sdd-sketch)
+    NNN-name/             # index.html (2-3 variants) + README
+    themes/
+      default.css         # Shared CSS variables for all sketches
+    MANIFEST.md           # Index of all sketches with winners
   codebase/               # Brownfield codebase mapping (from /sdd-map-codebase)
   phases/
     XX-phase-name/

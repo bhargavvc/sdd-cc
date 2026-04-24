@@ -124,9 +124,15 @@ function runStatusline() {
     const remaining = data.context_window?.remaining_percentage;
 
     // Context window display (shows USED percentage scaled to usable context)
-    // Claude Code reserves ~16.5% for autocompact buffer, so usable context
-    // is 83.5% of the total window. We normalize to show 100% at that point.
-    const AUTO_COMPACT_BUFFER_PCT = 16.5;
+    // Claude Code reserves a buffer for autocompact. By default this is ~16.5%
+    // of the total window, but users can override it via CLAUDE_CODE_AUTO_COMPACT_WINDOW
+    // (a token count). When the env var is set, compute the buffer % dynamically so
+    // the meter correctly reflects early-compaction configurations (#2219).
+    const totalCtx = data.context_window?.total_tokens || 1_000_000;
+    const acw = parseInt(process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || '0', 10);
+    const AUTO_COMPACT_BUFFER_PCT = acw > 0
+      ? Math.min(100, (acw / totalCtx) * 100)
+      : 16.5;
     let ctx = '';
     if (remaining != null) {
       // Normalize: subtract buffer from remaining, scale to usable range
@@ -211,7 +217,20 @@ function runStatusline() {
           sddUpdate = '\x1b[33m⬆ /sdd-update\x1b[0m │ ';
         }
         if (cache.stale_hooks && cache.stale_hooks.length > 0) {
-          sddUpdate += '\x1b[31m⚠ stale hooks — run /sdd-update\x1b[0m │ ';
+          // If installed version is ahead of npm latest, this is a dev install.
+          // Running /sdd-update would downgrade — show a contextual warning instead.
+          const isDevInstall = (() => {
+            if (!cache.installed || !cache.latest || cache.latest === 'unknown') return false;
+            const parseV = v => v.replace(/^v/, '').split('.').map(Number);
+            const [ai, bi, ci] = parseV(cache.installed);
+            const [an, bn, cn] = parseV(cache.latest);
+            return ai > an || (ai === an && bi > bn) || (ai === an && bi === bn && ci > cn);
+          })();
+          if (isDevInstall) {
+            sddUpdate += '\x1b[33m⚠ dev install — re-run installer to sync hooks\x1b[0m │ ';
+          } else {
+            sddUpdate += '\x1b[31m⚠ stale hooks — run /sdd-update\x1b[0m │ ';
+          }
         }
       } catch (e) {}
     }

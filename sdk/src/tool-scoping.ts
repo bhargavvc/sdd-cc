@@ -20,6 +20,7 @@ const PHASE_DEFAULT_TOOLS: Record<PhaseType, string[]> = {
   [PhaseType.Verify]: ['Read', 'Bash', 'Grep', 'Glob'],
   [PhaseType.Discuss]: ['Read', 'Bash', 'Grep', 'Glob'],
   [PhaseType.Plan]: ['Read', 'Write', 'Bash', 'Glob', 'Grep', 'WebFetch'],
+  [PhaseType.Repair]: ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob'],
 };
 
 // ─── Phase → agent definition filename ──────────────────────────────────────
@@ -29,11 +30,12 @@ const PHASE_DEFAULT_TOOLS: Record<PhaseType, string[]> = {
  * Discuss has no dedicated agent — it runs in the main conversation.
  */
 export const PHASE_AGENT_MAP: Record<PhaseType, string | null> = {
-  [PhaseType.Execute]: 'gsd-executor.md',
-  [PhaseType.Research]: 'gsd-phase-researcher.md',
-  [PhaseType.Plan]: 'gsd-planner.md',
-  [PhaseType.Verify]: 'gsd-verifier.md',
+  [PhaseType.Execute]: 'sdd-executor.md',
+  [PhaseType.Research]: 'sdd-phase-researcher.md',
+  [PhaseType.Plan]: 'sdd-planner.md',
+  [PhaseType.Verify]: 'sdd-verifier.md',
   [PhaseType.Discuss]: null,
+  [PhaseType.Repair]: null,
 };
 
 // ─── Public API ──────────────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const cyan = '\x1b[36m';
 const green = '\x1b[32m';
 const yellow = '\x1b[33m';
+const red = '\x1b[31m';
+const bold = '\x1b[1m';
 const dim = '\x1b[2m';
 const reset = '\x1b[0m';
 
@@ -76,6 +78,14 @@ const hasCline = args.includes('--cline');
 const hasBoth = args.includes('--both'); // Legacy flag, keeps working
 const hasAll = args.includes('--all');
 const hasUninstall = args.includes('--uninstall') || args.includes('-u');
+const hasPortableHooks = args.includes('--portable-hooks') || process.env.SDD_PORTABLE_HOOKS === '1';
+const hasSdk = args.includes('--sdk');
+const hasNoSdk = args.includes('--no-sdk');
+
+if (hasSdk && hasNoSdk) {
+  console.error(`  ${yellow}Cannot specify both --sdk and --no-sdk${reset}`);
+  process.exit(1);
+}
 
 // Runtime selection - can be set by flags or interactive prompt
 let selectedRuntimes = [];
@@ -436,7 +446,7 @@ if (hasUninstall) {
 
 // Show help if requested
 if (hasHelp) {
-  console.log(`  ${yellow}Usage:${reset} npx @bhargavvc/sdd-cc [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--kilo${reset}                    Install for Kilo only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only\n    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--trae${reset}                    Install for Trae only\n    ${cyan}--qwen${reset}                    Install for Qwen Code only\n    ${cyan}--cline${reset}                   Install for Cline only\n    ${cyan}--codebuddy${reset}              Install for CodeBuddy only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}-u, --uninstall${reset}           Uninstall SDD (remove all SDD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    npx @bhargavvc/sdd-cc\n\n    ${dim}# Install for Claude Code globally${reset}\n    npx @bhargavvc/sdd-cc --claude --global\n\n    ${dim}# Install for Gemini globally${reset}\n    npx @bhargavvc/sdd-cc --gemini --global\n\n    ${dim}# Install for Kilo globally${reset}\n    npx @bhargavvc/sdd-cc --kilo --global\n\n    ${dim}# Install for Codex globally${reset}\n    npx @bhargavvc/sdd-cc --codex --global\n\n    ${dim}# Install for Copilot globally${reset}\n    npx @bhargavvc/sdd-cc --copilot --global\n\n    ${dim}# Install for Copilot locally${reset}\n    npx @bhargavvc/sdd-cc --copilot --local\n\n    ${dim}# Install for Antigravity globally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --global\n\n    ${dim}# Install for Antigravity locally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --local\n\n    ${dim}# Install for Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global\n\n    ${dim}# Install for Cursor locally${reset}\n    npx @bhargavvc/sdd-cc --cursor --local\n\n    ${dim}# Install for Windsurf globally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --global\n\n    ${dim}# Install for Windsurf locally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --local\n\n    ${dim}# Install for Augment globally${reset}\n    npx @bhargavvc/sdd-cc --augment --global\n\n    ${dim}# Install for Augment locally${reset}\n    npx @bhargavvc/sdd-cc --augment --local\n\n    ${dim}# Install for Trae globally${reset}\n    npx @bhargavvc/sdd-cc --trae --global\n\n    ${dim}# Install for Trae locally${reset}\n    npx @bhargavvc/sdd-cc --trae --local\n\n    ${dim}# Install for Cline locally${reset}\n    npx @bhargavvc/sdd-cc --cline --local\n\n    ${dim}# Install for CodeBuddy globally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --global\n\n    ${dim}# Install for CodeBuddy locally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --local\n\n    ${dim}# Install for all runtimes globally${reset}\n    npx @bhargavvc/sdd-cc --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx @bhargavvc/sdd-cc --kilo --global --config-dir ~/.kilo-work\n\n    ${dim}# Install to current project only${reset}\n    npx @bhargavvc/sdd-cc --claude --local\n\n    ${dim}# Uninstall SDD from Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over CLAUDE_CONFIG_DIR / OPENCODE_CONFIG_DIR / GEMINI_CONFIG_DIR / KILO_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR / TRAE_CONFIG_DIR / QWEN_CONFIG_DIR / CLINE_CONFIG_DIR / CODEBUDDY_CONFIG_DIR environment variables.\n`);
+  console.log(`  ${yellow}Usage:${reset} npx @bhargavvc/sdd-cc [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--kilo${reset}                    Install for Kilo only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only\n    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--trae${reset}                    Install for Trae only\n    ${cyan}--qwen${reset}                    Install for Qwen Code only\n    ${cyan}--cline${reset}                   Install for Cline only\n    ${cyan}--codebuddy${reset}              Install for CodeBuddy only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}-u, --uninstall${reset}           Uninstall SDD (remove all SDD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n    ${cyan}--portable-hooks${reset}          Emit \$HOME-relative hook paths in settings.json\n                              (for WSL/Docker bind-mount setups; also SDD_PORTABLE_HOOKS=1)\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    npx @bhargavvc/sdd-cc\n\n    ${dim}# Install for Claude Code globally${reset}\n    npx @bhargavvc/sdd-cc --claude --global\n\n    ${dim}# Install for Gemini globally${reset}\n    npx @bhargavvc/sdd-cc --gemini --global\n\n    ${dim}# Install for Kilo globally${reset}\n    npx @bhargavvc/sdd-cc --kilo --global\n\n    ${dim}# Install for Codex globally${reset}\n    npx @bhargavvc/sdd-cc --codex --global\n\n    ${dim}# Install for Copilot globally${reset}\n    npx @bhargavvc/sdd-cc --copilot --global\n\n    ${dim}# Install for Copilot locally${reset}\n    npx @bhargavvc/sdd-cc --copilot --local\n\n    ${dim}# Install for Antigravity globally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --global\n\n    ${dim}# Install for Antigravity locally${reset}\n    npx @bhargavvc/sdd-cc --antigravity --local\n\n    ${dim}# Install for Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global\n\n    ${dim}# Install for Cursor locally${reset}\n    npx @bhargavvc/sdd-cc --cursor --local\n\n    ${dim}# Install for Windsurf globally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --global\n\n    ${dim}# Install for Windsurf locally${reset}\n    npx @bhargavvc/sdd-cc --windsurf --local\n\n    ${dim}# Install for Augment globally${reset}\n    npx @bhargavvc/sdd-cc --augment --global\n\n    ${dim}# Install for Augment locally${reset}\n    npx @bhargavvc/sdd-cc --augment --local\n\n    ${dim}# Install for Trae globally${reset}\n    npx @bhargavvc/sdd-cc --trae --global\n\n    ${dim}# Install for Trae locally${reset}\n    npx @bhargavvc/sdd-cc --trae --local\n\n    ${dim}# Install for Cline locally${reset}\n    npx @bhargavvc/sdd-cc --cline --local\n\n    ${dim}# Install for CodeBuddy globally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --global\n\n    ${dim}# Install for CodeBuddy locally${reset}\n    npx @bhargavvc/sdd-cc --codebuddy --local\n\n    ${dim}# Install for all runtimes globally${reset}\n    npx @bhargavvc/sdd-cc --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx @bhargavvc/sdd-cc --kilo --global --config-dir ~/.kilo-work\n\n    ${dim}# Install to current project only${reset}\n    npx @bhargavvc/sdd-cc --claude --local\n\n    ${dim}# Uninstall SDD from Cursor globally${reset}\n    npx @bhargavvc/sdd-cc --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over CLAUDE_CONFIG_DIR / OPENCODE_CONFIG_DIR / GEMINI_CONFIG_DIR / KILO_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR / TRAE_CONFIG_DIR / QWEN_CONFIG_DIR / CLINE_CONFIG_DIR / CODEBUDDY_CONFIG_DIR environment variables.\n`);
   process.exit(0);
 }
 
@@ -453,16 +463,31 @@ function expandTilde(filePath) {
 /**
  * Build a hook command path using forward slashes for cross-platform compatibility.
  * On Windows, $HOME is not expanded by cmd.exe/PowerShell, so we use the actual path.
+ *
+ * @param {string} configDir - Resolved absolute config directory path
+ * @param {string} hookName - Hook filename (e.g. 'sdd-statusline.js')
+ * @param {{ portableHooks?: boolean }} [opts] - Options
+ *   portableHooks: when true, emit $HOME-relative paths instead of absolute paths.
+ *   Safe for Linux/macOS global installs and WSL/Docker bind-mount scenarios.
+ *   Not suitable for pure Windows (cmd.exe/PowerShell do not expand $HOME).
  */
-function buildHookCommand(configDir, hookName) {
-  // Use forward slashes for Node.js compatibility on all platforms
-  const hooksPath = configDir.replace(/\\/g, '/') + '/hooks/' + hookName;
-  // .sh hooks use bash; .js hooks use node. Both wrap the path in double quotes
-  // so that paths with spaces (e.g. Windows "C:/Users/First Last/") work correctly
-  // (fixes #2045). Routing .sh hooks through this function also ensures they always
-  // receive an absolute path rather than the bare relative string that the old manual
-  // concatenation produced (fixes #2046).
+function buildHookCommand(configDir, hookName, opts) {
+  if (!opts) opts = {};
   const runner = hookName.endsWith('.sh') ? 'bash' : 'node';
+
+  if (opts.portableHooks) {
+    // Replace the home directory prefix with $HOME so the path works when
+    // ~/.claude is bind-mounted into a container at a different absolute path.
+    const home = os.homedir().replace(/\\/g, '/');
+    const normalized = configDir.replace(/\\/g, '/');
+    const relative = normalized.startsWith(home)
+      ? '$HOME' + normalized.slice(home.length)
+      : normalized;
+    return `${runner} "${relative}/hooks/${hookName}"`;
+  }
+
+  // Default: absolute path with forward slashes (Windows-safe, fixes #2045/#2046).
+  const hooksPath = configDir.replace(/\\/g, '/') + '/hooks/' + hookName;
   return `${runner} "${hooksPath}"`;
 }
 
@@ -571,6 +596,27 @@ function readSettings(settingsPath) {
  */
 function writeSettings(settingsPath, settings) {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+}
+
+/**
+ * Read model_overrides from ~/.sdd/defaults.json at install time.
+ * Returns an object mapping agent names to model IDs, or null if the file
+ * doesn't exist or has no model_overrides entry.
+ * Used by Codex TOML and OpenCode agent file generators to embed per-agent
+ * model assignments so that model_overrides is respected on non-Claude runtimes (#2256).
+ */
+function readSddGlobalModelOverrides() {
+  try {
+    const defaultsPath = path.join(os.homedir(), '.sdd', 'defaults.json');
+    if (!fs.existsSync(defaultsPath)) return null;
+    const raw = fs.readFileSync(defaultsPath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    const overrides = parsed.model_overrides;
+    if (!overrides || typeof overrides !== 'object') return null;
+    return overrides;
+  } catch {
+    return null;
+  }
 }
 
 // Cache for attribution settings (populated once per runtime during install)
@@ -1732,7 +1778,7 @@ purpose: ${toSingleLine(description)}
  * Sets required agent metadata, sandbox_mode, and developer_instructions
  * from the agent markdown content.
  */
-function generateCodexAgentToml(agentName, agentContent) {
+function generateCodexAgentToml(agentName, agentContent, modelOverrides = null) {
   const sandboxMode = CODEX_AGENT_SANDBOX[agentName] || 'read-only';
   const { frontmatter, body } = extractFrontmatterAndBody(agentContent);
   const frontmatterText = frontmatter || '';
@@ -1746,12 +1792,22 @@ function generateCodexAgentToml(agentName, agentContent) {
     `name = ${JSON.stringify(resolvedName)}`,
     `description = ${JSON.stringify(resolvedDescription)}`,
     `sandbox_mode = "${sandboxMode}"`,
-    // Agent prompts contain raw backslashes in regexes and shell snippets.
-    // TOML literal multiline strings preserve them without escape parsing.
-    `developer_instructions = '''`,
-    instructions,
-    `'''`,
   ];
+
+  // Embed model override when configured in ~/.sdd/defaults.json so that
+  // model_overrides is respected on Codex (which uses static TOML, not inline
+  // Task() model parameters). See #2256.
+  const modelOverride = modelOverrides?.[resolvedName] || modelOverrides?.[agentName];
+  if (modelOverride) {
+    lines.push(`model = ${JSON.stringify(modelOverride)}`);
+  }
+
+  // Agent prompts contain raw backslashes in regexes and shell snippets.
+  // TOML literal multiline strings preserve them without escape parsing.
+  lines.push(`developer_instructions = '''`);
+  lines.push(instructions);
+  lines.push(`'''`);
+
   return lines.join('\n') + '\n';
 }
 
@@ -2969,13 +3025,22 @@ function installCodexConfig(targetDir, agentsSrc) {
     // Replace full .claude/sdd prefix so path resolves to codex SDD install
     content = content.replace(/~\/\.claude\/sdd\//g, codexSddPath);
     content = content.replace(/\$HOME\/\.claude\/sdd\//g, codexSddPath);
+    // Replace remaining .claude paths with .codex equivalents (#2320).
+    // Capture group handles both trailing-slash form (~/.claude/) and
+    // bare end-of-string form (~/.claude) in a single pass.
+    content = content.replace(/\$HOME\/\.claude(\/|$)/g, '$HOME/.codex$1');
+    content = content.replace(/~\/\.claude(\/|$)/g, '~/.codex$1');
+    content = content.replace(/\.\/\.claude(\/|$)/g, './.codex$1');
     const { frontmatter } = extractFrontmatterAndBody(content);
     const name = extractFrontmatterField(frontmatter, 'name') || file.replace('.md', '');
     const description = extractFrontmatterField(frontmatter, 'description') || '';
 
     agents.push({ name, description: toSingleLine(description) });
 
-    const tomlContent = generateCodexAgentToml(name, content);
+    // Pass model overrides from ~/.sdd/defaults.json so Codex TOML files
+    // embed the configured model — Codex cannot receive model inline (#2256).
+    const modelOverrides = readSddGlobalModelOverrides();
+    const tomlContent = generateCodexAgentToml(name, content, modelOverrides);
     fs.writeFileSync(path.join(agentsTomlDir, `${name}.toml`), tomlContent);
   }
 
@@ -3129,7 +3194,7 @@ function convertClaudeToGeminiAgent(content) {
   return `---\n${newFrontmatter}\n---${stripSubTags(neutralBody)}`;
 }
 
-function convertClaudeToOpencodeFrontmatter(content, { isAgent = false } = {}) {
+function convertClaudeToOpencodeFrontmatter(content, { isAgent = false, modelOverride = null } = {}) {
   // Replace tool name references in content (applies to all files)
   let convertedContent = content;
   convertedContent = convertedContent.replace(/\bAskUserQuestion\b/g, 'question');
@@ -3264,6 +3329,12 @@ function convertClaudeToOpencodeFrontmatter(content, { isAgent = false } = {}) {
   // use its default model for subagents. See #1156.
   if (isAgent) {
     newLines.push('mode: subagent');
+    // Embed model override from ~/.sdd/defaults.json so model_overrides is
+    // respected on OpenCode (which uses static agent frontmatter, not inline
+    // Task() model parameters). See #2256.
+    if (modelOverride) {
+      newLines.push(`model: ${modelOverride}`);
+    }
   }
 
   // For commands: add tools object if we had allowed-tools or tools
@@ -3956,6 +4027,12 @@ function copyCommandsAsClaudeSkills(srcDir, skillsDir, prefix, pathPrefix, runti
       content = content.replace(/~\/\.qwen\//g, pathPrefix);
       content = content.replace(/\$HOME\/\.qwen\//g, pathPrefix);
       content = content.replace(/\.\/\.qwen\//g, `./${getDirName(runtime)}/`);
+      // Qwen reuses Claude skill format but needs runtime-specific content replacement
+      if (runtime === 'qwen') {
+        content = content.replace(/CLAUDE\.md/g, 'QWEN.md');
+        content = content.replace(/\bClaude Code\b/g, 'Qwen Code');
+        content = content.replace(/\.claude\//g, '.qwen/');
+      }
       content = processAttribution(content, getCommitAttribution(runtime));
       content = convertClaudeCommandToClaudeSkill(content, skillName);
 
@@ -4149,6 +4226,11 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
       } else if (isCline) {
         content = convertClaudeToCliineMarkdown(content);
         fs.writeFileSync(destPath, content);
+      } else if (isQwen) {
+        content = content.replace(/CLAUDE\.md/g, 'QWEN.md');
+        content = content.replace(/\bClaude Code\b/g, 'Qwen Code');
+        content = content.replace(/\.claude\//g, '.qwen/');
+        fs.writeFileSync(destPath, content);
       } else {
         fs.writeFileSync(destPath, content);
       }
@@ -4192,6 +4274,13 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
       jsContent = jsContent.replace(/\.claude\/skills\//g, '.cline/skills/');
       jsContent = jsContent.replace(/CLAUDE\.md/g, '.clinerules');
       jsContent = jsContent.replace(/\bClaude Code\b/g, 'Cline');
+      fs.writeFileSync(destPath, jsContent);
+    } else if (isQwen && (entry.name.endsWith('.cjs') || entry.name.endsWith('.js'))) {
+      let jsContent = fs.readFileSync(srcPath, 'utf8');
+      jsContent = jsContent.replace(/\.claude\/skills\//g, '.qwen/skills/');
+      jsContent = jsContent.replace(/\.claude\//g, '.qwen/');
+      jsContent = jsContent.replace(/CLAUDE\.md/g, 'QWEN.md');
+      jsContent = jsContent.replace(/\bClaude Code\b/g, 'Qwen Code');
       fs.writeFileSync(destPath, jsContent);
     } else {
       fs.copyFileSync(srcPath, destPath);
@@ -4681,7 +4770,7 @@ function uninstall(isGlobal, runtime = 'claude') {
   // 4. Remove SDD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const sddHooks = ['sdd-statusline.js', 'sdd-check-update.js', 'sdd-context-monitor.js', 'sdd-prompt-guard.js', 'sdd-read-guard.js', 'sdd-workflow-guard.js', 'sdd-session-state.sh', 'sdd-validate-commit.sh', 'sdd-phase-boundary.sh'];
+    const sddHooks = ['sdd-statusline.js', 'sdd-check-update.js', 'sdd-context-monitor.js', 'sdd-prompt-guard.js', 'sdd-read-guard.js', 'sdd-read-injection-scanner.js', 'sdd-workflow-guard.js', 'sdd-session-state.sh', 'sdd-validate-commit.sh', 'sdd-phase-boundary.sh'];
     let hookCount = 0;
     for (const hook of sddHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -4736,8 +4825,8 @@ function uninstall(isGlobal, runtime = 'claude') {
       cmd && (cmd.includes('sdd-check-update') || cmd.includes('sdd-statusline') ||
         cmd.includes('sdd-session-state') || cmd.includes('sdd-context-monitor') ||
         cmd.includes('sdd-phase-boundary') || cmd.includes('sdd-prompt-guard') ||
-        cmd.includes('sdd-read-guard') || cmd.includes('sdd-validate-commit') ||
-        cmd.includes('sdd-workflow-guard'));
+        cmd.includes('sdd-read-guard') || cmd.includes('sdd-read-injection-scanner') ||
+        cmd.includes('sdd-validate-commit') || cmd.includes('sdd-workflow-guard'));
 
     for (const eventName of ['SessionStart', 'PostToolUse', 'AfterTool', 'PreToolUse', 'BeforeTool']) {
       if (settings.hooks && settings.hooks[eventName]) {
@@ -5648,7 +5737,11 @@ function install(isGlobal, runtime = 'claude') {
         content = processAttribution(content, getCommitAttribution(runtime));
         // Convert frontmatter for runtime compatibility (agents need different handling)
         if (isOpencode) {
-          content = convertClaudeToOpencodeFrontmatter(content, { isAgent: true });
+          // Resolve per-agent model override from ~/.sdd/defaults.json (#2256)
+          const _ocAgentName = entry.name.replace(/\.md$/, '');
+          const _ocModelOverrides = readSddGlobalModelOverrides();
+          const _ocModelOverride = _ocModelOverrides?.[_ocAgentName] || null;
+          content = convertClaudeToOpencodeFrontmatter(content, { isAgent: true, modelOverride: _ocModelOverride });
         } else if (isKilo) {
           content = convertClaudeToKiloFrontmatter(content, { isAgent: true });
         } else if (isGemini) {
@@ -5671,6 +5764,10 @@ function install(isGlobal, runtime = 'claude') {
           content = convertClaudeAgentToCodebuddyAgent(content);
         } else if (isCline) {
           content = convertClaudeAgentToClineAgent(content);
+        } else if (isQwen) {
+          content = content.replace(/CLAUDE\.md/g, 'QWEN.md');
+          content = content.replace(/\bClaude Code\b/g, 'Qwen Code');
+          content = content.replace(/\.claude\//g, '.qwen/');
         }
         const destName = isCopilot ? entry.name.replace('.md', '.agent.md') : entry.name;
         fs.writeFileSync(path.join(agentsDest, destName), content);
@@ -5729,15 +5826,26 @@ function install(isGlobal, runtime = 'claude') {
           if (entry.endsWith('.js')) {
             let content = fs.readFileSync(srcFile, 'utf8');
             content = content.replace(/'\.claude'/g, configDirReplacement);
+            content = content.replace(/\/\.claude\//g, `/${getDirName(runtime)}/`);
+            content = content.replace(/\.claude\//g, `${getDirName(runtime)}/`);
+            if (isQwen) {
+              content = content.replace(/CLAUDE\.md/g, 'QWEN.md');
+              content = content.replace(/\bClaude Code\b/g, 'Qwen Code');
+            }
             content = content.replace(/\{\{SDD_VERSION\}\}/g, pkg.version);
             fs.writeFileSync(destFile, content);
             // Ensure hook files are executable (fixes #1162 — missing +x permission)
             try { fs.chmodSync(destFile, 0o755); } catch (e) { /* Windows doesn't support chmod */ }
           } else {
-            fs.copyFileSync(srcFile, destFile);
-            // Ensure .sh hook files are executable (mirrors chmod in build-hooks.js)
+            // .sh hooks carry a sdd-hook-version header so sdd-check-update.js can
+            // detect staleness after updates — stamp the version just like .js hooks.
             if (entry.endsWith('.sh')) {
+              let content = fs.readFileSync(srcFile, 'utf8');
+              content = content.replace(/\{\{SDD_VERSION\}\}/g, pkg.version);
+              fs.writeFileSync(destFile, content);
               try { fs.chmodSync(destFile, 0o755); } catch (e) { /* Windows doesn't support chmod */ }
+            } else {
+              fs.copyFileSync(srcFile, destFile);
             }
           }
         }
@@ -5828,6 +5936,40 @@ function install(isGlobal, runtime = 'claude') {
     const agentCount = installCodexConfig(targetDir, agentsSrc);
     console.log(`  ${green}✓${reset} Generated config.toml with ${agentCount} agent roles`);
     console.log(`  ${green}✓${reset} Generated ${agentCount} agent .toml config files`);
+
+    // Copy hook files that are referenced in config.toml (#2153)
+    // The main hook-copy block is gated to non-Codex runtimes, but Codex registers
+    // sdd-check-update.js in config.toml — the file must physically exist.
+    const codexHooksSrc = path.join(src, 'hooks', 'dist');
+    if (fs.existsSync(codexHooksSrc)) {
+      const codexHooksDest = path.join(targetDir, 'hooks');
+      fs.mkdirSync(codexHooksDest, { recursive: true });
+      const configDirReplacement = getConfigDirFromHome(runtime, isGlobal);
+      for (const entry of fs.readdirSync(codexHooksSrc)) {
+        const srcFile = path.join(codexHooksSrc, entry);
+        if (!fs.statSync(srcFile).isFile()) continue;
+        const destFile = path.join(codexHooksDest, entry);
+        if (entry.endsWith('.js')) {
+          let content = fs.readFileSync(srcFile, 'utf8');
+          content = content.replace(/'\.claude'/g, configDirReplacement);
+          content = content.replace(/\/\.claude\//g, `/${getDirName(runtime)}/`);
+          content = content.replace(/\.claude\//g, `${getDirName(runtime)}/`);
+          content = content.replace(/\{\{SDD_VERSION\}\}/g, pkg.version);
+          fs.writeFileSync(destFile, content);
+          try { fs.chmodSync(destFile, 0o755); } catch (e) { /* Windows */ }
+        } else {
+          if (entry.endsWith('.sh')) {
+            let content = fs.readFileSync(srcFile, 'utf8');
+            content = content.replace(/\{\{SDD_VERSION\}\}/g, pkg.version);
+            fs.writeFileSync(destFile, content);
+            try { fs.chmodSync(destFile, 0o755); } catch (e) { /* Windows */ }
+          } else {
+            fs.copyFileSync(srcFile, destFile);
+          }
+        }
+      }
+      console.log(`  ${green}✓${reset} Installed hooks`);
+    }
 
     // Add Codex hooks (SessionStart for update checking) — requires codex_hooks feature flag
     const configPath = path.join(targetDir, 'config.toml');
@@ -5926,21 +6068,25 @@ function install(isGlobal, runtime = 'claude') {
   // Local installs anchor paths to $CLAUDE_PROJECT_DIR so hooks resolve
   // correctly regardless of the shell's current working directory (#1906).
   const localPrefix = '"$CLAUDE_PROJECT_DIR"/' + dirName;
+  const hookOpts = { portableHooks: hasPortableHooks };
   const statuslineCommand = isGlobal
-    ? buildHookCommand(targetDir, 'sdd-statusline.js')
+    ? buildHookCommand(targetDir, 'sdd-statusline.js', hookOpts)
     : 'node ' + localPrefix + '/hooks/sdd-statusline.js';
   const updateCheckCommand = isGlobal
-    ? buildHookCommand(targetDir, 'sdd-check-update.js')
+    ? buildHookCommand(targetDir, 'sdd-check-update.js', hookOpts)
     : 'node ' + localPrefix + '/hooks/sdd-check-update.js';
   const contextMonitorCommand = isGlobal
-    ? buildHookCommand(targetDir, 'sdd-context-monitor.js')
+    ? buildHookCommand(targetDir, 'sdd-context-monitor.js', hookOpts)
     : 'node ' + localPrefix + '/hooks/sdd-context-monitor.js';
   const promptGuardCommand = isGlobal
-    ? buildHookCommand(targetDir, 'sdd-prompt-guard.js')
+    ? buildHookCommand(targetDir, 'sdd-prompt-guard.js', hookOpts)
     : 'node ' + localPrefix + '/hooks/sdd-prompt-guard.js';
   const readGuardCommand = isGlobal
-    ? buildHookCommand(targetDir, 'sdd-read-guard.js')
+    ? buildHookCommand(targetDir, 'sdd-read-guard.js', hookOpts)
     : 'node ' + localPrefix + '/hooks/sdd-read-guard.js';
+  const readInjectionScannerCommand = isGlobal
+    ? buildHookCommand(targetDir, 'sdd-read-injection-scanner.js', hookOpts)
+    : 'node ' + localPrefix + '/hooks/sdd-read-injection-scanner.js';
 
   // Enable experimental agents for Gemini CLI (required for custom sub-agents)
   if (isGemini) {
@@ -6083,6 +6229,30 @@ function install(isGlobal, runtime = 'claude') {
       console.warn(`  ${yellow}⚠${reset}  Skipped read guard hook — sdd-read-guard.js not found at target`);
     }
 
+    // Configure PostToolUse hook for read-time prompt injection scanning (#2201)
+    // Scans content returned by the Read tool for injection patterns, including
+    // summarisation-specific patterns that survive context compression.
+    const hasReadInjectionScannerHook = settings.hooks[postToolEvent].some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-read-injection-scanner'))
+    );
+
+    const readInjectionScannerFile = path.join(targetDir, 'hooks', 'sdd-read-injection-scanner.js');
+    if (!hasReadInjectionScannerHook && fs.existsSync(readInjectionScannerFile)) {
+      settings.hooks[postToolEvent].push({
+        matcher: 'Read',
+        hooks: [
+          {
+            type: 'command',
+            command: readInjectionScannerCommand,
+            timeout: 5
+          }
+        ]
+      });
+      console.log(`  ${green}✓${reset} Configured read injection scanner hook`);
+    } else if (!hasReadInjectionScannerHook && !fs.existsSync(readInjectionScannerFile)) {
+      console.warn(`  ${yellow}⚠${reset}  Skipped read injection scanner hook — sdd-read-injection-scanner.js not found at target`);
+    }
+
     // Community hooks — registered on install but opt-in at runtime.
     // Each hook checks .planning/config.json for hooks.community: true
     // and exits silently (no-op) if not enabled. This lets users enable
@@ -6092,7 +6262,7 @@ function install(isGlobal, runtime = 'claude') {
     // Detects file edits outside SDD workflow context and advises using
     // /sdd-quick or /sdd-fast for state-tracked changes. Advisory only.
     const workflowGuardCommand = isGlobal
-      ? buildHookCommand(targetDir, 'sdd-workflow-guard.js')
+      ? buildHookCommand(targetDir, 'sdd-workflow-guard.js', hookOpts)
       : 'node ' + localPrefix + '/hooks/sdd-workflow-guard.js';
     const hasWorkflowGuardHook = settings.hooks[preToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-workflow-guard'))
@@ -6117,7 +6287,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure commit validation hook (Conventional Commits enforcement, opt-in)
     const validateCommitCommand = isGlobal
-      ? buildHookCommand(targetDir, 'sdd-validate-commit.sh')
+      ? buildHookCommand(targetDir, 'sdd-validate-commit.sh', hookOpts)
       : 'bash ' + localPrefix + '/hooks/sdd-validate-commit.sh';
     const hasValidateCommitHook = settings.hooks[preToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-validate-commit'))
@@ -6144,7 +6314,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure session state orientation hook (opt-in)
     const sessionStateCommand = isGlobal
-      ? buildHookCommand(targetDir, 'sdd-session-state.sh')
+      ? buildHookCommand(targetDir, 'sdd-session-state.sh', hookOpts)
       : 'bash ' + localPrefix + '/hooks/sdd-session-state.sh';
     const hasSessionStateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-session-state'))
@@ -6166,7 +6336,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure phase boundary detection hook (opt-in)
     const phaseBoundaryCommand = isGlobal
-      ? buildHookCommand(targetDir, 'sdd-phase-boundary.sh')
+      ? buildHookCommand(targetDir, 'sdd-phase-boundary.sh', hookOpts)
       : 'bash ' + localPrefix + '/hooks/sdd-phase-boundary.sh';
     const hasPhaseBoundaryHook = settings.hooks[postToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('sdd-phase-boundary'))
@@ -6206,11 +6376,19 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   const isCline = runtime === 'cline';
 
   if (shouldInstallStatusline && !isOpencode && !isKilo && !isCodex && !isCopilot && !isCursor && !isWindsurf && !isTrae) {
-    settings.statusLine = {
-      type: 'command',
-      command: statuslineCommand
-    };
-    console.log(`  ${green}✓${reset} Configured statusline`);
+    if (!isGlobal && !forceStatusline) {
+      // Local installs skip statusLine by default: repo settings.json takes precedence over
+      // profile-level settings.json in Claude Code, so writing here would silently clobber
+      // any profile-level statusLine the user has configured (#2248).
+      // Pass --force-statusline to override this guard.
+      console.log(`  ${yellow}⚠${reset} Skipping statusLine for local install (avoids overriding profile-level settings; use --force-statusline to override)`);
+    } else {
+      settings.statusLine = {
+        type: 'command',
+        command: statuslineCommand
+      };
+      console.log(`  ${green}✓${reset} Configured statusline`);
+    }
   }
 
   // Write settings when runtime supports settings.json
@@ -6261,6 +6439,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   if (runtime === 'augment') program = 'Augment';
   if (runtime === 'trae') program = 'Trae';
   if (runtime === 'cline') program = 'Cline';
+  if (runtime === 'qwen') program = 'Qwen Code';
 
   let command = '/sdd-new-project';
   if (runtime === 'opencode') command = '/sdd-new-project';
@@ -6273,6 +6452,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   if (runtime === 'augment') command = '/sdd-new-project';
   if (runtime === 'trae') command = '/sdd-new-project';
   if (runtime === 'cline') command = '/sdd-new-project';
+  if (runtime === 'qwen') command = '/sdd-new-project';
   console.log(`
   ${green}Done!${reset} Open a blank directory in ${program} and run ${cyan}${command}${reset}.
 
@@ -6458,6 +6638,179 @@ function promptLocation(runtimes) {
 }
 
 /**
+ * Build `@gsd-build/sdk` from the in-repo `sdk/` source tree and install the
+ * resulting `sdd-sdk` binary globally so workflow commands that shell out to
+ * `sdd-sdk query …` succeed.
+ *
+ * We build from source rather than `npm install -g @gsd-build/sdk` because the
+ * npm-published package lags the source tree and shipping a stale SDK breaks
+ * every /sdd-* command that depends on newer query handlers.
+ *
+ * Skip if --no-sdk. Skip if already on PATH (unless --sdk was explicit).
+ * Failures are FATAL — we exit non-zero so install does not complete with a
+ * silently broken SDK (issue #2439). Set SDD_ALLOW_OFF_PATH=1 to downgrade the
+ * post-install PATH verification to a warning (exit code 2) for users with an
+ * intentionally restricted PATH who will wire things up manually.
+ */
+
+/**
+ * Resolve `sdd-sdk` on PATH. Uses `command -v` via `sh -c` on POSIX (portable
+ * across sh/bash/zsh) and `where` on Windows. Returns trimmed path or null.
+ */
+function resolveSddSdk() {
+  const { spawnSync } = require('child_process');
+  if (process.platform === 'win32') {
+    const r = spawnSync('where', ['sdd-sdk'], { encoding: 'utf-8' });
+    if (r.status === 0 && r.stdout && r.stdout.trim()) {
+      return r.stdout.trim().split('\n')[0].trim();
+    }
+    return null;
+  }
+  const r = spawnSync('sh', ['-c', 'command -v sdd-sdk'], { encoding: 'utf-8' });
+  if (r.status === 0 && r.stdout && r.stdout.trim()) {
+    return r.stdout.trim();
+  }
+  return null;
+}
+
+/**
+ * Best-effort detection of the user's shell rc file for PATH remediation hints.
+ */
+function detectShellRc() {
+  const path = require('path');
+  const shell = process.env.SHELL || '';
+  const home = process.env.HOME || '~';
+  if (/\/zsh$/.test(shell)) return { shell: 'zsh', rc: path.join(home, '.zshrc') };
+  if (/\/bash$/.test(shell)) return { shell: 'bash', rc: path.join(home, '.bashrc') };
+  if (/\/fish$/.test(shell)) return { shell: 'fish', rc: path.join(home, '.config', 'fish', 'config.fish') };
+  return { shell: 'sh', rc: path.join(home, '.profile') };
+}
+
+/**
+ * Emit a red fatal banner and exit. Prints actionable PATH remediation when
+ * the global install succeeded but the bin dir is not on PATH.
+ *
+ * If exitCode is 2, this is the "off-PATH" case and SDD_ALLOW_OFF_PATH respect
+ * is applied by the caller; we only print.
+ */
+function emitSdkFatal(reason, { globalBin, exitCode }) {
+  const { shell, rc } = detectShellRc();
+  const bar = '━'.repeat(72);
+  const redBold = `${red}${bold}`;
+
+  console.error('');
+  console.error(`${redBold}${bar}${reset}`);
+  console.error(`${redBold}  ✗ SDD SDK install failed — /sdd-* commands will not work${reset}`);
+  console.error(`${redBold}${bar}${reset}`);
+  console.error(`  ${red}Reason:${reset} ${reason}`);
+
+  if (globalBin) {
+    console.error('');
+    console.error(`  ${yellow}sdd-sdk was installed to:${reset}`);
+    console.error(`    ${cyan}${globalBin}${reset}`);
+    console.error('');
+    console.error(`  ${yellow}Your shell's PATH does not include this directory.${reset}`);
+    console.error(`  Add it by running:`);
+    if (shell === 'fish') {
+      console.error(`    ${cyan}fish_add_path "${globalBin}"${reset}`);
+      console.error(`    (or append to ${rc})`);
+    } else {
+      console.error(`    ${cyan}echo 'export PATH="${globalBin}:$PATH"' >> ${rc}${reset}`);
+      console.error(`    ${cyan}source ${rc}${reset}`);
+    }
+    console.error('');
+    console.error(`  Then verify: ${cyan}command -v sdd-sdk${reset}`);
+    if (exitCode === 2) {
+      console.error('');
+      console.error(`  ${dim}(SDD_ALLOW_OFF_PATH=1 set → exit ${exitCode} instead of hard failure)${reset}`);
+    }
+  } else {
+    console.error('');
+    console.error(`  Build manually to retry:`);
+    console.error(`    ${cyan}cd <install-dir>/sdk && npm install && npm run build && npm install -g .${reset}`);
+  }
+
+  console.error(`${redBold}${bar}${reset}`);
+  console.error('');
+  process.exit(exitCode);
+}
+
+function installSdkIfNeeded() {
+  if (hasNoSdk) {
+    console.log(`\n  ${dim}Skipping SDD SDK install (--no-sdk)${reset}`);
+    return;
+  }
+
+  const { spawnSync } = require('child_process');
+  const path = require('path');
+  const fs = require('fs');
+
+  if (!hasSdk) {
+    const resolved = resolveSddSdk();
+    if (resolved) {
+      console.log(`  ${green}✓${reset} SDD SDK already installed (sdd-sdk on PATH at ${resolved})`);
+      return;
+    }
+  }
+
+  // Locate the in-repo sdk/ directory relative to this installer file.
+  // For global npm installs this resolves inside the published package dir;
+  // for git-based installs (npx github:..., local clone) it resolves to the
+  // repo's sdk/ tree. Both contain the source tree because root package.json
+  // includes "sdk" in its `files` array.
+  const sdkDir = path.resolve(__dirname, '..', 'sdk');
+  const sdkPackageJson = path.join(sdkDir, 'package.json');
+
+  if (!fs.existsSync(sdkPackageJson)) {
+    emitSdkFatal(`SDK source tree not found at ${sdkDir}.`, { globalBin: null, exitCode: 1 });
+  }
+
+  console.log(`\n  ${cyan}Building SDD SDK from source (${sdkDir})…${reset}`);
+  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+  // 1. Install sdk build-time dependencies (tsc, etc.)
+  const installResult = spawnSync(npmCmd, ['install'], { cwd: sdkDir, stdio: 'inherit' });
+  if (installResult.status !== 0) {
+    emitSdkFatal('Failed to `npm install` in sdk/.', { globalBin: null, exitCode: 1 });
+  }
+
+  // 2. Compile TypeScript → sdk/dist/
+  const buildResult = spawnSync(npmCmd, ['run', 'build'], { cwd: sdkDir, stdio: 'inherit' });
+  if (buildResult.status !== 0) {
+    emitSdkFatal('Failed to `npm run build` in sdk/.', { globalBin: null, exitCode: 1 });
+  }
+
+  // 3. Install the built package globally so `sdd-sdk` lands on PATH.
+  const globalResult = spawnSync(npmCmd, ['install', '-g', '.'], { cwd: sdkDir, stdio: 'inherit' });
+  if (globalResult.status !== 0) {
+    emitSdkFatal('Failed to `npm install -g .` from sdk/.', { globalBin: null, exitCode: 1 });
+  }
+
+  // 4. Verify sdd-sdk is actually resolvable on PATH. npm's global bin dir is
+  //    not always on the current shell's PATH (Homebrew prefixes, nvm setups,
+  //    unconfigured npm prefix), so a zero exit status from `npm install -g`
+  //    alone is not proof of a working binary (issue #2439 root cause).
+  const resolved = resolveSddSdk();
+  if (resolved) {
+    console.log(`  ${green}✓${reset} Built and installed SDD SDK from source (sdd-sdk resolved at ${resolved})`);
+    return;
+  }
+
+  // Off-PATH: resolve npm global bin dir for actionable remediation.
+  const prefixResult = spawnSync(npmCmd, ['config', 'get', 'prefix'], { encoding: 'utf-8' });
+  const prefix = prefixResult.status === 0 ? (prefixResult.stdout || '').trim() : null;
+  const globalBin = prefix
+    ? (process.platform === 'win32' ? prefix : path.join(prefix, 'bin'))
+    : null;
+
+  const allowOffPath = process.env.SDD_ALLOW_OFF_PATH === '1';
+  emitSdkFatal(
+    'Built and installed SDD SDK, but `sdd-sdk` is not on your PATH.',
+    { globalBin, exitCode: allowOffPath ? 2 : 1 },
+  );
+}
+
+/**
  * Install SDD for all selected runtimes
  */
 function installAllRuntimes(runtimes, isGlobal, isInteractive) {
@@ -6472,7 +6825,15 @@ function installAllRuntimes(runtimes, isGlobal, isInteractive) {
   const primaryStatuslineResult = results.find(r => statuslineRuntimes.includes(r.runtime));
 
   const finalize = (shouldInstallStatusline) => {
-    // Handle SDK installation before printing final summaries
+    // Build @gsd-build/sdk from the in-repo sdk/ source and install it globally
+    // so `sdd-sdk` lands on PATH. Every /sdd-* command shells out to
+    // `sdd-sdk query …`; without this, commands fail with "command not found:
+    // sdd-sdk". The npm-published @gsd-build/sdk is kept intentionally frozen
+    // at an older version; we always build from source so users get the SDK
+    // that matches the installed SDD version.
+    // Runs by default; skip with --no-sdk. Idempotent when already present.
+    installSdkIfNeeded();
+
     const printSummaries = () => {
       for (const result of results) {
         const useStatusline = statuslineRuntimes.includes(result.runtime) && shouldInstallStatusline;

@@ -1,5 +1,5 @@
 ---
-name: sdd:from-sdd2
+name: sdd:from-gsd2
 description: Import a SDD-2 (.sdd/) project back to SDD v1 (.planning/) format
 argument-hint: "[--path <dir>] [--force]"
 allowed-tools:
@@ -13,13 +13,15 @@ type: prompt
 Reverse-migrate a SDD-2 project (`.sdd/` directory) back to SDD v1 (`.planning/`) format.
 
 Maps the SDD-2 hierarchy (Milestone → Slice → Task) to the SDD v1 hierarchy (Milestone sections in ROADMAP.md → Phase → Plan), preserving completion state, research files, and summaries.
+
+**CJS-only:** `from-gsd2` is not on the `sdd-sdk query` registry; call `sdd-tools.cjs` as shown below (see `docs/CLI-TOOLS.md`).
 </objective>
 
 <process>
 
 1. **Locate the .sdd/ directory** — check the current working directory (or `--path` argument):
    ```bash
-   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-sdd2 --dry-run
+   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-gsd2 --dry-run
    ```
    If no `.sdd/` is found, report the error and stop.
 
@@ -27,7 +29,7 @@ Maps the SDD-2 hierarchy (Milestone → Slice → Task) to the SDD v1 hierarchy 
 
 3. **Run the migration** after confirmation:
    ```bash
-   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-sdd2
+   node "$HOME/.claude/sdd/bin/sdd-tools.cjs" from-gsd2
    ```
    Use `--force` if `.planning/` already exists and the user has confirmed overwrite.
 

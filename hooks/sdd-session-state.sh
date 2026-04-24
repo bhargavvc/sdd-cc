@@ -1,4 +1,5 @@
 #!/bin/bash
+# sdd-hook-version: {{SDD_VERSION}}
 # sdd-session-state.sh — SessionStart hook: inject project state reminder
 # Outputs STATE.md head on every session start for orientation.
 #

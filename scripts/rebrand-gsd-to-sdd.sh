@@ -81,7 +81,8 @@ echo "  Done."
 echo ""
 echo "[3/5] Finding files with content to replace..."
 
-grep -rl --include="*.md" --include="*.js" --include="*.cjs" \
+grep -rl --include="*.md" --include="*.js" --include="*.cjs" --include="*.mjs" \
+  --include="*.ts" --include="*.tsx" \
   --include="*.json" --include="*.sh" --include="*.yml" --include="*.yaml" \
   -E "${OLD_LC}|${OLD_UC}|${OLD_DIR}" . 2>/dev/null \
   | grep -v '\.git/' | grep -v 'node_modules/' \

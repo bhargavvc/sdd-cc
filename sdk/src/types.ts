@@ -1,8 +1,8 @@
 /**
- * Core type definitions for GSD-1 PLAN.md structures.
+ * Core type definitions for SDD-1 PLAN.md structures.
  *
  * These types model the YAML frontmatter + XML task bodies
- * that make up a GSD plan file.
+ * that make up a SDD plan file.
  */
 
 // ─── Frontmatter types ───────────────────────────────────────────────────────
@@ -88,15 +88,15 @@ export interface ParsedPlan {
 // ─── Init command types ──────────────────────────────────────────────────────
 
 /**
- * JSON output from `gsd-tools.cjs init new-project`.
+ * JSON output from `sdd-tools.cjs init new-project`.
  * Describes project state and model configuration for the init workflow.
  */
 export interface InitNewProjectInfo {
-  /** Model resolved for the gsd-project-researcher agent. */
+  /** Model resolved for the sdd-project-researcher agent. */
   researcher_model: string;
-  /** Model resolved for the gsd-research-synthesizer agent. */
+  /** Model resolved for the sdd-research-synthesizer agent. */
   synthesizer_model: string;
-  /** Model resolved for the gsd-roadmapper agent. */
+  /** Model resolved for the sdd-roadmapper agent. */
   roadmapper_model: string;
 
   /** Whether docs should be committed after generation. */
@@ -134,7 +134,7 @@ export interface InitNewProjectInfo {
   /** Absolute project root path (injected by withProjectRoot). */
   project_root?: string;
 
-  /** Allow additional fields from gsd-tools evolution. */
+  /** Allow additional fields from sdd-tools evolution. */
   [key: string]: unknown;
 }
 
@@ -192,13 +192,13 @@ export interface PlanResult {
 }
 
 /**
- * Options for creating a GSD instance.
+ * Options for creating a SDD instance.
  */
-export interface GSDOptions {
+export interface SDDOptions {
   /** Root directory of the project. */
   projectDir: string;
-  /** Path to gsd-tools.cjs. Falls back to <projectDir>/.claude/, then the bundled repo path, then ~/.claude/. */
-  gsdToolsPath?: string;
+  /** Path to sdd-tools.cjs. Falls back to <projectDir>/.claude/, then the bundled repo path, then ~/.claude/. */
+  sddToolsPath?: string;
   /** Model to use for execution sessions. */
   model?: string;
   /** Maximum budget per plan execution in USD. Default: 5.0. */
@@ -207,12 +207,14 @@ export interface GSDOptions {
   maxTurns?: number;
   /** Enable auto mode: sets auto_advance=true, skip_discuss=false in workflow config. */
   autoMode?: boolean;
+  /** Workstream name. Routes all .planning/ paths to .planning/workstreams/<name>/. */
+  workstream?: string;
 }
 
 // ─── S02: Event stream types ─────────────────────────────────────────────────
 
 /**
- * Phase types for GSD execution workflow.
+ * Phase types for SDD execution workflow.
  */
 export enum PhaseType {
   Discuss = 'discuss',
@@ -220,13 +222,14 @@ export enum PhaseType {
   Plan = 'plan',
   Execute = 'execute',
   Verify = 'verify',
+  Repair = 'repair',
 }
 
 /**
- * Event types emitted by the GSD event stream.
+ * Event types emitted by the SDD event stream.
  * Maps from SDKMessage variants to domain-meaningful events.
  */
-export enum GSDEventType {
+export enum SDDEventType {
   SessionInit = 'session_init',
   SessionComplete = 'session_complete',
   SessionError = 'session_error',
@@ -256,13 +259,18 @@ export enum GSDEventType {
   InitStepComplete = 'init_step_complete',
   InitComplete = 'init_complete',
   InitResearchSpawn = 'init_research_spawn',
+  StateMutation = 'state_mutation',
+  ConfigMutation = 'config_mutation',
+  FrontmatterMutation = 'frontmatter_mutation',
+  GitCommit = 'git_commit',
+  TemplateFill = 'template_fill',
 }
 
 /**
- * Base fields present on every GSD event.
+ * Base fields present on every SDD event.
  */
-export interface GSDEventBase {
-  type: GSDEventType;
+export interface SDDEventBase {
+  type: SDDEventType;
   timestamp: string;
   sessionId: string;
   phase?: PhaseType;
@@ -272,8 +280,8 @@ export interface GSDEventBase {
 /**
  * Session initialized — emitted on SDKSystemMessage subtype 'init'.
  */
-export interface GSDSessionInitEvent extends GSDEventBase {
-  type: GSDEventType.SessionInit;
+export interface SDDSessionInitEvent extends SDDEventBase {
+  type: SDDEventType.SessionInit;
   model: string;
   tools: string[];
   cwd: string;
@@ -282,8 +290,8 @@ export interface GSDSessionInitEvent extends GSDEventBase {
 /**
  * Session completed successfully — emitted on SDKResultSuccess.
  */
-export interface GSDSessionCompleteEvent extends GSDEventBase {
-  type: GSDEventType.SessionComplete;
+export interface SDDSessionCompleteEvent extends SDDEventBase {
+  type: SDDEventType.SessionComplete;
   success: true;
   totalCostUsd: number;
   durationMs: number;
@@ -294,8 +302,8 @@ export interface GSDSessionCompleteEvent extends GSDEventBase {
 /**
  * Session ended with an error — emitted on SDKResultError.
  */
-export interface GSDSessionErrorEvent extends GSDEventBase {
-  type: GSDEventType.SessionError;
+export interface SDDSessionErrorEvent extends SDDEventBase {
+  type: SDDEventType.SessionError;
   success: false;
   totalCostUsd: number;
   durationMs: number;
@@ -307,16 +315,16 @@ export interface GSDSessionErrorEvent extends GSDEventBase {
 /**
  * Assistant produced text output.
  */
-export interface GSDAssistantTextEvent extends GSDEventBase {
-  type: GSDEventType.AssistantText;
+export interface SDDAssistantTextEvent extends SDDEventBase {
+  type: SDDEventType.AssistantText;
   text: string;
 }
 
 /**
  * Tool invocation detected in assistant response.
  */
-export interface GSDToolCallEvent extends GSDEventBase {
-  type: GSDEventType.ToolCall;
+export interface SDDToolCallEvent extends SDDEventBase {
+  type: SDDEventType.ToolCall;
   toolName: string;
   toolUseId: string;
   input: Record<string, unknown>;
@@ -325,8 +333,8 @@ export interface GSDToolCallEvent extends GSDEventBase {
 /**
  * Tool execution progress update.
  */
-export interface GSDToolProgressEvent extends GSDEventBase {
-  type: GSDEventType.ToolProgress;
+export interface SDDToolProgressEvent extends SDDEventBase {
+  type: SDDEventType.ToolProgress;
   toolName: string;
   toolUseId: string;
   elapsedSeconds: number;
@@ -335,8 +343,8 @@ export interface GSDToolProgressEvent extends GSDEventBase {
 /**
  * Tool use summary after completion.
  */
-export interface GSDToolUseSummaryEvent extends GSDEventBase {
-  type: GSDEventType.ToolUseSummary;
+export interface SDDToolUseSummaryEvent extends SDDEventBase {
+  type: SDDEventType.ToolUseSummary;
   summary: string;
   toolUseIds: string[];
 }
@@ -344,8 +352,8 @@ export interface GSDToolUseSummaryEvent extends GSDEventBase {
 /**
  * Subagent task started.
  */
-export interface GSDTaskStartedEvent extends GSDEventBase {
-  type: GSDEventType.TaskStarted;
+export interface SDDTaskStartedEvent extends SDDEventBase {
+  type: SDDEventType.TaskStarted;
   taskId: string;
   description: string;
   taskType?: string;
@@ -354,8 +362,8 @@ export interface GSDTaskStartedEvent extends GSDEventBase {
 /**
  * Subagent task progress.
  */
-export interface GSDTaskProgressEvent extends GSDEventBase {
-  type: GSDEventType.TaskProgress;
+export interface SDDTaskProgressEvent extends SDDEventBase {
+  type: SDDEventType.TaskProgress;
   taskId: string;
   description: string;
   totalTokens: number;
@@ -367,8 +375,8 @@ export interface GSDTaskProgressEvent extends GSDEventBase {
 /**
  * Subagent task completed/failed/stopped.
  */
-export interface GSDTaskNotificationEvent extends GSDEventBase {
-  type: GSDEventType.TaskNotification;
+export interface SDDTaskNotificationEvent extends SDDEventBase {
+  type: SDDEventType.TaskNotification;
   taskId: string;
   status: 'completed' | 'failed' | 'stopped';
   summary: string;
@@ -377,8 +385,8 @@ export interface GSDTaskNotificationEvent extends GSDEventBase {
 /**
  * Cost updated (emitted on session_complete and periodically).
  */
-export interface GSDCostUpdateEvent extends GSDEventBase {
-  type: GSDEventType.CostUpdate;
+export interface SDDCostUpdateEvent extends SDDEventBase {
+  type: SDDEventType.CostUpdate;
   sessionCostUsd: number;
   cumulativeCostUsd: number;
 }
@@ -386,8 +394,8 @@ export interface GSDCostUpdateEvent extends GSDEventBase {
 /**
  * API retry in progress.
  */
-export interface GSDAPIRetryEvent extends GSDEventBase {
-  type: GSDEventType.APIRetry;
+export interface SDDAPIRetryEvent extends SDDEventBase {
+  type: SDDEventType.APIRetry;
   attempt: number;
   maxRetries: number;
   retryDelayMs: number;
@@ -397,8 +405,8 @@ export interface GSDAPIRetryEvent extends GSDEventBase {
 /**
  * Rate limit information updated.
  */
-export interface GSDRateLimitEvent extends GSDEventBase {
-  type: GSDEventType.RateLimit;
+export interface SDDRateLimitEvent extends SDDEventBase {
+  type: SDDEventType.RateLimit;
   status: string;
   resetsAt?: number;
   utilization?: number;
@@ -407,16 +415,16 @@ export interface GSDRateLimitEvent extends GSDEventBase {
 /**
  * System status change (e.g., compacting).
  */
-export interface GSDStatusChangeEvent extends GSDEventBase {
-  type: GSDEventType.StatusChange;
+export interface SDDStatusChangeEvent extends SDDEventBase {
+  type: SDDEventType.StatusChange;
   status: string | null;
 }
 
 /**
  * Compact boundary — context window was compacted.
  */
-export interface GSDCompactBoundaryEvent extends GSDEventBase {
-  type: GSDEventType.CompactBoundary;
+export interface SDDCompactBoundaryEvent extends SDDEventBase {
+  type: SDDEventType.CompactBoundary;
   trigger: 'manual' | 'auto';
   preTokens: number;
 }
@@ -424,16 +432,16 @@ export interface GSDCompactBoundaryEvent extends GSDEventBase {
 /**
  * Raw stream event from SDK (partial assistant messages).
  */
-export interface GSDStreamEvent extends GSDEventBase {
-  type: GSDEventType.StreamEvent;
+export interface SDDStreamEvent extends SDDEventBase {
+  type: SDDEventType.StreamEvent;
   event: unknown;
 }
 
 /**
  * Phase execution started.
  */
-export interface GSDPhaseStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStart;
+export interface SDDPhaseStartEvent extends SDDEventBase {
+  type: SDDEventType.PhaseStart;
   phaseNumber: string;
   phaseName: string;
 }
@@ -441,8 +449,8 @@ export interface GSDPhaseStartEvent extends GSDEventBase {
 /**
  * A single phase step (discuss, research, etc.) started.
  */
-export interface GSDPhaseStepStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepStart;
+export interface SDDPhaseStepStartEvent extends SDDEventBase {
+  type: SDDEventType.PhaseStepStart;
   phaseNumber: string;
   step: PhaseStepType;
 }
@@ -450,8 +458,8 @@ export interface GSDPhaseStepStartEvent extends GSDEventBase {
 /**
  * A single phase step completed.
  */
-export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepComplete;
+export interface SDDPhaseStepCompleteEvent extends SDDEventBase {
+  type: SDDEventType.PhaseStepComplete;
   phaseNumber: string;
   step: PhaseStepType;
   success: boolean;
@@ -462,8 +470,8 @@ export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
 /**
  * Full phase execution completed.
  */
-export interface GSDPhaseCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseComplete;
+export interface SDDPhaseCompleteEvent extends SDDEventBase {
+  type: SDDEventType.PhaseComplete;
   phaseNumber: string;
   phaseName: string;
   success: boolean;
@@ -501,8 +509,8 @@ export interface PhasePlanIndex {
 /**
  * Wave execution started — emitted before concurrent plans launch.
  */
-export interface GSDWaveStartEvent extends GSDEventBase {
-  type: GSDEventType.WaveStart;
+export interface SDDWaveStartEvent extends SDDEventBase {
+  type: SDDEventType.WaveStart;
   phaseNumber: string;
   waveNumber: number;
   planCount: number;
@@ -512,8 +520,8 @@ export interface GSDWaveStartEvent extends GSDEventBase {
 /**
  * Wave execution completed — emitted after all plans in a wave settle.
  */
-export interface GSDWaveCompleteEvent extends GSDEventBase {
-  type: GSDEventType.WaveComplete;
+export interface SDDWaveCompleteEvent extends SDDEventBase {
+  type: SDDEventType.WaveComplete;
   phaseNumber: string;
   waveNumber: number;
   successCount: number;
@@ -524,7 +532,7 @@ export interface GSDWaveCompleteEvent extends GSDEventBase {
 // ─── S05: Milestone-level types ──────────────────────────────────────────────
 
 /**
- * Single phase entry from `gsd-tools.cjs roadmap analyze`.
+ * Single phase entry from `sdd-tools.cjs roadmap analyze`.
  */
 export interface RoadmapPhaseInfo {
   number: string;
@@ -534,7 +542,7 @@ export interface RoadmapPhaseInfo {
 }
 
 /**
- * Structured output from `gsd-tools.cjs roadmap analyze`.
+ * Structured output from `sdd-tools.cjs roadmap analyze`.
  */
 export interface RoadmapAnalysis {
   phases: RoadmapPhaseInfo[];
@@ -563,8 +571,8 @@ export interface MilestoneRunnerResult {
 /**
  * Milestone execution started.
  */
-export interface GSDMilestoneStartEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneStart;
+export interface SDDMilestoneStartEvent extends SDDEventBase {
+  type: SDDEventType.MilestoneStart;
   phaseCount: number;
   prompt: string;
 }
@@ -572,8 +580,8 @@ export interface GSDMilestoneStartEvent extends GSDEventBase {
 /**
  * Milestone execution completed.
  */
-export interface GSDMilestoneCompleteEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneComplete;
+export interface SDDMilestoneCompleteEvent extends SDDEventBase {
+  type: SDDEventType.MilestoneComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -601,7 +609,7 @@ export type InitStepName =
  * Configuration overrides for InitRunner.
  */
 export interface InitConfig {
-  /** Model for research sessions (overrides gsd-tools detected model). */
+  /** Model for research sessions (overrides sdd-tools detected model). */
   researchModel?: string;
   /** Model for synthesis/roadmap sessions. */
   orchestratorModel?: string;
@@ -637,8 +645,8 @@ export interface InitResult {
 /**
  * Init workflow started.
  */
-export interface GSDInitStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStart;
+export interface SDDInitStartEvent extends SDDEventBase {
+  type: SDDEventType.InitStart;
   input: string;
   projectDir: string;
 }
@@ -646,16 +654,16 @@ export interface GSDInitStartEvent extends GSDEventBase {
 /**
  * Init workflow step started.
  */
-export interface GSDInitStepStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStepStart;
+export interface SDDInitStepStartEvent extends SDDEventBase {
+  type: SDDEventType.InitStepStart;
   step: InitStepName;
 }
 
 /**
  * Init workflow step completed.
  */
-export interface GSDInitStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitStepComplete;
+export interface SDDInitStepCompleteEvent extends SDDEventBase {
+  type: SDDEventType.InitStepComplete;
   step: InitStepName;
   success: boolean;
   durationMs: number;
@@ -666,8 +674,8 @@ export interface GSDInitStepCompleteEvent extends GSDEventBase {
 /**
  * Init workflow completed.
  */
-export interface GSDInitCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitComplete;
+export interface SDDInitCompleteEvent extends SDDEventBase {
+  type: SDDEventType.InitComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -677,53 +685,109 @@ export interface GSDInitCompleteEvent extends GSDEventBase {
 /**
  * Research sessions spawned in parallel during init.
  */
-export interface GSDInitResearchSpawnEvent extends GSDEventBase {
-  type: GSDEventType.InitResearchSpawn;
+export interface SDDInitResearchSpawnEvent extends SDDEventBase {
+  type: SDDEventType.InitResearchSpawn;
   sessionCount: number;
   researchTypes: string[];
 }
 
 /**
- * Discriminated union of all GSD events.
+ * State mutation completed — emitted after STATE.md write operations.
  */
-export type GSDEvent =
-  | GSDSessionInitEvent
-  | GSDSessionCompleteEvent
-  | GSDSessionErrorEvent
-  | GSDAssistantTextEvent
-  | GSDToolCallEvent
-  | GSDToolProgressEvent
-  | GSDToolUseSummaryEvent
-  | GSDTaskStartedEvent
-  | GSDTaskProgressEvent
-  | GSDTaskNotificationEvent
-  | GSDCostUpdateEvent
-  | GSDAPIRetryEvent
-  | GSDRateLimitEvent
-  | GSDStatusChangeEvent
-  | GSDCompactBoundaryEvent
-  | GSDStreamEvent
-  | GSDPhaseStartEvent
-  | GSDPhaseStepStartEvent
-  | GSDPhaseStepCompleteEvent
-  | GSDPhaseCompleteEvent
-  | GSDWaveStartEvent
-  | GSDWaveCompleteEvent
-  | GSDMilestoneStartEvent
-  | GSDMilestoneCompleteEvent
-  | GSDInitStartEvent
-  | GSDInitStepStartEvent
-  | GSDInitStepCompleteEvent
-  | GSDInitCompleteEvent
-  | GSDInitResearchSpawnEvent;
+export interface SDDStateMutationEvent extends SDDEventBase {
+  type: SDDEventType.StateMutation;
+  command: string;
+  fields: string[];
+  success: boolean;
+}
 
 /**
- * Transport handler interface for consuming GSD events.
+ * Config mutation completed — emitted after config.json write operations.
+ */
+export interface SDDConfigMutationEvent extends SDDEventBase {
+  type: SDDEventType.ConfigMutation;
+  command: string;
+  key: string;
+  success: boolean;
+}
+
+/**
+ * Frontmatter mutation completed — emitted after frontmatter write operations.
+ */
+export interface SDDFrontmatterMutationEvent extends SDDEventBase {
+  type: SDDEventType.FrontmatterMutation;
+  command: string;
+  file: string;
+  fields: string[];
+  success: boolean;
+}
+
+/**
+ * Git commit completed — emitted after commit or check-commit operations.
+ */
+export interface SDDGitCommitEvent extends SDDEventBase {
+  type: SDDEventType.GitCommit;
+  hash: string | null;
+  committed: boolean;
+  reason: string;
+}
+
+/**
+ * Template fill completed — emitted after template.fill or template.select operations.
+ */
+export interface SDDTemplateFillEvent extends SDDEventBase {
+  type: SDDEventType.TemplateFill;
+  templateType: string;
+  path: string;
+  created: boolean;
+}
+
+/**
+ * Discriminated union of all SDD events.
+ */
+export type SDDEvent =
+  | SDDSessionInitEvent
+  | SDDSessionCompleteEvent
+  | SDDSessionErrorEvent
+  | SDDAssistantTextEvent
+  | SDDToolCallEvent
+  | SDDToolProgressEvent
+  | SDDToolUseSummaryEvent
+  | SDDTaskStartedEvent
+  | SDDTaskProgressEvent
+  | SDDTaskNotificationEvent
+  | SDDCostUpdateEvent
+  | SDDAPIRetryEvent
+  | SDDRateLimitEvent
+  | SDDStatusChangeEvent
+  | SDDCompactBoundaryEvent
+  | SDDStreamEvent
+  | SDDPhaseStartEvent
+  | SDDPhaseStepStartEvent
+  | SDDPhaseStepCompleteEvent
+  | SDDPhaseCompleteEvent
+  | SDDWaveStartEvent
+  | SDDWaveCompleteEvent
+  | SDDMilestoneStartEvent
+  | SDDMilestoneCompleteEvent
+  | SDDInitStartEvent
+  | SDDInitStepStartEvent
+  | SDDInitStepCompleteEvent
+  | SDDInitCompleteEvent
+  | SDDInitResearchSpawnEvent
+  | SDDStateMutationEvent
+  | SDDConfigMutationEvent
+  | SDDFrontmatterMutationEvent
+  | SDDGitCommitEvent
+  | SDDTemplateFillEvent;
+
+/**
+ * Transport handler interface for consuming SDD events.
  * Transports receive all events and can write to files, WebSockets, etc.
  */
 export interface TransportHandler {
   /** Called for each event. Must not throw. */
-  onEvent(event: GSDEvent): void;
+  onEvent(event: SDDEvent): void;
   /** Called when the stream is closing. Clean up resources. */
   close(): void;
 }
@@ -781,7 +845,7 @@ export enum PhaseStepType {
 }
 
 /**
- * Structured output from `gsd-tools.cjs init phase-op <N>`.
+ * Structured output from `sdd-tools.cjs init phase-op <N>`.
  * Describes the current state of a phase on disk.
  */
 export interface PhaseOpInfo {

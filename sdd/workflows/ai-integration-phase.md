@@ -20,7 +20,7 @@ This prevents the two most common AI development failures: choosing the wrong fr
 ## 1. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init plan-phase "$PHASE")
+INIT=$(sdd-sdk query init.plan-phase "$PHASE")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -30,15 +30,15 @@ Parse JSON for: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded
 
 Resolve agent models:
 ```bash
-SELECTOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-framework-selector --raw)
-RESEARCHER_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-ai-researcher --raw)
-DOMAIN_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-domain-researcher --raw)
-PLANNER_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-eval-planner --raw)
+SELECTOR_MODEL=$(sdd-sdk query resolve-model sdd-framework-selector 2>/dev/null | jq -r '.model' 2>/dev/null || true)
+RESEARCHER_MODEL=$(sdd-sdk query resolve-model sdd-ai-researcher 2>/dev/null | jq -r '.model' 2>/dev/null || true)
+DOMAIN_MODEL=$(sdd-sdk query resolve-model sdd-domain-researcher 2>/dev/null | jq -r '.model' 2>/dev/null || true)
+PLANNER_MODEL=$(sdd-sdk query resolve-model sdd-eval-planner 2>/dev/null | jq -r '.model' 2>/dev/null || true)
 ```
 
 Check config:
 ```bash
-AI_PHASE_ENABLED=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.ai_integration_phase 2>/dev/null || echo "true")
+AI_PHASE_ENABLED=$(sdd-sdk query config-get workflow.ai_integration_phase 2>/dev/null || echo "true")
 ```
 
 **If `AI_PHASE_ENABLED` is `false`:**
@@ -54,7 +54,7 @@ Exit workflow.
 Extract phase number from $ARGUMENTS. If not provided, detect next unplanned phase.
 
 ```bash
-PHASE_INFO=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap get-phase "${PHASE}")
+PHASE_INFO=$(sdd-sdk query roadmap.get-phase "${PHASE}")
 ```
 
 **If `found` is false:** Error with available phases.

@@ -9,4 +9,4 @@ allowed-tools:
 
 Show the following output to the user verbatim, with no extra commentary:
 
-!`node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-set-model-profile $ARGUMENTS --raw`
+!`if ! command -v sdd-sdk >/dev/null 2>&1; then printf '⚠ sdd-sdk not found in PATH — /sdd-set-profile requires it.\n\nInstall the SDD SDK:\n  npm install -g @bhargavvc/sdk\n\nOr update SDD to get the latest packages:\n  /sdd-update\n'; exit 1; fi; sdd-sdk query config-set-model-profile $ARGUMENTS --raw`

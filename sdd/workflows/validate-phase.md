@@ -16,16 +16,16 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_AUDITOR=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" agent-skills sdd-nyquist-auditor 2>/dev/null)
+AGENT_SKILLS_AUDITOR=$(sdd-sdk query agent-skills sdd-nyquist-auditor 2>/dev/null)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`.
 
 ```bash
-AUDITOR_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-nyquist-auditor --raw)
-NYQUIST_CFG=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" config-get workflow.nyquist_validation --raw)
+AUDITOR_MODEL=$(sdd-sdk query resolve-model sdd-nyquist-auditor --raw)
+NYQUIST_CFG=$(sdd-sdk query config-get workflow.nyquist_validation --raw)
 ```
 
 If `NYQUIST_CFG` is `false`: exit with "Nyquist validation is disabled. Enable via /sdd-settings."
@@ -137,7 +137,7 @@ Handle return:
 git add {test_files}
 git commit -m "test(phase-${PHASE}): add Nyquist validation tests"
 
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "docs(phase-${PHASE}): add/update validation strategy"
+sdd-sdk query commit "docs(phase-${PHASE}): add/update validation strategy"
 ```
 
 ## 8. Results + Routing

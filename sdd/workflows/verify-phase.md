@@ -29,7 +29,7 @@ Then verify each level against the actual codebase.
 Load phase operation context:
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -37,14 +37,14 @@ Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `has_plans`, 
 
 Then load phase details and list plans/summaries:
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap get-phase "${phase_number}"
+sdd-sdk query roadmap.get-phase "${phase_number}"
 grep -E "^| ${phase_number}" .planning/REQUIREMENTS.md 2>/dev/null || true
 ls "$phase_dir"/*-SUMMARY.md "$phase_dir"/*-PLAN.md 2>/dev/null || true
 ```
 
 Load full milestone phases for deferred-item filtering (Step 9b):
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap analyze
+sdd-sdk query roadmap.analyze
 ```
 
 Extract **phase goal** from ROADMAP.md (the outcome to verify, not tasks), **requirements** from REQUIREMENTS.md if it exists, and **all milestone phases** from roadmap analyze (for cross-referencing gaps against later phases).
@@ -53,11 +53,11 @@ Extract **phase goal** from ROADMAP.md (the outcome to verify, not tasks), **req
 <step name="establish_must_haves">
 **Option A: Must-haves in PLAN frontmatter**
 
-Use sdd-tools to extract must_haves from each PLAN:
+Use `sdd-sdk query` verify handlers (or legacy sdd-tools) to extract must_haves from each PLAN:
 
 ```bash
 for plan in "$PHASE_DIR"/*-PLAN.md; do
-  MUST_HAVES=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" frontmatter get "$plan" --field must_haves)
+  MUST_HAVES=$(sdd-sdk query frontmatter.get "$plan" --field must_haves)
   echo "=== $plan ===" && echo "$MUST_HAVES"
 done
 ```
@@ -71,7 +71,7 @@ Aggregate all must_haves across plans for phase-level verification.
 If no must_haves in frontmatter (MUST_HAVES returns error or empty), check for Success Criteria:
 
 ```bash
-PHASE_DATA=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap get-phase "${phase_number}" --raw)
+PHASE_DATA=$(sdd-sdk query roadmap.get-phase "${phase_number}" --raw)
 ```
 
 Parse the `success_criteria` array from the JSON output. If non-empty:
@@ -103,11 +103,11 @@ For each truth: identify supporting artifacts → check artifact status → chec
 </step>
 
 <step name="verify_artifacts">
-Use sdd-tools for artifact verification against must_haves in each PLAN:
+Use `sdd-sdk query verify.artifacts` (or legacy sdd-tools) for artifact verification against must_haves in each PLAN:
 
 ```bash
 for plan in "$PHASE_DIR"/*-PLAN.md; do
-  ARTIFACT_RESULT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" verify artifacts "$plan")
+  ARTIFACT_RESULT=$(sdd-sdk query verify.artifacts "$plan")
   echo "=== $plan ===" && echo "$ARTIFACT_RESULT"
 done
 ```
@@ -146,11 +146,11 @@ wiring or leftover code from plan revisions.
 </step>
 
 <step name="verify_wiring">
-Use sdd-tools for key link verification against must_haves in each PLAN:
+Use `sdd-sdk query verify.key-links` (or legacy sdd-tools) for key link verification against must_haves in each PLAN:
 
 ```bash
 for plan in "$PHASE_DIR"/*-PLAN.md; do
-  LINKS_RESULT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" verify key-links "$plan")
+  LINKS_RESULT=$(sdd-sdk query verify.key-links "$plan")
   echo "=== $plan ===" && echo "$LINKS_RESULT"
 done
 ```

@@ -1,11 +1,11 @@
 /**
- * InitRunner — orchestrates the GSD new-project init workflow.
+ * InitRunner — orchestrates the SDD new-project init workflow.
  *
  * Workflow: setup → config → PROJECT.md → parallel research (4 sessions)
  *         → synthesis → requirements → roadmap
  *
  * Each step calls Agent SDK `query()` via `runPhaseStepSession()` with
- * prompts derived from GSD-1 workflow/agent/template files on disk.
+ * prompts derived from SDD-1 workflow/agent/template files on disk.
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -20,24 +20,24 @@ import type {
   InitStepResult,
   InitStepName,
   InitNewProjectInfo,
-  GSDInitStartEvent,
-  GSDInitStepStartEvent,
-  GSDInitStepCompleteEvent,
-  GSDInitCompleteEvent,
-  GSDInitResearchSpawnEvent,
+  SDDInitStartEvent,
+  SDDInitStepStartEvent,
+  SDDInitStepCompleteEvent,
+  SDDInitCompleteEvent,
+  SDDInitResearchSpawnEvent,
   PlanResult,
 } from './types.js';
-import { GSDEventType, PhaseStepType } from './types.js';
-import type { GSDTools } from './gsd-tools.js';
-import type { GSDEventStream } from './event-stream.js';
+import { SDDEventType, PhaseStepType } from './types.js';
+import type { SDDTools } from './sdd-tools.js';
+import type { SDDEventStream } from './event-stream.js';
 import { loadConfig } from './config.js';
 import { runPhaseStepSession } from './session-runner.js';
 import { sanitizePrompt } from './prompt-sanitizer.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GSD_TEMPLATES_DIR = join(homedir(), '.claude', 'get-shit-done', 'templates');
-const GSD_AGENTS_DIR = join(homedir(), '.claude', 'agents');
+const SDD_TEMPLATES_DIR = join(homedir(), '.claude', 'get-shit-done', 'templates');
+const SDD_AGENTS_DIR = join(homedir(), '.claude', 'agents');
 
 const RESEARCH_TYPES = ['STACK', 'FEATURES', 'ARCHITECTURE', 'PITFALLS'] as const;
 type ResearchType = (typeof RESEARCH_TYPES)[number];
@@ -67,8 +67,8 @@ const AUTO_MODE_CONFIG = {
 
 export interface InitRunnerDeps {
   projectDir: string;
-  tools: GSDTools;
-  eventStream: GSDEventStream;
+  tools: SDDTools;
+  eventStream: SDDEventStream;
   config?: Partial<InitConfig>;
   /** Override for SDK prompts directory. Defaults to package-relative sdk/prompts/. */
   sdkPromptsDir?: string;
@@ -76,8 +76,8 @@ export interface InitRunnerDeps {
 
 export class InitRunner {
   private readonly projectDir: string;
-  private readonly tools: GSDTools;
-  private readonly eventStream: GSDEventStream;
+  private readonly tools: SDDTools;
+  private readonly eventStream: SDDEventStream;
   private readonly config: InitConfig;
   private readonly sessionId: string;
   private readonly sdkPromptsDir: string;
@@ -110,8 +110,8 @@ export class InitRunner {
     const steps: InitStepResult[] = [];
     const artifacts: string[] = [];
 
-    this.emitEvent<GSDInitStartEvent>({
-      type: GSDEventType.InitStart,
+    this.emitEvent<SDDInitStartEvent>({
+      type: SDDEventType.InitStart,
       input: input.slice(0, 200),
       projectDir: this.projectDir,
     });
@@ -147,7 +147,7 @@ export class InitRunner {
         await writeFile(configPath, JSON.stringify(AUTO_MODE_CONFIG, null, 2) + '\n', 'utf-8');
         artifacts.push('.planning/config.json');
 
-        // Persist auto_advance via gsd-tools (validates & updates state)
+        // Persist auto_advance via sdd-tools (validates & updates state)
         await this.tools.configSet('workflow.auto_advance', 'true');
 
         // Commit config
@@ -275,8 +275,8 @@ export class InitRunner {
   ): Promise<{ stepResult: InitStepResult; value?: T }> {
     const stepStart = Date.now();
 
-    this.emitEvent<GSDInitStepStartEvent>({
-      type: GSDEventType.InitStepStart,
+    this.emitEvent<SDDInitStepStartEvent>({
+      type: SDDEventType.InitStepStart,
       step,
     });
 
@@ -292,8 +292,8 @@ export class InitRunner {
         costUsd,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<SDDInitStepCompleteEvent>({
+        type: SDDEventType.InitStepComplete,
         step,
         success: true,
         durationMs,
@@ -313,8 +313,8 @@ export class InitRunner {
         error: errorMsg,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<SDDInitStepCompleteEvent>({
+        type: SDDEventType.InitStepComplete,
         step,
         success: false,
         durationMs,
@@ -332,8 +332,8 @@ export class InitRunner {
     input: string,
     projectInfo: InitNewProjectInfo,
   ): Promise<InitStepResult[]> {
-    this.emitEvent<GSDInitResearchSpawnEvent>({
-      type: GSDEventType.InitResearchSpawn,
+    this.emitEvent<SDDInitResearchSpawnEvent>({
+      type: SDDEventType.InitResearchSpawn,
       sessionCount: RESEARCH_TYPES.length,
       researchTypes: [...RESEARCH_TYPES],
     });
@@ -382,7 +382,7 @@ export class InitRunner {
    * Reads the project template and combines with user input.
    */
   private async buildProjectPrompt(input: string): Promise<string> {
-    const template = await this.readGSDFile('templates/project.md');
+    const template = await this.readSDDFile('templates/project.md');
 
     return sanitizePrompt([
       'You are creating the PROJECT.md for a new software project.',
@@ -409,8 +409,8 @@ export class InitRunner {
     researchType: ResearchType,
     input: string,
   ): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-project-researcher.md');
-    const template = await this.readGSDFile(`templates/research-project/${researchType}.md`);
+    const agentDef = await this.readAgentFile('sdd-project-researcher.md');
+    const template = await this.readSDDFile(`templates/research-project/${researchType}.md`);
 
     // Read PROJECT.md if it exists (it should by now)
     let projectContent = '';
@@ -454,8 +454,8 @@ export class InitRunner {
    * Reads synthesizer agent def and all 4 research outputs.
    */
   private async buildSynthesisPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-research-synthesizer.md');
-    const summaryTemplate = await this.readGSDFile('templates/research-project/SUMMARY.md');
+    const agentDef = await this.readAgentFile('sdd-research-synthesizer.md');
+    const summaryTemplate = await this.readSDDFile('templates/research-project/SUMMARY.md');
     const researchDir = join(this.projectDir, '.planning', 'research');
 
     // Read whatever research files exist
@@ -499,7 +499,7 @@ export class InitRunner {
    * Reads PROJECT.md + FEATURES.md for requirement derivation.
    */
   private async buildRequirementsPrompt(): Promise<string> {
-    const reqTemplate = await this.readGSDFile('templates/requirements.md');
+    const reqTemplate = await this.readSDDFile('templates/requirements.md');
 
     let projectContent = '';
     let featuresContent = '';
@@ -547,9 +547,9 @@ export class InitRunner {
    * Reads PROJECT.md + REQUIREMENTS.md + research/SUMMARY.md + config.json.
    */
   private async buildRoadmapPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-roadmapper.md');
-    const roadmapTemplate = await this.readGSDFile('templates/roadmap.md');
-    const stateTemplate = await this.readGSDFile('templates/state.md');
+    const agentDef = await this.readAgentFile('sdd-roadmapper.md');
+    const roadmapTemplate = await this.readSDDFile('templates/roadmap.md');
+    const stateTemplate = await this.readSDDFile('templates/state.md');
 
     const filesToRead = [
       '.planning/PROJECT.md',
@@ -619,21 +619,21 @@ export class InitRunner {
   // ─── File reading helpers ──────────────────────────────────────────────────
 
   /**
-   * Read a file from the GSD templates directory.
+   * Read a file from the SDD templates directory.
    * Tries sdk/prompts/{relativePath} first (headless versions), then
-   * falls back to GSD-1 originals (~/.claude/get-shit-done/).
+   * falls back to SDD-1 originals (~/.claude/sdd/).
    */
-  private async readGSDFile(relativePath: string): Promise<string> {
+  private async readSDDFile(relativePath: string): Promise<string> {
     // Try SDK prompts dir first (headless versions)
     const sdkPath = join(this.sdkPromptsDir, relativePath);
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/prompts/, fall through to SDD-1 originals
     }
 
-    // Fall back to GSD-1 originals
-    const fullPath = join(GSD_TEMPLATES_DIR, '..', relativePath);
+    // Fall back to SDD-1 originals
+    const fullPath = join(SDD_TEMPLATES_DIR, '..', relativePath);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -645,7 +645,7 @@ export class InitRunner {
   /**
    * Read an agent definition.
    * Tries sdk/prompts/agents/{filename} first (headless versions), then
-   * falls back to GSD-1 originals (~/.claude/agents/).
+   * falls back to SDD-1 originals (~/.claude/agents/).
    */
   private async readAgentFile(filename: string): Promise<string> {
     // Try SDK prompts dir first (headless versions)
@@ -653,11 +653,11 @@ export class InitRunner {
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/prompts/, fall through to SDD-1 originals
     }
 
-    // Fall back to GSD-1 originals
-    const fullPath = join(GSD_AGENTS_DIR, filename);
+    // Fall back to SDD-1 originals
+    const fullPath = join(SDD_AGENTS_DIR, filename);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -684,14 +684,14 @@ export class InitRunner {
 
   // ─── Event helpers ─────────────────────────────────────────────────────────
 
-  private emitEvent<T extends { type: GSDEventType }>(
-    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: GSDEventType },
+  private emitEvent<T extends { type: SDDEventType }>(
+    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: SDDEventType },
   ): void {
     this.eventStream.emitEvent({
       timestamp: new Date().toISOString(),
       sessionId: this.sessionId,
       ...partial,
-    } as unknown as import('./types.js').GSDEvent);
+    } as unknown as import('./types.js').SDDEvent);
   }
 
   // ─── Result helpers ────────────────────────────────────────────────────────
@@ -705,8 +705,8 @@ export class InitRunner {
     const totalCostUsd = steps.reduce((sum, s) => sum + s.costUsd, 0);
     const totalDurationMs = Date.now() - startTime;
 
-    this.emitEvent<GSDInitCompleteEvent>({
-      type: GSDEventType.InitComplete,
+    this.emitEvent<SDDInitCompleteEvent>({
+      type: SDDEventType.InitComplete,
       success,
       totalCostUsd,
       totalDurationMs,

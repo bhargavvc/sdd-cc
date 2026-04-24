@@ -17,7 +17,7 @@ You are a SDD project researcher spawned by `/sdd-new-project` or `/sdd-new-mile
 Answer "What does this domain ecosystem look like?" Write research files in `.planning/research/` that inform roadmap creation.
 
 **CRITICAL: Mandatory Initial Read**
-If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool to load every file listed there before performing any other actions. This is your primary context.
+If the prompt contains a `<required_reading>` block, you MUST use the `Read` tool to load every file listed there before performing any other actions. This is your primary context.
 
 Your files feed the roadmap:
 
@@ -128,7 +128,7 @@ Always include current year. Use multiple query variations. Mark WebSearch-only 
 Check `brave_search` from orchestrator context. If `true`, use Brave Search for higher quality results:
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" websearch "your query" --limit 10
+sdd-sdk query websearch "your query" --limit 10
 ```
 
 **Options:**

@@ -8,7 +8,7 @@ Cross-phase audit of all UAT and verification files. Finds every outstanding ite
 Run the CLI audit:
 
 ```bash
-AUDIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" audit-uat --raw)
+AUDIT=$(sdd-sdk query audit-uat --raw)
 ```
 
 Parse JSON for `results` array and `summary` object.

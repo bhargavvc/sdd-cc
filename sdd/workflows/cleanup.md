@@ -124,7 +124,7 @@ Repeat for all milestones in the cleanup set.
 Commit the changes:
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "chore: archive phase directories from completed milestones" --files .planning/milestones/ .planning/phases/
+sdd-sdk query commit "chore: archive phase directories from completed milestones" .planning/milestones/ .planning/phases/
 ```
 
 </step>

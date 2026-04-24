@@ -98,6 +98,7 @@ Capture implementation decisions before planning.
 
 | Flag | Description |
 |------|-------------|
+| `--all` | Skip area selection — discuss all gray areas interactively (no auto-advance) |
 | `--auto` | Auto-select recommended defaults for all questions |
 | `--batch` | Group questions for batch intake instead of one-by-one |
 | `--analyze` | Add trade-off analysis during discussion |
@@ -108,6 +109,7 @@ Capture implementation decisions before planning.
 
 ```bash
 /sdd-discuss-phase 1                # Interactive discussion for phase 1
+/sdd-discuss-phase 1 --all          # Discuss all gray areas without selection step
 /sdd-discuss-phase 3 --auto         # Auto-select defaults for phase 3
 /sdd-discuss-phase --batch          # Batch mode for current phase
 /sdd-discuss-phase 2 --analyze      # Discussion with trade-off analysis
@@ -151,6 +153,8 @@ Research, plan, and verify a phase.
 | `--prd <file>` | Use a PRD file instead of discuss-phase for context |
 | `--reviews` | Replan with cross-AI review feedback from REVIEWS.md |
 | `--validate` | Run state validation before planning begins |
+| `--bounce` | Run external plan bounce validation after planning (uses `workflow.plan_bounce_script`) |
+| `--skip-bounce` | Skip plan bounce even if enabled in config |
 
 **Prerequisites:** `.planning/ROADMAP.md` exists
 **Produces:** `{phase}-RESEARCH.md`, `{phase}-{N}-PLAN.md`, `{phase}-VALIDATION.md`
@@ -160,6 +164,7 @@ Research, plan, and verify a phase.
 /sdd-plan-phase 3 --skip-research   # Plan without research (familiar domain)
 /sdd-plan-phase --auto              # Non-interactive planning
 /sdd-plan-phase 2 --validate        # Validate state before planning
+/sdd-plan-phase 1 --bounce          # Plan + external bounce validation
 ```
 
 ---
@@ -173,6 +178,8 @@ Execute all plans in a phase with wave-based parallelization, or run a specific 
 | `N` | **Yes** | Phase number to execute |
 | `--wave N` | No | Execute only Wave `N` in the phase |
 | `--validate` | No | Run state validation before execution begins |
+| `--cross-ai` | No | Delegate execution to an external AI CLI (uses `workflow.cross_ai_command`) |
+| `--no-cross-ai` | No | Force local execution even if cross-AI is enabled in config |
 
 **Prerequisites:** Phase has PLAN.md files
 **Produces:** per-plan `{phase}-{N}-SUMMARY.md`, git commits, and `{phase}-VERIFICATION.md` when the phase is fully complete
@@ -181,6 +188,7 @@ Execute all plans in a phase with wave-based parallelization, or run a specific 
 /sdd-execute-phase 1                # Execute phase 1
 /sdd-execute-phase 1 --wave 2       # Execute only Wave 2
 /sdd-execute-phase 1 --validate     # Validate state before execution
+/sdd-execute-phase 2 --cross-ai     # Delegate phase 2 to external AI CLI
 ```
 
 ---
@@ -476,8 +484,13 @@ Retroactively audit and fill Nyquist validation gaps.
 
 Show status and next steps.
 
+| Flag | Description |
+|------|-------------|
+| `--forensic` | Append a 6-check integrity audit after the standard report (STATE consistency, orphaned handoffs, deferred scope drift, memory-flagged pending work, blocking todos, uncommitted code) |
+
 ```bash
 /sdd-progress                       # "Where am I? What's next?"
+/sdd-progress --forensic            # Standard report + integrity audit
 ```
 
 ### `/sdd-resume-work`
@@ -593,6 +606,31 @@ Ingest an external plan file into the SDD planning system with conflict detectio
 
 ---
 
+### `/sdd-from-gsd2`
+
+Reverse migration from SDD-2 format (`.sdd/` with Milestone→Slice→Task hierarchy) back to v1 `.planning/` format.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--dry-run` | No | Preview what would be migrated without writing anything |
+| `--force` | No | Overwrite existing `.planning/` directory |
+| `--path <dir>` | No | Specify SDD-2 root directory (defaults to current directory) |
+
+**Flattening:** Milestone→Slice hierarchy is flattened to sequential phase numbers (M001/S01→phase 01, M001/S02→phase 02, M002/S01→phase 03, etc.).
+
+**Produces:** `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, and sequential phase directories in `.planning/`.
+
+**Safety:** Guards against overwriting an existing `.planning/` directory without `--force`.
+
+```bash
+/sdd-from-gsd2                          # Migrate .sdd/ in current directory
+/sdd-from-gsd2 --dry-run                # Preview migration without writing
+/sdd-from-gsd2 --force                  # Overwrite existing .planning/
+/sdd-from-gsd2 --path /path/to/gsd2-project  # Specify SDD-2 root
+```
+
+---
+
 ### `/sdd-quick`
 
 Execute ad-hoc task with SDD guarantees.
@@ -669,9 +707,20 @@ Systematic debugging with persistent state.
 |------|-------------|
 | `--diagnose` | Diagnosis-only mode — investigate without attempting fixes |
 
+**Subcommands:**
+- `/sdd-debug list` — List all active debug sessions with status, hypothesis, and next action
+- `/sdd-debug status <slug>` — Print full summary of a session (Evidence count, Eliminated count, Resolution, TDD checkpoint) without spawning an agent
+- `/sdd-debug continue <slug>` — Resume a specific session by slug (surfaces Current Focus then spawns continuation agent)
+- `/sdd-debug [--diagnose] <description>` — Start new debug session (existing behavior; `--diagnose` stops at root cause without applying fix)
+
+**TDD mode:** When `tdd_mode: true` in `.planning/config.json`, debug sessions require a failing test to be written and verified before any fix is applied (red → green → done).
+
 ```bash
 /sdd-debug "Login button not responding on mobile Safari"
 /sdd-debug --diagnose "Intermittent 500 errors on /api/users"
+/sdd-debug list
+/sdd-debug status auth-token-null
+/sdd-debug continue form-submit-500
 ```
 
 ### `/sdd-add-todo`
@@ -757,6 +806,74 @@ Archive accumulated phase directories from completed milestones.
 
 ---
 
+## Spiking & Sketching Commands
+
+### `/sdd-spike`
+
+Run 2–5 focused feasibility experiments before committing to an implementation approach. Each experiment uses Given/When/Then framing, produces executable code, and returns a VALIDATED / INVALIDATED / PARTIAL verdict.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `idea` | No | The technical question or approach to investigate |
+| `--quick` | No | Skip intake conversation; use `idea` text directly |
+
+**Produces:** `.planning/spikes/NNN-experiment-name/` with code, results, and README; `.planning/spikes/MANIFEST.md`
+
+```bash
+/sdd-spike                              # Interactive intake
+/sdd-spike "can we stream LLM tokens through SSE"
+/sdd-spike --quick websocket-vs-polling
+```
+
+---
+
+### `/sdd-spike-wrap-up`
+
+Package completed spike findings into a reusable project-local skill so future sessions can reference the conclusions.
+
+**Prerequisites:** `.planning/spikes/` exists with at least one completed spike
+**Produces:** `.claude/skills/spike-findings-[project]/` skill file
+
+```bash
+/sdd-spike-wrap-up
+```
+
+---
+
+### `/sdd-sketch`
+
+Explore design directions through throwaway HTML mockups before committing to implementation. Produces 2–3 variants per design question for direct browser comparison.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `idea` | No | The UI design question or direction to explore |
+| `--quick` | No | Skip mood intake; use `idea` text directly |
+| `--text` | No | Text-mode fallback — replace interactive prompts with numbered lists (for non-Claude runtimes) |
+
+**Produces:** `.planning/sketches/NNN-descriptive-name/index.html` (2–3 interactive variants), `README.md`, shared `themes/default.css`; `.planning/sketches/MANIFEST.md`
+
+```bash
+/sdd-sketch                             # Interactive mood intake
+/sdd-sketch "dashboard layout"
+/sdd-sketch --quick "sidebar navigation"
+/sdd-sketch --text "onboarding flow"    # Non-Claude runtime
+```
+
+---
+
+### `/sdd-sketch-wrap-up`
+
+Package winning sketch decisions into a reusable project-local skill so future sessions inherit the visual direction.
+
+**Prerequisites:** `.planning/sketches/` exists with at least one completed sketch (winner marked)
+**Produces:** `.claude/skills/sketch-findings-[project]/` skill file
+
+```bash
+/sdd-sketch-wrap-up
+```
+
+---
+
 ## Diagnostics Commands
 
 ### `/sdd-forensics`
@@ -781,6 +898,36 @@ Post-mortem investigation of failed or stuck SDD workflows.
 ```bash
 /sdd-forensics                              # Interactive — prompted for problem
 /sdd-forensics "Phase 3 execution stalled"  # With problem description
+```
+
+---
+
+### `/sdd-extract-learnings`
+
+Extract reusable patterns, anti-patterns, and architectural decisions from completed phase work.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `N` | **Yes** | Phase number to extract learnings from |
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Extract learnings from all completed phases |
+| `--format` | Output format: `markdown` (default), `json` |
+
+**Prerequisites:** Phase has been executed (SUMMARY.md files exist)
+**Produces:** `.planning/learnings/{phase}-LEARNINGS.md`
+
+**Extracts:**
+- Architectural decisions and their rationale
+- Patterns that worked well (reusable in future phases)
+- Anti-patterns encountered and how they were resolved
+- Technology-specific insights
+- Performance and testing observations
+
+```bash
+/sdd-extract-learnings 3                    # Extract learnings from phase 3
+/sdd-extract-learnings --all                # Extract from all completed phases
 ```
 
 ---
@@ -896,6 +1043,37 @@ Query, inspect, or refresh queryable codebase intelligence files stored in `.pla
 /sdd-intel query authentication     # Search intel for a term
 /sdd-intel diff                     # What changed since last snapshot
 /sdd-intel refresh                  # Rebuild intel index
+```
+
+---
+
+## AI Integration Commands
+
+### `/sdd-ai-integration-phase`
+
+AI framework selection wizard for integrating AI/LLM capabilities into a project phase. Presents an interactive decision matrix, surfaces domain-specific failure modes and eval criteria, and produces `AI-SPEC.md` with a framework recommendation, implementation guidance, and evaluation strategy.
+
+**Produces:** `{phase}-AI-SPEC.md` in the phase directory
+
+**Spawns:** 3 parallel specialist agents: domain-researcher, framework-selector, ai-researcher, and eval-planner
+
+```bash
+/sdd-ai-integration-phase              # Wizard for the current phase
+/sdd-ai-integration-phase 3           # Wizard for a specific phase
+```
+
+---
+
+### `/sdd-eval-review`
+
+Retroactive audit of an implemented AI phase's evaluation coverage. Checks implementation against the `AI-SPEC.md` evaluation plan produced by `/sdd-ai-integration-phase`. Scores each eval dimension as COVERED/PARTIAL/MISSING.
+
+**Prerequisites:** Phase has been executed and has an `AI-SPEC.md`
+**Produces:** `{phase}-EVAL-REVIEW.md` with findings, gaps, and remediation guidance
+
+```bash
+/sdd-eval-review                       # Audit current phase
+/sdd-eval-review 3                     # Audit a specific phase
 ```
 
 ---

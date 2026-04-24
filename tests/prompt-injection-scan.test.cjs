@@ -53,7 +53,9 @@ const ALLOWLIST = new Set([
   'sdd/bin/lib/security.cjs',        // The security module itself
   'sdd/workflows/discuss-phase.md',  // Large workflow (~50K) with power mode + i18n
   'sdd/workflows/execute-phase.md',  // Large orchestration workflow (~51K) with wave execution + code-review gate
+  'sdd/workflows/plan-phase.md',      // Large orchestration workflow (~51K) with TDD mode integration
   'hooks/sdd-prompt-guard.js',                  // The prompt guard hook
+  'hooks/sdd-read-injection-scanner.js',        // The read injection scanner (contains patterns)
   'tests/security.test.cjs',                    // Security tests
   'tests/prompt-injection-scan.test.cjs',       // This file
 ]);

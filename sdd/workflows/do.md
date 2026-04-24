@@ -26,7 +26,7 @@ Wait for response before continuing.
 **Check if project exists.**
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" state load 2>/dev/null)
+INIT=$(sdd-sdk query state.load 2>/dev/null)
 ```
 
 Track whether `.planning/` exists — some routes require it, others don't.
@@ -42,6 +42,10 @@ Evaluate `$ARGUMENTS` against these routing rules. Apply the **first matching** 
 | Starting a new project, "set up", "initialize" | `/sdd-new-project` | Needs full project initialization |
 | Mapping or analyzing an existing codebase | `/sdd-map-codebase` | Codebase discovery |
 | A bug, error, crash, failure, or something broken | `/sdd-debug` | Needs systematic investigation |
+| Spiking, "test if", "will this work", "experiment", "prove this out", validate feasibility | `/sdd-spike` | Throwaway experiment to validate feasibility |
+| Sketching, "mockup", "what would this look like", "prototype the UI", "design this", explore visual direction | `/sdd-sketch` | Throwaway HTML mockups to explore design |
+| Wrapping up spikes, "package the spikes", "consolidate spike findings" | `/sdd-spike-wrap-up` | Package spike findings into reusable skill |
+| Wrapping up sketches, "package the designs", "consolidate sketch findings" | `/sdd-sketch-wrap-up` | Package sketch findings into reusable skill |
 | Exploring, researching, comparing, or "how does X work" | `/sdd-research-phase` | Domain research before planning |
 | Discussing vision, "how should X look", brainstorming | `/sdd-discuss-phase` | Needs context gathering |
 | A complex task: refactoring, migration, multi-file architecture, system redesign | `/sdd-add-phase` | Needs a full phase with plan/build cycle |
@@ -56,7 +60,7 @@ Evaluate `$ARGUMENTS` against these routing rules. Apply the **first matching** 
 | Completing a milestone, shipping, releasing | `/sdd-complete-milestone` | Milestone lifecycle |
 | A specific, actionable, small task (add feature, fix typo, update config) | `/sdd-quick` | Self-contained, single executor |
 
-**Requires `.planning/` directory:** All routes except `/sdd-new-project`, `/sdd-map-codebase`, `/sdd-help`, and `/sdd-join-discord`. If the project doesn't exist and the route requires it, suggest `/sdd-new-project` first.
+**Requires `.planning/` directory:** All routes except `/sdd-new-project`, `/sdd-map-codebase`, `/sdd-spike`, `/sdd-sketch`, `/sdd-help`, and `/sdd-join-discord`. If the project doesn't exist and the route requires it, suggest `/sdd-new-project` first.
 
 **Ambiguity handling:** If the text could reasonably match multiple routes, ask the user via AskUserQuestion with the top 2-3 options. For example:
 

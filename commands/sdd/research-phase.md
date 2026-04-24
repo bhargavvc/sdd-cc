@@ -39,7 +39,7 @@ Normalize phase input in step 1 before any directory lookups.
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "$ARGUMENTS")
+INIT=$(sdd-sdk query init.phase-op "$ARGUMENTS")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -47,13 +47,13 @@ Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `phase_found`
 
 Resolve researcher model:
 ```bash
-RESEARCHER_MODEL=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" resolve-model sdd-phase-researcher --raw)
+RESEARCHER_MODEL=$(sdd-sdk query resolve-model sdd-phase-researcher --raw)
 ```
 
 ## 1. Validate Phase
 
 ```bash
-PHASE_INFO=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" roadmap get-phase "${phase_number}")
+PHASE_INFO=$(sdd-sdk query roadmap.get-phase "${phase_number}")
 ```
 
 **If `found` is false:** Error and exit. **If `found` is true:** Extract `phase_number`, `phase_name`, `goal` from JSON.

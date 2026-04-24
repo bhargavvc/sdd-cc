@@ -29,7 +29,7 @@ Exit.
 Load phase operation context:
 
 ```bash
-INIT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" init phase-op "${target}")
+INIT=$(sdd-sdk query init.phase-op "${target}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -77,16 +77,16 @@ Wait for confirmation.
 </step>
 
 <step name="execute_removal">
-**Delegate the entire removal operation to sdd-tools:**
+**Delegate the entire removal operation to `sdd-sdk query phase.remove`:**
 
 ```bash
-RESULT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase remove "${target}")
+RESULT=$(sdd-sdk query phase.remove "${target}")
 ```
 
-If the phase has executed plans (SUMMARY.md files), sdd-tools will error. Use `--force` only if the user confirms:
+If the phase has executed plans (SUMMARY.md files), the CLI will error. Use `--force` only if the user confirms:
 
 ```bash
-RESULT=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase remove "${target}" --force)
+RESULT=$(sdd-sdk query phase.remove "${target}" --force)
 ```
 
 The CLI handles:
@@ -103,7 +103,7 @@ Extract from result: `removed`, `directory_deleted`, `renamed_directories`, `ren
 Stage and commit the removal:
 
 ```bash
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" commit "chore: remove phase {target} ({original-phase-name})" --files .planning/
+sdd-sdk query commit "chore: remove phase {target} ({original-phase-name})" .planning/
 ```
 
 The commit message preserves the historical record of what was removed.
@@ -140,7 +140,7 @@ Would you like to:
 
 - Don't remove completed phases (have SUMMARY.md files) without --force
 - Don't remove current or past phases
-- Don't manually renumber — use `sdd-tools phase remove` which handles all renumbering
+- Don't manually renumber — use `sdd-sdk query phase.remove` which handles all renumbering
 - Don't add "removed phase" notes to STATE.md — git commit is the record
 - Don't modify completed phase directories
 </anti_patterns>
@@ -149,7 +149,7 @@ Would you like to:
 Phase removal is complete when:
 
 - [ ] Target phase validated as future/unstarted
-- [ ] `sdd-tools phase remove` executed successfully
+- [ ] `sdd-sdk query phase.remove` executed successfully
 - [ ] Changes committed with descriptive message
 - [ ] User informed of changes
 </success_criteria>

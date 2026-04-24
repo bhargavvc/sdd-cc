@@ -38,20 +38,24 @@ describe('command files: sdd-tools path references (#1766)', () => {
       'Violations:\n' + violations.join('\n'));
   });
 
-  test('workstreams.md uses standard sdd-tools.cjs path', () => {
+  test('workstreams.md documents sdd-sdk query or legacy sdd-tools.cjs', () => {
     const content = fs.readFileSync(
       path.join(COMMANDS_DIR, 'workstreams.md'), 'utf-8'
     );
-    const nodeLines = content.split('\n').filter(l => /node\s/.test(l));
 
-    assert.ok(nodeLines.length > 0,
-      'workstreams.md should contain node invocations');
+    assert.ok(
+      /sdd-sdk\s+query/.test(content) || /sdd-tools\.cjs/.test(content),
+      'workstreams.md should document sdd-sdk query or sdd-tools.cjs'
+    );
 
-    for (const line of nodeLines) {
-      assert.ok(
-        line.includes('sdd-tools.cjs'),
-        'Each node invocation must reference sdd-tools.cjs, got: ' + line.trim()
-      );
+    const lines = content.split('\n');
+    for (const line of lines) {
+      if (/node\s/.test(line)) {
+        assert.ok(
+          line.includes('sdd-tools.cjs'),
+          'Each node invocation must reference sdd-tools.cjs, got: ' + line.trim()
+        );
+      }
     }
   });
 });

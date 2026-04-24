@@ -1,4 +1,5 @@
 #!/bin/bash
+# sdd-hook-version: {{SDD_VERSION}}
 # sdd-phase-boundary.sh — PostToolUse hook: detect .planning/ file writes
 # Outputs a reminder when planning files are modified outside normal workflow.
 # Uses Node.js for JSON parsing (always available in SDD projects, no jq dependency).

@@ -18,13 +18,13 @@ import type {
   PhasePlanIndex,
   PlanInfo,
 } from './types.js';
-import { PhaseStepType, PhaseType, GSDEventType } from './types.js';
-import type { GSDConfig } from './config.js';
-import type { GSDTools } from './gsd-tools.js';
-import type { GSDEventStream } from './event-stream.js';
+import { PhaseStepType, PhaseType, SDDEventType } from './types.js';
+import type { SDDConfig } from './config.js';
+import type { SDDTools } from './sdd-tools.js';
+import type { SDDEventStream } from './event-stream.js';
 import type { PromptFactory } from './phase-prompt.js';
 import type { ContextEngine } from './context-engine.js';
-import type { GSDLogger } from './logger.js';
+import type { SDDLogger } from './logger.js';
 import { runPhaseStepSession, runPlanSession } from './session-runner.js';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -52,24 +52,24 @@ export type VerificationOutcome = 'passed' | 'human_needed' | 'gaps_found';
 
 export interface PhaseRunnerDeps {
   projectDir: string;
-  tools: GSDTools;
+  tools: SDDTools;
   promptFactory: PromptFactory;
   contextEngine: ContextEngine;
-  eventStream: GSDEventStream;
-  config: GSDConfig;
-  logger?: GSDLogger;
+  eventStream: SDDEventStream;
+  config: SDDConfig;
+  logger?: SDDLogger;
 }
 
 // ─── PhaseRunner ─────────────────────────────────────────────────────────────
 
 export class PhaseRunner {
   private readonly projectDir: string;
-  private readonly tools: GSDTools;
+  private readonly tools: SDDTools;
   private readonly promptFactory: PromptFactory;
   private readonly contextEngine: ContextEngine;
-  private readonly eventStream: GSDEventStream;
-  private readonly config: GSDConfig;
-  private readonly logger?: GSDLogger;
+  private readonly eventStream: SDDEventStream;
+  private readonly config: SDDConfig;
+  private readonly logger?: SDDLogger;
 
   constructor(deps: PhaseRunnerDeps) {
     this.projectDir = deps.projectDir;
@@ -118,7 +118,7 @@ export class PhaseRunner {
 
     // Emit phase_start
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStart,
+      type: SDDEventType.PhaseStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -288,7 +288,7 @@ export class PhaseRunner {
 
     // Emit phase_complete
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseComplete,
+      type: SDDEventType.PhaseComplete,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -329,7 +329,7 @@ export class PhaseRunner {
 
   /**
    * Run the plan-check step.
-   * Loads the gsd-plan-checker agent definition, runs a Verify-scoped session,
+   * Loads the sdd-plan-checker agent definition, runs a Verify-scoped session,
    * and parses output for PASS/FAIL signals.
    */
   private async runPlanCheckStep(
@@ -339,7 +339,7 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -371,7 +371,7 @@ export class PhaseRunner {
       const errorMsg = err instanceof Error ? err.message : String(err);
 
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -394,7 +394,7 @@ export class PhaseRunner {
     const success = planResult.success;
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: planResult.sessionId,
       phaseNumber,
@@ -425,7 +425,7 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -454,7 +454,7 @@ export class PhaseRunner {
       const errorMsg = err instanceof Error ? err.message : String(err);
 
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -476,7 +476,7 @@ export class PhaseRunner {
     const success = planResult.success;
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: planResult.sessionId,
       phaseNumber,
@@ -507,7 +507,7 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -534,7 +534,7 @@ export class PhaseRunner {
       const errorMsg = err instanceof Error ? err.message : String(err);
 
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -556,7 +556,7 @@ export class PhaseRunner {
     const success = planResult.success;
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: planResult.sessionId,
       phaseNumber,
@@ -589,14 +589,14 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
       step: PhaseStepType.Execute,
     });
 
-    // Get the plan index from gsd-tools
+    // Get the plan index from sdd-tools
     let planIndex: PhasePlanIndex;
     try {
       planIndex = await this.tools.phasePlanIndex(phaseNumber);
@@ -604,7 +604,7 @@ export class PhaseRunner {
       const durationMs = Date.now() - stepStart;
       const errorMsg = err instanceof Error ? err.message : String(err);
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -627,7 +627,7 @@ export class PhaseRunner {
     if (incompletePlans.length === 0) {
       const durationMs = Date.now() - stepStart;
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -667,7 +667,7 @@ export class PhaseRunner {
 
         // Emit wave_start
         this.eventStream.emitEvent({
-          type: GSDEventType.WaveStart,
+          type: SDDEventType.WaveStart,
           timestamp: new Date().toISOString(),
           sessionId: '',
           phaseNumber,
@@ -710,7 +710,7 @@ export class PhaseRunner {
 
         // Emit wave_complete
         this.eventStream.emitEvent({
-          type: GSDEventType.WaveComplete,
+          type: SDDEventType.WaveComplete,
           timestamp: new Date().toISOString(),
           sessionId: '',
           phaseNumber,
@@ -726,7 +726,7 @@ export class PhaseRunner {
     const allSucceeded = planResults.every(r => r.success);
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -797,7 +797,7 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -830,7 +830,7 @@ export class PhaseRunner {
         const errorMsg = err instanceof Error ? err.message : String(err);
 
         this.eventStream.emitEvent({
-          type: GSDEventType.PhaseStepComplete,
+          type: SDDEventType.PhaseStepComplete,
           timestamp: new Date().toISOString(),
           sessionId: '',
           phaseNumber,
@@ -875,7 +875,7 @@ export class PhaseRunner {
           // reject or exceeded retries
           const durationMs = Date.now() - stepStart;
           this.eventStream.emitEvent({
-            type: GSDEventType.PhaseStepComplete,
+            type: SDDEventType.PhaseStepComplete,
             timestamp: new Date().toISOString(),
             sessionId: lastResult.sessionId,
             phaseNumber,
@@ -944,7 +944,7 @@ export class PhaseRunner {
     const verifySuccess = outcome === 'passed';
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: lastResult?.sessionId ?? '',
       phaseNumber,
@@ -975,7 +975,7 @@ export class PhaseRunner {
     const stepStart = Date.now();
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepStart,
+      type: SDDEventType.PhaseStepStart,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
@@ -1005,7 +1005,7 @@ export class PhaseRunner {
     if (!shouldAdvance) {
       const durationMs = Date.now() - stepStart;
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -1029,7 +1029,7 @@ export class PhaseRunner {
       const errorMsg = err instanceof Error ? err.message : String(err);
 
       this.eventStream.emitEvent({
-        type: GSDEventType.PhaseStepComplete,
+        type: SDDEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: '',
         phaseNumber,
@@ -1050,7 +1050,7 @@ export class PhaseRunner {
     const durationMs = Date.now() - stepStart;
 
     this.eventStream.emitEvent({
-      type: GSDEventType.PhaseStepComplete,
+      type: SDDEventType.PhaseStepComplete,
       timestamp: new Date().toISOString(),
       sessionId: '',
       phaseNumber,
