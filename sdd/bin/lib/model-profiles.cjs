@@ -26,7 +26,122 @@ const MODEL_PROFILES = {
   'sdd-doc-writer': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
   'sdd-doc-verifier': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
 };
-const VALID_PROFILES = Object.keys(MODEL_PROFILES['sdd-planner']);
+const VALID_PROFILES = [...Object.keys(MODEL_PROFILES['sdd-planner']), 'inherit'];
+
+/**
+ * #3023 — Phase-type → agent mapping table.
+ *
+ * Lets users tune model selection at the *phase-type* level (planning,
+ * research, execution, verification, ...) instead of per-agent. Maps
+ * each agent in MODEL_PROFILES to exactly one phase-type so resolution
+ * is deterministic.
+ *
+ * Adding a new agent to MODEL_PROFILES requires adding an entry here too;
+ * tests/feat-3023-phase-type-models.test.cjs asserts coverage.
+ *
+ * Phase-type semantics:
+ *   - planning:     produces the plan (PLAN.md, ROADMAP.md, patterns)
+ *   - discuss:      collaborative scoping (no subagent today; reserved
+ *                   for orchestrators that may spawn one)
+ *   - research:     gathers external/codebase context (RESEARCH.md)
+ *   - execution:    implements the plan or writes user-facing artifacts
+ *   - verification: checks correctness (VERIFICATION.md, audits)
+ *   - completion:   post-execution wrap-up (no subagent today; reserved)
+ */
+const AGENT_TO_PHASE_TYPE = {
+  // Planning — produces the plan / roadmap / pattern map
+  'sdd-planner':                'planning',
+  'sdd-roadmapper':             'planning',
+  'sdd-pattern-mapper':         'planning',
+  // Research — external/codebase information gathering
+  'sdd-phase-researcher':       'research',
+  'sdd-project-researcher':     'research',
+  'sdd-research-synthesizer':   'research',
+  'sdd-codebase-mapper':        'research',
+  'sdd-ui-researcher':          'research',
+  // Execution — implementation, debugging, doc writing
+  'sdd-executor':               'execution',
+  'sdd-debugger':               'execution',
+  'sdd-doc-writer':             'execution',
+  // Verification — correctness checks, audits, gap analysis
+  'sdd-verifier':               'verification',
+  'sdd-plan-checker':           'verification',
+  'sdd-integration-checker':    'verification',
+  'sdd-nyquist-auditor':        'verification',
+  'sdd-ui-checker':             'verification',
+  'sdd-ui-auditor':             'verification',
+  'sdd-doc-verifier':           'verification',
+};
+
+/**
+ * The six phase-type slots accepted in `.planning/config.json` `models`
+ * block. `discuss` and `completion` are reserved — no current agent maps
+ * to them today — so users can pre-configure those slots without
+ * breaking validation when an orchestrator starts honoring them.
+ */
+const VALID_PHASE_TYPES = new Set([
+  'planning', 'discuss', 'research', 'execution', 'verification', 'completion',
+]);
+
+/**
+ * #3024 — Per-agent default tier for dynamic routing.
+ *
+ * Each agent declares a default routing tier (light/standard/heavy)
+ * that the dynamic-routing resolver uses to pick from
+ * `dynamic_routing.tier_models[tier]` on the first attempt. On
+ * orchestrator-detected soft failure, the resolver escalates to the
+ * next tier up (capped at `max_escalations`).
+ *
+ * Tier semantics:
+ *   - light:    cheap/fast — pure mappers/scanners, low-stakes verifiers
+ *   - standard: default workhorse — most researchers/writers/checkers
+ *   - heavy:    deep reasoning — planners/debuggers; can't escalate further
+ *
+ * Adding a new agent to MODEL_PROFILES requires adding an entry here too;
+ * tests/feat-3024-dynamic-routing.test.cjs asserts coverage.
+ */
+const AGENT_DEFAULT_TIERS = {
+  // Heavy — deep reasoning, planning, hard debugging
+  'sdd-planner':                'heavy',
+  'sdd-roadmapper':             'heavy',
+  'sdd-debugger':               'heavy',
+  // Standard — default workhorse: research, writing, primary verification
+  'sdd-executor':               'standard',
+  'sdd-phase-researcher':       'standard',
+  'sdd-project-researcher':     'standard',
+  'sdd-verifier':               'standard',
+  'sdd-doc-writer':             'standard',
+  'sdd-ui-researcher':          'standard',
+  // Light — fast scanners, structural mappers, low-stakes audits
+  'sdd-codebase-mapper':        'light',
+  'sdd-pattern-mapper':         'light',
+  'sdd-research-synthesizer':   'light',
+  'sdd-plan-checker':           'light',
+  'sdd-integration-checker':    'light',
+  'sdd-nyquist-auditor':        'light',
+  'sdd-ui-checker':             'light',
+  'sdd-ui-auditor':             'light',
+  'sdd-doc-verifier':           'light',
+};
+
+/**
+ * The three valid agent tier slots for dynamic routing. Used to
+ * validate `dynamic_routing.tier_models.<tier>` keys at config-set
+ * time and the AGENT_DEFAULT_TIERS values at startup.
+ */
+const VALID_AGENT_TIERS = new Set(['light', 'standard', 'heavy']);
+
+/**
+ * Tier escalation order: light → standard → heavy.
+ * `nextTier(currentTier)` returns the tier one step up. `heavy` stays
+ * at heavy (no tier above). Returns null for invalid input so callers
+ * can detect mis-config rather than silently degrade.
+ */
+const _TIER_ESCALATION = { light: 'standard', standard: 'heavy', heavy: 'heavy' };
+function nextTier(currentTier) {
+  if (typeof currentTier !== 'string') return null;
+  return _TIER_ESCALATION[currentTier] || null;
+}
 
 /**
  * Formats the agent-to-model mapping as a human-readable table (in string format).
@@ -58,7 +173,9 @@ function formatAgentToModelMapAsTable(agentToModelMap) {
 function getAgentToModelMapForProfile(normalizedProfile) {
   const agentToModelMap = {};
   for (const [agent, profileToModelMap] of Object.entries(MODEL_PROFILES)) {
-    agentToModelMap[agent] = profileToModelMap[normalizedProfile];
+    agentToModelMap[agent] = normalizedProfile === 'inherit'
+      ? 'inherit'
+      : profileToModelMap[normalizedProfile];
   }
   return agentToModelMap;
 }
@@ -66,6 +183,11 @@ function getAgentToModelMapForProfile(normalizedProfile) {
 module.exports = {
   MODEL_PROFILES,
   VALID_PROFILES,
+  AGENT_TO_PHASE_TYPE,
+  VALID_PHASE_TYPES,
+  AGENT_DEFAULT_TIERS,
+  VALID_AGENT_TIERS,
+  nextTier,
   formatAgentToModelMapAsTable,
   getAgentToModelMapForProfile,
 };

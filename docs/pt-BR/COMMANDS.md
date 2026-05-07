@@ -16,7 +16,7 @@ Para detalhes completos de flags avançadas e mudanças recentes, consulte tamb�
 | `/sdd-execute-phase <N>` | Executa planos em ondas paralelas | Após planejamento aprovado |
 | `/sdd-verify-work [N]` | UAT manual com diagnóstico automático | Após execução |
 | `/sdd-ship [N]` | Cria PR da fase validada | Ao concluir a fase |
-| `/sdd-next` | Detecta e executa o próximo passo lógico | Qualquer momento |
+| `/sdd-progress --next` | Detecta e executa o próximo passo lógico | Qualquer momento |
 | `/sdd-fast <texto>` | Tarefa curta sem planejamento completo | Ajustes triviais |
 
 ## Navegação e Sessão
@@ -26,7 +26,7 @@ Para detalhes completos de flags avançadas e mudanças recentes, consulte tamb�
 | `/sdd-progress` | Mostra status atual e próximos passos |
 | `/sdd-resume-work` | Retoma contexto da sessão anterior |
 | `/sdd-pause-work` | Salva handoff estruturado |
-| `/sdd-session-report` | Gera resumo da sessão |
+| `/sdd-pause-work --report` | Gera resumo da sessão |
 | `/sdd-autonomous` | Executa todas as fases restantes de forma autônoma (`--from N`, `--to N`, `--only N`) |
 | `/sdd-help` | Lista comandos e uso |
 | `/sdd-update` | Atualiza o SDD |
@@ -35,11 +35,10 @@ Para detalhes completos de flags avançadas e mudanças recentes, consulte tamb�
 
 | Comando | Finalidade |
 |---------|------------|
-| `/sdd-add-phase` | Adiciona fase no roadmap |
-| `/sdd-insert-phase [N]` | Insere trabalho urgente entre fases |
-| `/sdd-remove-phase [N]` | Remove fase futura e reenumera |
-| `/sdd-list-phase-assumptions [N]` | Mostra abordagem assumida pelo Claude |
-| `/sdd-plan-milestone-gaps` | Cria fases para fechar lacunas de auditoria |
+| `/sdd-phase` | Adiciona fase no roadmap |
+| `/sdd-phase --insert [N]` | Insere trabalho urgente entre fases |
+| `/sdd-phase --remove [N]` | Remove fase futura e reenumera |
+| `/sdd-discuss-phase --assumptions [N]` | Mostra abordagem assumida pelo Claude |
 
 ## Brownfield e Utilidades
 
@@ -48,10 +47,10 @@ Para detalhes completos de flags avançadas e mudanças recentes, consulte tamb�
 | `/sdd-map-codebase` | Mapeia base existente antes de novo projeto |
 | `/sdd-quick` | Tarefas ad-hoc com garantias do SDD |
 | `/sdd-debug [desc]` | Debug sistemático com estado persistente (`--diagnose` para modo diagnóstico) |
-| `/sdd-analyze-dependencies` | Detecta dependências entre fases e sugere `Depends on` no ROADMAP.md (v1.32) |
+| `/sdd-manager --analyze-deps` | Detecta dependências entre fases e sugere `Depends on` no ROADMAP.md (v1.32) |
 | `/sdd-forensics` | Diagnóstico de falhas no workflow |
 | `/sdd-settings` | Configuração de agentes, perfil e toggles |
-| `/sdd-set-profile <perfil>` | Troca rápida de perfil de modelo |
+| `/sdd-config --profile <perfil>` | Troca rápida de perfil de modelo |
 
 ## Qualidade de Código
 
@@ -65,9 +64,9 @@ Para detalhes completos de flags avançadas e mudanças recentes, consulte tamb�
 
 | Comando | Finalidade |
 |---------|------------|
-| `/sdd-add-backlog <desc>` | Adiciona item no backlog (999.x) |
+| `/sdd-capture --backlog <desc>` | Adiciona item no backlog (999.x) |
 | `/sdd-review-backlog` | Promove, mantém ou remove itens |
-| `/sdd-plant-seed <ideia>` | Registra ideia com gatilho futuro |
+| `/sdd-capture --seed <ideia>` | Registra ideia com gatilho futuro |
 | `/sdd-thread [nome]` | Gerencia threads persistentes |
 
 ## Gerenciamento de Estado

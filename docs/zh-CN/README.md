@@ -51,7 +51,7 @@ npx @bhargavvc/sdd-cc@latest
 
 其他规格驱动开发工具确实存在，比如 BMAD、Speckit... 但它们似乎都把事情搞得比实际需要的复杂得多（冲刺会议、故事点、干系人同步、回顾、Jira 工作流），或者缺乏对你正在构建的东西的真正大局理解。我不是一个 50 人的软件公司。我不想搞企业级表演。我只是个想构建出好用的东西的创意人。
 
-所以我开发了 GSD。复杂性在系统内部，不在你的工作流里。幕后是：上下文工程、XML 提示格式、子代理编排、状态管理。你看到的是：几个命令，用就完了。
+所以我开发了 SDD。复杂性在系统内部，不在你的工作流里。幕后是：上下文工程、XML 提示格式、子代理编排、状态管理。你看到的是：几个命令，用就完了。
 
 系统给 Claude 提供了它完成工作**以及**验证工作所需的一切。我信任这个工作流。它就是做得好。
 
@@ -499,7 +499,6 @@ lmn012o feat(08-02): 创建注册端点
 | `/sdd-progress` | 我在哪？接下来做什么？ |
 | `/sdd-help` | 显示所有命令和使用指南 |
 | `/sdd-update` | 更新 SDD 并预览变更日志 |
-| `/sdd-join-discord` | 加入 SDD Discord 社区 |
 
 ### 现有代码库
 
@@ -511,13 +510,12 @@ lmn012o feat(08-02): 创建注册端点
 
 | 命令 | 作用 |
 |---------|--------------|
-| `/sdd-add-phase` | 向路线图追加阶段 |
-| `/sdd-insert-phase [N]` | 在阶段之间插入紧急工作 |
-| `/sdd-remove-phase [N]` | 删除未来阶段，重新编号 |
-| `/sdd-list-phase-assumptions [N]` | 规划前查看 Claude 的预期方法 |
-| `/sdd-plan-milestone-gaps` | 创建阶段以填补审计发现的差距 |
+| `/sdd-phase` | 向路线图追加阶段 |
+| `/sdd-phase --insert [N]` | 在阶段之间插入紧急工作 |
+| `/sdd-phase --remove [N]` | 删除未来阶段，重新编号 |
+| `/sdd-discuss-phase --assumptions [N]` | 规划前查看 Claude 的预期方法 |
 | `/sdd-autonomous [--from N] [--to N] [--only N]` | 自主执行所有剩余阶段（`--to N` 执行到阶段 N 停止，`--only N` 只执行单个阶段） |
-| `/sdd-analyze-dependencies` | 检测阶段间依赖关系并建议 ROADMAP.md 的 `Depends on` 条目 |
+| `/sdd-manager --analyze-deps` | 检测阶段间依赖关系并建议 ROADMAP.md 的 `Depends on` 条目 |
 
 ### 会话
 
@@ -531,9 +529,9 @@ lmn012o feat(08-02): 创建注册端点
 | 命令 | 作用 |
 |---------|--------------|
 | `/sdd-settings` | 配置模型配置文件和工作流代理 |
-| `/sdd-set-profile <profile>` | 切换模型配置文件（quality/balanced/budget） |
-| `/sdd-add-todo [desc]` | 捕获想法留待后用 |
-| `/sdd-check-todos` | 列出待处理事项 |
+| `/sdd-config --profile <profile>` | 切换模型配置文件（quality/balanced/budget/inherit） |
+| `/sdd-capture [desc]` | 捕获想法留待后用 |
+| `/sdd-capture --list` | 列出待处理事项 |
 | `/sdd-debug [desc] [--diagnose]` | 带持久状态的系统化调试（`--diagnose` 仅诊断不修复） |
 | `/sdd-quick [--full] [--discuss] [--research]` | 用 SDD 保证执行临时任务（`--full` 启用全部阶段，`--discuss` 先收集上下文，`--research` 规划前调查方法） |
 | `/sdd-health [--repair]` | 验证 `.planning/` 目录完整性，用 `--repair` 自动修复 |
@@ -565,7 +563,7 @@ SDD 在 `.planning/config.json` 中存储项目设置。在 `/sdd-new-project` �
 
 切换配置：
 ```
-/sdd-set-profile budget
+/sdd-config --profile budget
 ```
 
 或通过 `/sdd-settings` 配置。
@@ -671,7 +669,7 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ### 卸载
 
-完全删除 GSD：
+完全删除 SDD：
 
 ```bash
 # 全局安装

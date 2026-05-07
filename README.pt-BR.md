@@ -73,15 +73,17 @@ Para quem quer descrever o que precisa e receber isso construído do jeito certo
 
 Quality gates embutidos capturam problemas reais: detecção de schema drift sinaliza mudanças ORM sem migrations, segurança ancora verificação a modelos de ameaça, e detecção de redução de escopo impede o planner de descartar requisitos silenciosamente.
 
-### Destaques v1.32.0
+### Destaques v1.39.0
 
-- **Gates de consistência STATE.md** — `state validate` detecta divergência entre STATE.md e o filesystem; `state sync` reconstrói a partir do estado real do projeto
-- **Flag `--to N`** — Para a execução autônoma após completar uma fase específica
-- **Research gate** — Bloqueia planejamento quando RESEARCH.md tem perguntas abertas não resolvidas
-- **Filtro de escopo do verificador** — Lacunas abordadas em fases posteriores são marcadas como "adiadas", não como lacunas
-- **Guard de leitura antes de edição** — Hook consultivo previne loops de retry infinitos em runtimes não-Claude
-- **Redução de contexto** — Truncamento de Markdown e ordenação de prompts cache-friendly para menor uso de tokens
-- **4 novos runtimes** — Trae, Kilo, Augment e Cline (12 runtimes no total)
+Lista completa nas [notas de release v1.39.0](https://github.com/bhargavvc/sdd-cc/releases/tag/v1.39.0).
+
+- **Perfil de instalação `--minimal`** — alias `--core-only`. Instala apenas os 6 skills do loop principal (`new-project`, `discuss-phase`, `plan-phase`, `execute-phase`, `help`, `update`) e nenhum subagente `sdd-*`. Reduz o overhead do system prompt no cold-start de ~12k para ~700 tokens (≥94% de redução). Útil para LLMs locais com contexto de 32K–128K e APIs cobradas por token.
+- **`/sdd-phase --edit`** — edita qualquer campo de uma fase existente em `ROADMAP.md` no lugar, sem alterar o número ou a posição. `--force` pula o diff de confirmação; referências em `depends_on` são validadas e o `STATE.md` é atualizado na escrita.
+- **Build & test gate pós-merge** — o passo 5.6 de `execute-phase` agora detecta automaticamente o comando de build em `workflow.build_command`, com fallback para Xcode (`.xcodeproj`), Makefile, Justfile, Cargo, Go, Python ou npm. Projetos Xcode/iOS rodam `xcodebuild build` e `xcodebuild test` automaticamente. Funciona em modo paralelo e serial.
+- **Modelo de review por runtime** — `review.models.<cli>` permite que cada CLI externa de review (codex, gemini, etc.) escolha seu próprio modelo, independente do perfil de planner/executor.
+- **Herança de configuração de workstream** — quando `SDD_WORKSTREAM` está definido, o `.planning/config.json` raiz é carregado primeiro e merge-deep com o config da workstream (workstream vence em conflito). Um `null` explícito no config da workstream sobrescreve corretamente o valor raiz.
+- **Workflow manual de canary release** — `.github/workflows/canary.yml` publica builds `{base}-canary.{N}` de `@bhargavvc/sdd-cc` e `@bhargavvc/sdk` na dist-tag `@canary` a partir de `dev`, sob demanda via `workflow_dispatch`.
+- **Consolidação de skills: 86 → 59** — 4 novos skills agrupados (`capture`, `phase`, `config`, `workspace`) absorvem 31 micro-skills. 6 skills pais existentes absorvem wrap-up e sub-operações como flags: `update --sync/--reapply`, `sketch --wrap-up`, `spike --wrap-up`, `map-codebase --fast/--query`, `code-review --fix`, `progress --do/--next`. Sem perda funcional.
 
 ---
 
@@ -257,7 +259,7 @@ Validação manual orientada para confirmar que a feature realmente funciona com
 Ou deixe o SDD decidir:
 
 ```
-/sdd-next
+/sdd-progress --next
 ```
 
 ### Modo rápido
@@ -325,7 +327,7 @@ Cada tarefa gera commit próprio, facilitando `git bisect`, rollback e rastreabi
 | `/sdd-execute-phase <N>` | Executa planos em ondas paralelas |
 | `/sdd-verify-work [N]` | UAT manual |
 | `/sdd-ship [N] [--draft]` | Cria PR da fase validada |
-| `/sdd-next` | Avança automaticamente para o próximo passo |
+| `/sdd-progress --next` | Avança automaticamente para o próximo passo |
 | `/sdd-fast <text>` | Tarefas triviais sem planejamento |
 | `/sdd-complete-milestone` | Fecha o marco e marca release |
 | `/sdd-new-milestone [name]` | Inicia próximo marco |
@@ -337,7 +339,7 @@ Cada tarefa gera commit próprio, facilitando `git bisect`, rollback e rastreabi
 | `/sdd-review` | Peer review com múltiplas IAs |
 | `/sdd-pr-branch` | Cria branch limpa para PR |
 | `/sdd-settings` | Configura perfis e agentes |
-| `/sdd-set-profile <profile>` | Troca perfil (quality/balanced/budget/inherit) |
+| `/sdd-config --profile <profile>` | Troca perfil (quality/balanced/budget/inherit) |
 | `/sdd-quick [--full] [--discuss] [--research]` | Execução rápida com garantias do SDD (`--full` ativa todas as etapas, `--validate` ativa apenas verificação) |
 | `/sdd-health [--repair]` | Verifica e repara `.planning/` |
 
@@ -368,7 +370,7 @@ Você pode configurar no `/sdd-new-project` ou ajustar depois com `/sdd-settings
 
 Troca rápida:
 ```
-/sdd-set-profile budget
+/sdd-config --profile budget
 ```
 
 ---

@@ -292,7 +292,7 @@ Fill all sections. Write to `$PHASE_DIR/$PADDED_PHASE-UI-SPEC.md`.
 ## Step 6: Commit (optional)
 
 ```bash
-sdd-sdk query commit "docs($PHASE): UI design contract" "$PHASE_DIR/$PADDED_PHASE-UI-SPEC.md"
+sdd-sdk query commit "docs($PHASE): UI design contract" --files "$PHASE_DIR/$PADDED_PHASE-UI-SPEC.md"
 ```
 
 ## Step 7: Return Structured Result

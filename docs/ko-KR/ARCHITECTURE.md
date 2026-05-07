@@ -21,7 +21,7 @@
 
 ## 시스템 개요
 
-GSD는 사용자와 AI 코딩 에이전트(Claude Code, Gemini CLI, OpenCode, Kilo, Codex, Copilot, Antigravity, Trae, Cline, Augment Code) 사이에 위치하는 **메타 프롬프팅 프레임워크**입니다. 다음을 제공합니다.
+SDD는 사용자와 AI 코딩 에이전트(Claude Code, Gemini CLI, OpenCode, Kilo, Codex, Copilot, Antigravity, Trae, Cline, Augment Code) 사이에 위치하는 **메타 프롬프팅 프레임워크**입니다. 다음을 제공합니다.
 
 1. **컨텍스트 엔지니어링** — 작업별로 AI에게 필요한 모든 것을 제공하는 구조화된 아티팩트
 2. **멀티 에이전트 오케스트레이션** — 새로운 컨텍스트 윈도우로 전문화된 에이전트를 생성하는 가벼운 오케스트레이터
@@ -411,7 +411,7 @@ UI-SPEC.md (per phase) ───────────────────
 │   ├── pending/            # 캡처된 아이디어
 │   └── done/               # 완료된 할 일
 ├── threads/               # 영구 컨텍스트 스레드 (/sdd-thread에서)
-├── seeds/                 # 미래 지향적 아이디어 (/sdd-plant-seed에서)
+├── seeds/                 # 미래 지향적 아이디어 (/sdd-capture --seed에서)
 ├── debug/                  # 활성 디버그 세션
 │   ├── *.md                # 활성 세션
 │   ├── resolved/           # 보관된 세션
@@ -439,7 +439,7 @@ UI-SPEC.md (per phase) ───────────────────
    - Antigravity: Google 모델 등가물을 사용한 skills-first 방식
 5. **경로 정규화** — `~/.claude/` 경로를 런타임별 경로로 교체
 6. **설정 통합** — 런타임의 `settings.json`에 훅 등록
-7. **패치 백업** — v1.17부터 로컬 수정 파일을 `sdd-local-patches/`에 백업하여 `/sdd-reapply-patches`에 사용
+7. **패치 백업** — v1.17부터 로컬 수정 파일을 `sdd-local-patches/`에 백업하여 `/sdd-update --reapply`에 사용
 8. **매니페스트 추적** — 깔끔한 제거를 위해 `sdd-file-manifest.json` 작성
 9. **제거 모드** — `--uninstall`로 모든 SDD 파일, 훅, 설정 제거
 
@@ -507,7 +507,7 @@ Runtime Engine (Claude Code / Gemini CLI)
 
 ## 런타임 추상화
 
-GSD는 통합된 명령어/워크플로우 아키텍처를 통해 여러 AI 코딩 런타임을 지원합니다.
+SDD는 통합된 명령어/워크플로우 아키텍처를 통해 여러 AI 코딩 런타임을 지원합니다.
 
 | 런타임 | 명령어 형식 | 에이전트 시스템 | 설정 위치 |
 |---------|---------------|--------------|-----------------|
@@ -525,6 +525,6 @@ GSD는 통합된 명령어/워크플로우 아키텍처를 통해 여러 AI 코�
 2. **훅 이벤트 이름** — Claude는 `PostToolUse`를 사용하고 Gemini는 `AfterTool`을 사용합니다
 3. **에이전트 전문** — 각 런타임은 고유한 에이전트 정의 형식을 가집니다
 4. **경로 규칙** — 각 런타임은 서로 다른 디렉터리에 설정을 저장합니다
-5. **모델 참조** — `inherit` 프로필을 통해 GSD가 런타임의 모델 선택에 위임합니다
+5. **모델 참조** — `inherit` 프로필을 통해 SDD가 런타임의 모델 선택에 위임합니다
 
 인스톨러는 설치 시 모든 변환을 처리합니다. 워크플로우와 에이전트는 Claude Code의 네이티브 형식으로 작성되어 배포 중에 변환됩니다.

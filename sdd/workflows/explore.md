@@ -60,11 +60,13 @@ This would take ~30 seconds and might surface useful context.
 
 If yes, spawn a research agent:
 ```
-Task(
+Agent(
   prompt="Quick research: {specific_question}. Return 3-5 key findings, no more than 200 words.",
   subagent_type="sdd-phase-researcher"
 )
 ```
+
+> **ORCHESTRATOR RULE — CODEX RUNTIME**: After calling Agent() above, stop working on this task immediately. Do not read more files, edit code, or run tests related to this task while the subagent is active. Wait for the subagent to return its result. This prevents duplicate work, conflicting edits, and wasted context. Only resume when the subagent result is available.
 
 Share findings and continue the conversation.
 
@@ -113,7 +115,7 @@ For each selected output, write the file:
 
 Commit if `commit_docs` is enabled:
 ```bash
-sdd-sdk query commit "docs: capture exploration — {topic_slug}" {file_list}
+sdd-sdk query commit "docs: capture exploration — {topic_slug}" --files {file_list}
 ```
 
 ## Step 6: Close
@@ -125,7 +127,7 @@ sdd-sdk query commit "docs: capture exploration — {topic_slug}" {file_list}
 **Outputs:** {count} artifact(s) created
 {list of created files}
 
-Continue exploring with `/sdd-explore` or start working with `/sdd-next`.
+Continue exploring with `/sdd-explore` or start working with `/sdd-progress --next`.
 ```
 
 </process>

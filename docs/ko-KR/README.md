@@ -1,6 +1,6 @@
 # SDD 문서
 
-Spec-Driven Development (SDD) 프레임워크의 종합 문서입니다. GSD는 AI 코딩 에이전트를 위한 메타 프롬프팅, 컨텍스트 엔지니어링, 스펙 기반 개발 시스템입니다.
+Spec-Driven Development (SDD) 프레임워크의 종합 문서입니다. SDD는 AI 코딩 에이전트를 위한 메타 프롬프팅, 컨텍스트 엔지니어링, 스펙 기반 개발 시스템입니다.
 
 언어 버전: [English](README.md) · [Português (pt-BR)](pt-BR/README.md) · [日本語](ja-JP/README.md) · [简体中文](zh-CN/README.md) · [한국어](ko-KR/README.md)
 
@@ -12,7 +12,7 @@ Spec-Driven Development (SDD) 프레임워크의 종합 문서입니다. GSD는 
 | [Feature Reference](FEATURES.md) | 전체 사용자 | 요구사항이 포함된 전체 기능 및 함수 문서 |
 | [Command Reference](COMMANDS.md) | 전체 사용자 | 모든 명령어의 구문, 플래그, 옵션 및 예제 |
 | [Configuration Reference](CONFIGURATION.md) | 전체 사용자 | 전체 설정 스키마, 워크플로우 토글, 모델 프로필, git 브랜칭 |
-| [CLI Tools Reference](CLI-TOOLS.md) | 기여자, 에이전트 작성자 | 워크플로우 및 에이전트를 위한 `sdd-tools.cjs` 프로그래매틱 API |
+| [CLI Tools Reference](CLI-TOOLS.md) | 기여자, 에이전트 작성자 | CJS `sdd-tools.cjs` + **`sdd-sdk query`/SDK** 안내 |
 | [Agent Reference](AGENTS.md) | 기여자, 고급 사용자 | 18개 전문 에이전트의 역할, 도구, 스폰 패턴 |
 | [User Guide](USER-GUIDE.md) | 전체 사용자 | 워크플로우 안내, 문제 해결, 복구 방법 |
 | [Context Monitor](context-monitor.md) | 전체 사용자 | 컨텍스트 윈도우 모니터링 훅 아키텍처 |
@@ -20,7 +20,7 @@ Spec-Driven Development (SDD) 프레임워크의 종합 문서입니다. GSD는 
 
 ## 빠른 링크
 
-- **v1.32의 새로운 기능:** STATE.md 일관성 게이트, `--to N` 자율 모드, 리서치 게이트, 검증자 마일스톤 범위 필터링, read-before-edit 가드, 컨텍스트 축소, 신규 런타임(Trae, Cline, Augment Code), 응답 언어 설정, `--power`/`--diagnose` 플래그, `/sdd-analyze-dependencies`
+- **v1.39의 새로운 기능:** `--minimal` 설치 프로파일(콜드 스타트 ≥94% 감소), `/sdd-phase --edit`, 머지 후 빌드 & 테스트 게이트, `review.models.<cli>` 런타임별 리뷰 모델, 워크스트림 설정 상속, 수동 카나리 릴리스 워크플로, 스킬 통합(86 → 59)
 - **시작하기:** [README](../README.md) → 설치 → `/sdd-new-project`
 - **전체 워크플로우 안내:** [User Guide](USER-GUIDE.md)
 - **모든 명령어 한눈에 보기:** [Command Reference](COMMANDS.md)

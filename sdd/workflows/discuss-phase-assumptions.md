@@ -66,7 +66,7 @@ Phase number from argument (required).
 ```bash
 INIT=$(sdd-sdk query init.phase-op "${PHASE}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_ANALYZER=$(sdd-sdk query agent-skills sdd-assumptions-analyzer 2>/dev/null)
+AGENT_SKILLS_ANALYZER=$(sdd-sdk query agent-skills sdd-assumptions-analyzer)
 ```
 
 Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`,
@@ -254,7 +254,7 @@ If no USER-PROFILE.md: calibration_tier = "standard"
 **Spawn Explore subagent:**
 
 ```
-Task(subagent_type="sdd-assumptions-analyzer", prompt="""
+Agent(subagent_type="sdd-assumptions-analyzer", prompt="""
 Analyze the codebase for Phase {PHASE}: {phase_name}.
 
 Phase goal: {roadmap_description}
@@ -294,6 +294,8 @@ ${AGENT_SKILLS_ANALYZER}
 """)
 ```
 
+> **ORCHESTRATOR RULE — CODEX RUNTIME**: After calling Agent() above, stop working on this task immediately. Do not read more files, analyze the codebase, or process assumptions while the subagent is active. Wait for the subagent to return its result. This prevents duplicate work, conflicting edits, and wasted context. Only resume when the subagent result is available.
+
 Parse the subagent's response. Extract:
 - `assumptions[]` — each with area, statement, evidence, consequence, confidence
 - `needs_research[]` — topics requiring external research (may be empty)
@@ -310,7 +312,7 @@ Parse the subagent's response. Extract:
 If research topics were flagged, spawn a general-purpose research agent:
 
 ```
-Task(subagent_type="general-purpose", prompt="""
+Agent(subagent_type="general-purpose", prompt="""
 Research the following topics for Phase {PHASE}: {phase_name}.
 
 Topics needing research:
@@ -324,6 +326,8 @@ For each topic, return:
 Use Context7 (resolve-library-id then query-docs) for library-specific questions.
 Use WebSearch for ecosystem/best-practice questions.
 """)
+
+> **ORCHESTRATOR RULE — CODEX RUNTIME**: After calling Agent() above, stop working on this task immediately. Do not independently research any of these topics while the subagent is active. Wait for the subagent to return its result. This prevents duplicate work and wasted context. Only resume when the subagent result is available.
 ```
 
 Merge findings back into assumptions:
@@ -548,7 +552,7 @@ Write file.
 Commit phase context and discussion log:
 
 ```bash
-sdd-sdk query commit "docs(${padded_phase}): capture phase context (assumptions mode)" "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
+sdd-sdk query commit "docs(${padded_phase}): capture phase context (assumptions mode)" --files "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
 ```
 
 Confirm: "Committed: docs(${padded_phase}): capture phase context (assumptions mode)"
@@ -566,7 +570,7 @@ sdd-sdk query state.record-session \
 Commit STATE.md:
 
 ```bash
-sdd-sdk query commit "docs(state): record phase ${PHASE} context session" .planning/STATE.md
+sdd-sdk query commit "docs(state): record phase ${PHASE} context session" --files .planning/STATE.md
 ```
 </step>
 
@@ -619,24 +623,23 @@ Check for auto-advance trigger:
 2. Sync chain flag:
    ```bash
    if [[ ! "$ARGUMENTS" =~ --auto ]]; then
-     sdd-sdk query config-set workflow._auto_chain_active false 2>/dev/null
+     sdd-sdk query config-set workflow._auto_chain_active false || true
    fi
    ```
-3. Read chain flag and user preference:
+3. Read consolidated auto-mode (`active` = chain flag OR user preference):
    ```bash
-   AUTO_CHAIN=$(sdd-sdk query config-get workflow._auto_chain_active 2>/dev/null || echo "false")
-   AUTO_CFG=$(sdd-sdk query config-get workflow.auto_advance 2>/dev/null || echo "false")
+   AUTO_MODE=$(sdd-sdk query check auto-mode --pick active 2>/dev/null || echo "false")
    ```
 
-**If `--auto` flag present AND `AUTO_CHAIN` is not true:**
+**If `--auto` flag present AND `AUTO_MODE` is not true:**
 ```bash
 sdd-sdk query config-set workflow._auto_chain_active true
 ```
 
-**If `--auto` flag present OR `AUTO_CHAIN` is true OR `AUTO_CFG` is true:**
+**If `--auto` flag present OR `AUTO_MODE` is true:**
 
 Display banner:
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  SDD ► AUTO-ADVANCING TO PLAN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

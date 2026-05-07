@@ -1,0 +1,5 @@
+---
+type: Fixed
+pr: 3156
+---
+**`/sdd-plan-phase` no longer auto-dispatches to a subagent on OpenCode (#3156)** — `commands/sdd/plan-phase.md` carried `agent: sdd-planner` in its frontmatter. Per the OpenCode commands spec, `agent: <name>` causes the runtime to auto-dispatch the command to a named subagent context where the `Agent` (subagent-spawner) tool is unavailable. The `/sdd-plan-phase` orchestrator relies on `Agent` to spawn `sdd-phase-researcher`, `sdd-planner`, and `sdd-plan-checker` subagents; in the auto-dispatched context it fell back to doing all work inline. The `agent: sdd-planner` directive has been removed from `plan-phase.md` so the command runs in the main agent context where `Agent` is available. The same fix was applied to `commands/sdd/mvp-phase.md`, which carried the same directive and had the identical failure mode. A structural regression test parses the YAML frontmatter of every `commands/sdd/*.md` file and asserts that no command carries an `agent:` directive.

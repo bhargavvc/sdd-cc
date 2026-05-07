@@ -1,3 +1,7 @@
+// allow-test-rule: source-text-is-the-product
+// Reads .md/.json/.yml product files whose deployed text IS what the
+// runtime loads — testing text content tests the deployed contract.
+
 /**
  * SDD Tools Tests - Phase
  */
@@ -222,6 +226,139 @@ describe('phase-plan-index command', () => {
     assert.deepStrictEqual(output.waves, {}, 'waves should be empty');
     assert.deepStrictEqual(output.incomplete, [], 'incomplete should be empty');
     assert.strictEqual(output.has_checkpoints, false, 'no checkpoints');
+    assert.ok(output.warning === undefined, 'truly empty dir must not emit a warning');
+  });
+
+  // #2893 — when the planner produces filenames that don't match the canonical
+  // `{padded_phase}-{NN}-PLAN.md` contract, the executor used to silently see
+  // plan_count: 0 with no signal. Now the response must include a `warning`
+  // field naming every offender, so the user gets an actionable error instead
+  // of "execute-phase blocked, no clue why".
+  test('non-canonical plan filenames surface a warning naming each offender (#2893)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+
+    // The reporter's exact symptom: planner wrote `{phase-id}-PLAN-{N}-{slug}.md`.
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
+
+    const result = runSddTools('phase-plan-index 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.plans.length, 0, 'non-canonical files are not silently accepted');
+    assert.ok(typeof output.warning === 'string', 'warning field must be present');
+    assert.ok(output.warning.includes('01-PLAN-01-foundation.md'), 'warning names the first offender');
+    assert.ok(output.warning.includes('01-PLAN-02-api.md'), 'warning names the second offender');
+    assert.ok(
+      output.warning.includes('{padded_phase}-{NN}-PLAN.md'),
+      'warning cites the canonical pattern so user knows what to rename to',
+    );
+  });
+
+  test('canonical plans suppress the warning even alongside derivative files (#2893)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+
+    // Canonical plan + the legitimate derivative artifacts the planner emits.
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.md'), '---\nwave: 1\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
+
+    const result = runSddTools('phase-plan-index 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.plans.length, 1, 'canonical plan detected');
+    assert.ok(
+      output.warning === undefined,
+      `outline and pre-bounce files must not trigger the warning, got: ${output.warning}`,
+    );
+  });
+
+  // #2893 parity — find-phase reads the same phase directory and applies the
+  // same canonical filter, so it must emit the same warning shape. Without
+  // these tests the two code paths could silently diverge.
+  test('find-phase: non-canonical plan filenames surface the same warning (#2893 parity)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
+
+    const result = runSddTools('find-phase 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.found, true, 'phase directory found');
+    assert.deepStrictEqual(output.plans, [], 'non-canonical files are not silently accepted');
+    assert.ok(typeof output.warning === 'string', 'warning field must be present');
+    assert.ok(output.warning.includes('01-PLAN-01-foundation.md'), 'warning names the first offender');
+    assert.ok(output.warning.includes('01-PLAN-02-api.md'), 'warning names the second offender');
+    assert.ok(
+      output.warning.includes('{padded_phase}-{NN}-PLAN.md'),
+      'warning cites the canonical pattern',
+    );
+  });
+
+  test('find-phase: canonical plans + derivatives suppress the warning (#2893 parity)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.md'), '---\nwave: 1\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
+
+    const result = runSddTools('find-phase 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.deepStrictEqual(output.plans, ['03-01-PLAN.md'], 'canonical plan detected');
+    assert.ok(
+      output.warning === undefined,
+      `outline and pre-bounce files must not trigger the warning, got: ${output.warning}`,
+    );
+  });
+
+  // #2893 parity — `phases list --type plans` aggregates across phase dirs
+  // and prefixes each warning with `${dir}: ` so the user can locate the
+  // offending phase. Test mirrors the find-phase pair but accounts for that
+  // prefix in the assertion.
+  test('phases list --type plans: non-canonical filenames surface a per-dir warning (#2893 parity)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
+
+    const result = runSddTools('phases list --type plans --phase 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.deepStrictEqual(output.files, [], 'non-canonical files are not silently accepted');
+    assert.ok(typeof output.warning === 'string', 'warning field must be present');
+    assert.ok(output.warning.includes('03-api:'), 'warning is prefixed with the offending phase dir');
+    assert.ok(output.warning.includes('01-PLAN-01-foundation.md'), 'warning names the first offender');
+    assert.ok(output.warning.includes('01-PLAN-02-api.md'), 'warning names the second offender');
+    assert.ok(
+      output.warning.includes('{padded_phase}-{NN}-PLAN.md'),
+      'warning cites the canonical pattern',
+    );
+  });
+
+  test('phases list --type plans: canonical plans suppress the warning (#2893 parity)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.md'), '---\nwave: 1\n---\n');
+    fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
+    fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
+
+    const result = runSddTools('phases list --type plans --phase 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.deepStrictEqual(output.files, ['03-01-PLAN.md'], 'canonical plan detected');
+    assert.ok(
+      output.warning === undefined,
+      `outline and pre-bounce files must not trigger the warning, got: ${output.warning}`,
+    );
   });
 
   test('extracts single plan with frontmatter', () => {
@@ -323,6 +460,21 @@ objective: API routes
     assert.strictEqual(output.plans[0].has_summary, true, 'first plan has summary');
     assert.strictEqual(output.plans[1].has_summary, false, 'second plan has no summary');
     assert.deepStrictEqual(output.incomplete, ['03-02'], 'incomplete list correct');
+  });
+
+  test('phase-plan-index matches descriptive plan with prefix summary (#3101)', () => {
+    const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
+    fs.mkdirSync(phaseDir, { recursive: true });
+
+    fs.writeFileSync(path.join(phaseDir, '03-01-auth-hardening-PLAN.md'), `---\nwave: 1\n---\n## Task 1`);
+    fs.writeFileSync(path.join(phaseDir, '03-01-SUMMARY.md'), `# Summary`);
+
+    const result = runSddTools('phase-plan-index 03', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.plans[0].has_summary, true, 'descriptive plan should match prefix summary');
+    assert.deepStrictEqual(output.incomplete, [], 'plan should not be marked incomplete');
   });
 
   test('detects checkpoints (autonomous: false)', () => {
@@ -1100,6 +1252,28 @@ describe('phase insert command', () => {
     assert.ok(roadmap.includes('**Requirements**: TBD'), 'inserted phase entry should include Requirements TBD');
   });
 
+  test('reports actionable error for summary-only placeholder phase without detail section (#3098)', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap\n\n- [ ] **Phase 5: Placeholder**\n`
+    );
+
+    const result = runSddTools('phase insert 5 Hotfix', tmpDir);
+    assert.ok(!result.success, 'should fail when phase is summary-only placeholder');
+    assert.ok(result.error.includes('missing a detail section'));
+  });
+
+  test('phase insert rejects unsupported --dry-run flag explicitly (#3098)', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap\n\n### Phase 1: Foundation\n**Goal:** Setup\n`
+    );
+
+    const result = runSddTools('phase insert 1 Hotfix --dry-run', tmpDir);
+    assert.ok(!result.success, 'phase insert should reject unsupported --dry-run');
+    assert.ok(result.error.includes('does not support --dry-run'));
+  });
+
   test('handles #### heading depth from multi-milestone roadmaps', () => {
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'ROADMAP.md'),
@@ -1267,6 +1441,142 @@ describe('phase remove command', () => {
 
     const state = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.ok(state.includes('**Total Phases:** 1'), 'total phases should be decremented');
+  });
+
+  test('bug-2434: integer phase remove does not rename 999.x backlog directory', () => {
+    // Setup: an active integer phase 4 and a backlog phase 999.1
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+### Phase 1: Foundation
+**Goal:** Setup
+
+### Phase 2: Auth
+**Goal:** Authentication
+
+### Phase 3: Features
+**Goal:** Core features
+
+### Phase 4: Extras
+**Goal:** Extra stuff
+
+### Phase 999.1: Backlog item
+**Goal:** Parked backlog task
+`
+    );
+
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-auth'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-features'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '999.1-backlog-item'), { recursive: true });
+
+    const result = runSddTools('phase remove 4', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    // Backlog directory must remain at 999.1, not be decremented to 998.1
+    assert.ok(
+      fs.existsSync(path.join(tmpDir, '.planning', 'phases', '999.1-backlog-item')),
+      'backlog directory 999.1-backlog-item must not be renamed'
+    );
+    assert.ok(
+      !fs.existsSync(path.join(tmpDir, '.planning', 'phases', '998.1-backlog-item')),
+      'backlog directory must not be incorrectly renamed to 998.1'
+    );
+  });
+
+  test('bug-2435: integer phase remove does not corrupt YYYY-MM-DD dates in ROADMAP.md', () => {
+    // Setup: removing phase 4 from a roadmap containing 2026-04-14 date strings
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+### Phase 1: Foundation
+**Goal:** Setup
+**Completed:** 2026-01-15
+
+### Phase 2: Auth
+**Goal:** Authentication
+**Completed:** 2026-02-20
+
+### Phase 3: Features
+**Goal:** Core features
+**Completed:** 2026-04-14
+
+### Phase 4: Extras
+**Goal:** Extra stuff
+
+### Phase 5: Final
+**Goal:** Final phase
+`
+    );
+
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-auth'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-features'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05-final'), { recursive: true });
+
+    const result = runSddTools('phase remove 4', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
+
+    // Dates must be preserved exactly
+    assert.ok(roadmap.includes('2026-01-15'), 'date 2026-01-15 must not be corrupted');
+    assert.ok(roadmap.includes('2026-02-20'), 'date 2026-02-20 must not be corrupted');
+    assert.ok(roadmap.includes('2026-04-14'), 'date 2026-04-14 must not be corrupted');
+
+    // Phase 5 should be renumbered to 4
+    assert.ok(roadmap.includes('Phase 4: Final'), 'Phase 5 should be renumbered to Phase 4');
+  });
+
+  test('bug-2435: integer phase remove does not corrupt date whose month matches removed phase number', () => {
+    // Setup: removing phase 4 from a roadmap containing 2026-05-14
+    // When renumbering phase 5→4, the regex must not replace "05-14" in the date "2026-05-14"
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+### Phase 1: Foundation
+**Goal:** Setup
+**Completed:** 2026-01-15
+
+### Phase 2: Auth
+**Goal:** Authentication
+**Completed:** 2026-02-20
+
+### Phase 3: Features
+**Goal:** Core features
+**Completed:** 2026-03-10
+
+### Phase 4: Extras
+**Goal:** Extra stuff
+
+### Phase 5: Final
+**Goal:** Final phase
+**Due:** 2026-05-14
+`
+    );
+
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-auth'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-features'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05-final'), { recursive: true });
+
+    const result = runSddTools('phase remove 4', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
+
+    // Date "2026-05-14" must not be corrupted to "2026-04-14" when phase 5 is renumbered to 4
+    assert.ok(roadmap.includes('2026-05-14'), 'date 2026-05-14 must not be corrupted when renumbering phase 5→4');
+    assert.ok(!roadmap.includes('2026-04-14'), 'date must not be incorrectly mutated to 2026-04-14');
+
+    // Phase 5 should be renumbered to 4
+    assert.ok(roadmap.includes('Phase 4: Final'), 'Phase 5 should be renumbered to Phase 4');
   });
 });
 

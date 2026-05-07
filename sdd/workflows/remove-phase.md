@@ -103,7 +103,7 @@ Extract from result: `removed`, `directory_deleted`, `renamed_directories`, `ren
 Stage and commit the removal:
 
 ```bash
-sdd-sdk query commit "chore: remove phase {target} ({original-phase-name})" .planning/
+sdd-sdk query commit "chore: remove phase {target} ({original-phase-name})" --files .planning/
 ```
 
 The commit message preserves the historical record of what was removed.

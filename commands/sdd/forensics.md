@@ -1,7 +1,7 @@
 ---
 type: prompt
 name: sdd:forensics
-description: Post-mortem investigation for failed SDD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
+description: Post-mortem investigation for failed SDD workflows — diagnoses what went wrong.
 argument-hint: "[problem description]"
 allowed-tools:
   - Read
@@ -36,7 +36,7 @@ Output: Forensic report saved to `.planning/forensics/`, presented inline, with 
 </context>
 
 <process>
-Read and execute the forensics workflow from @~/.claude/sdd/workflows/forensics.md end-to-end.
+Execute end-to-end.
 </process>
 
 <success_criteria>

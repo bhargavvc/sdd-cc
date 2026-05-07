@@ -12,6 +12,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
+// allow-test-rule: source-text-is-the-product
+// commands/sdd/autonomous.md is the installed command — its frontmatter is what Claude Code
+// reads at runtime to enforce allowed-tools. Checking text content IS checking the contract.
 describe('commands/sdd/autonomous.md allowed-tools', () => {
   test('includes Agent in allowed-tools list', () => {
     const filePath = path.join(__dirname, '..', 'commands', 'sdd', 'autonomous.md');

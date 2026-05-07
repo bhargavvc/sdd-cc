@@ -1,57 +1,139 @@
 /**
- * SDD Tools Bridge — shells out to `sdd-tools.cjs` for state management.
+ * SDD Tools Bridge — programmatic access to SDD planning operations.
  *
- * All `.planning/` state operations go through sdd-tools.cjs rather than
- * reimplementing 12K+ lines of logic.
+ * By default routes commands through the SDK **query registry** (same handlers as
+ * `sdd-sdk query`) so `PhaseRunner`, `InitRunner`, and `SDD` share contracts with
+ * the typed CLI. Runner hot-path helpers (`initPhaseOp`, `phasePlanIndex`,
+ * `phaseComplete`, `initNewProject`, `configSet`, `commit`) call
+ * `registry.dispatch()` with canonical keys when native query is active, avoiding
+ * repeated argv resolution. When a workstream is set, dispatches to `sdd-tools.cjs` so
+ * workstream env stays aligned with CJS.
  */
 
-import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+
 import type { InitNewProjectInfo, PhaseOpInfo, PhasePlanIndex, RoadmapAnalysis } from './types.js';
+import type { SDDEventStream } from './event-stream.js';
+import { toToolsErrorFromUnknown } from './query-tools-error-factory.js';
+import { SDDToolsError } from './sdd-tools-error.js';
+import type { QueryCommandResolution } from './query/query-command-resolution-strategy.js';
+import { resolveSddToolsPath } from './query-sdd-tools-path.js';
+import { createSDDToolsRuntime } from './query-sdd-tools-runtime.js';
+import { QueryCommandExecutor } from './query-command-executor.js';
+import { QueryHotpathMethods } from './query-hotpath-methods.js';
+import { QueryRuntimeBridge, type RuntimeBridgeOptions } from './query-runtime-bridge.js';
 
-// ─── Error type ──────────────────────────────────────────────────────────────
-
-export class SDDToolsError extends Error {
-  constructor(
-    message: string,
-    public readonly command: string,
-    public readonly args: string[],
-    public readonly exitCode: number | null,
-    public readonly stderr: string,
-  ) {
-    super(message);
-    this.name = 'SDDToolsError';
-  }
-}
+export { SDDToolsError } from './sdd-tools-error.js';
 
 // ─── SDDTools class ──────────────────────────────────────────────────────────
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const BUNDLED_SDD_TOOLS_PATH = fileURLToPath(
-  new URL('../../sdd/bin/sdd-tools.cjs', import.meta.url),
-);
+
 
 export class SDDTools {
   private readonly projectDir: string;
   private readonly sddToolsPath: string;
   private readonly timeoutMs: number;
   private readonly workstream?: string;
+  private readonly bridge: QueryRuntimeBridge;
+  private readonly preferNativeQuery: boolean;
+  private readonly commandExecutor: QueryCommandExecutor;
+  private readonly hotpathMethods: QueryHotpathMethods;
 
   constructor(opts: {
     projectDir: string;
     sddToolsPath?: string;
     timeoutMs?: number;
     workstream?: string;
+    /** When set, mutation handlers emit the same events as `sdd-sdk query`. */
+    eventStream?: SDDEventStream;
+    /** Correlation id for mutation events when `eventStream` is set. */
+    sessionId?: string;
+    /**
+     * When true (default), route known commands through the SDK query registry.
+     * Set false in tests that substitute a mock `sddToolsPath` script.
+     */
+    preferNativeQuery?: boolean;
+    /** When true, fail if a command has no native registry adapter. */
+    strictSdk?: boolean;
+    /** Explicit subprocess bridge policy. Default false for SDK-native mode. */
+    allowFallbackToSubprocess?: boolean;
+    /** Structured runtime bridge dispatch observability callback. */
+    onDispatchEvent?: RuntimeBridgeOptions['onDispatchEvent'];
   }) {
     this.projectDir = opts.projectDir;
     this.sddToolsPath =
       opts.sddToolsPath ?? resolveSddToolsPath(opts.projectDir);
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.workstream = opts.workstream;
+    this.preferNativeQuery = opts.preferNativeQuery ?? true;
+
+    const runtime = createSDDToolsRuntime({
+      projectDir: this.projectDir,
+      sddToolsPath: this.sddToolsPath,
+      timeoutMs: this.timeoutMs,
+      workstream: this.workstream,
+      eventStream: opts.eventStream,
+      sessionId: opts.sessionId,
+      shouldUseNativeQuery: () => this.shouldUseNativeQuery(),
+      execJsonFallback: (legacyCommand, legacyArgs) => this.exec(legacyCommand, legacyArgs),
+      execRawFallback: (legacyCommand, legacyArgs) => this.execRaw(legacyCommand, legacyArgs),
+      strictSdk: opts.strictSdk,
+      allowFallbackToSubprocess: opts.allowFallbackToSubprocess,
+      onDispatchEvent: opts.onDispatchEvent,
+    });
+
+    this.bridge = runtime.bridge;
+    this.commandExecutor = new QueryCommandExecutor({
+      nativeMatch: (command, args) => this.nativeMatch(command, args),
+      execute: async (input) => this.bridge.execute({
+        legacyCommand: input.legacyCommand,
+        legacyArgs: input.legacyArgs,
+        registryCommand: input.registryCommand,
+        registryArgs: input.registryArgs,
+        mode: input.mode,
+        projectDir: this.projectDir,
+        workstream: this.workstream,
+      }),
+    });
+
+    this.hotpathMethods = new QueryHotpathMethods({
+      dispatchNativeHotpath: (legacyCommand, legacyArgs, registryCommand, registryArgs, mode) =>
+        this.dispatchNativeHotpath(legacyCommand, legacyArgs, registryCommand, registryArgs, mode),
+    });
+  }
+
+  private shouldUseNativeQuery(): boolean {
+    return this.preferNativeQuery && !this.workstream;
+  }
+
+  private nativeMatch(command: string, args: string[]): QueryCommandResolution | null {
+    return this.bridge.resolve(command, args);
+  }
+
+  private async dispatchNativeHotpath(
+    legacyCommand: string,
+    legacyArgs: string[],
+    registryCommand: string,
+    registryArgs: string[],
+    mode: 'json' | 'raw',
+  ): Promise<unknown> {
+    return this.executeWithToolsError(legacyCommand, legacyArgs, () =>
+      this.bridge.dispatchHotpath(
+        legacyCommand,
+        legacyArgs,
+        registryCommand,
+        registryArgs,
+        mode,
+      ));
+  }
+
+  private async executeWithToolsError<T>(command: string, args: string[], work: () => Promise<T>): Promise<T> {
+    try {
+      return await work();
+    } catch (err) {
+      if (err instanceof SDDToolsError) throw err;
+      throw toToolsErrorFromUnknown(command, args, err);
+    }
   }
 
   // ─── Core exec ───────────────────────────────────────────────────────────
@@ -61,105 +143,7 @@ export class SDDTools {
    * Handles the `@file:` prefix pattern for large results.
    */
   async exec(command: string, args: string[] = []): Promise<unknown> {
-    const wsArgs = this.workstream ? ['--ws', this.workstream] : [];
-    const fullArgs = [this.sddToolsPath, command, ...args, ...wsArgs];
-
-    return new Promise<unknown>((resolve, reject) => {
-      const child = execFile(
-        process.execPath,
-        fullArgs,
-        {
-          cwd: this.projectDir,
-          maxBuffer: 10 * 1024 * 1024, // 10MB
-          timeout: this.timeoutMs,
-          env: { ...process.env },
-        },
-        async (error, stdout, stderr) => {
-          const stderrStr = stderr?.toString() ?? '';
-
-          if (error) {
-            // Distinguish timeout from other errors
-            if (error.killed || (error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-              reject(
-                new SDDToolsError(
-                  `sdd-tools timed out after ${this.timeoutMs}ms: ${command} ${args.join(' ')}`,
-                  command,
-                  args,
-                  null,
-                  stderrStr,
-                ),
-              );
-              return;
-            }
-
-            reject(
-              new SDDToolsError(
-                `sdd-tools exited with code ${error.code ?? 'unknown'}: ${command} ${args.join(' ')}${stderrStr ? `\n${stderrStr}` : ''}`,
-                command,
-                args,
-                typeof error.code === 'number' ? error.code : (error as { status?: number }).status ?? 1,
-                stderrStr,
-              ),
-            );
-            return;
-          }
-
-          const raw = stdout?.toString() ?? '';
-
-          try {
-            const parsed = await this.parseOutput(raw);
-            resolve(parsed);
-          } catch (parseErr) {
-            reject(
-              new SDDToolsError(
-                `Failed to parse sdd-tools output for "${command}": ${parseErr instanceof Error ? parseErr.message : String(parseErr)}\nRaw output: ${raw.slice(0, 500)}`,
-                command,
-                args,
-                0,
-                stderrStr,
-              ),
-            );
-          }
-        },
-      );
-
-      // Safety net: kill if child doesn't respond to timeout signal
-      child.on('error', (err) => {
-        reject(
-          new SDDToolsError(
-            `Failed to execute sdd-tools: ${err.message}`,
-            command,
-            args,
-            null,
-            '',
-          ),
-        );
-      });
-    });
-  }
-
-  /**
-   * Parse sdd-tools output, handling `@file:` prefix.
-   */
-  private async parseOutput(raw: string): Promise<unknown> {
-    const trimmed = raw.trim();
-
-    if (trimmed === '') {
-      return null;
-    }
-
-    let jsonStr = trimmed;
-    if (jsonStr.startsWith('@file:')) {
-      const filePath = jsonStr.slice(6).trim();
-      try {
-        jsonStr = await readFile(filePath, 'utf-8');
-      } catch (err) {
-        const reason = err instanceof Error ? err.message : String(err);
-        throw new Error(`Failed to read sdd-tools @file: indirection at "${filePath}": ${reason}`);
-      }
-    }
-
-    return JSON.parse(jsonStr);
+    return this.executeWithToolsError(command, args, () => this.commandExecutor.exec(command, args, 'json'));
   }
 
   // ─── Raw exec (no JSON parsing) ───────────────────────────────────────
@@ -169,55 +153,17 @@ export class SDDTools {
    * Use for commands like `config-set` that return plain text, not JSON.
    */
   async execRaw(command: string, args: string[] = []): Promise<string> {
-    const wsArgs = this.workstream ? ['--ws', this.workstream] : [];
-    const fullArgs = [this.sddToolsPath, command, ...args, ...wsArgs, '--raw'];
-
-    return new Promise<string>((resolve, reject) => {
-      const child = execFile(
-        process.execPath,
-        fullArgs,
-        {
-          cwd: this.projectDir,
-          maxBuffer: 10 * 1024 * 1024,
-          timeout: this.timeoutMs,
-          env: { ...process.env },
-        },
-        (error, stdout, stderr) => {
-          const stderrStr = stderr?.toString() ?? '';
-          if (error) {
-            reject(
-              new SDDToolsError(
-                `sdd-tools exited with code ${error.code ?? 'unknown'}: ${command} ${args.join(' ')}${stderrStr ? `\n${stderrStr}` : ''}`,
-                command,
-                args,
-                typeof error.code === 'number' ? error.code : (error as { status?: number }).status ?? 1,
-                stderrStr,
-              ),
-            );
-            return;
-          }
-          resolve((stdout?.toString() ?? '').trim());
-        },
-      );
-
-      child.on('error', (err) => {
-        reject(
-          new SDDToolsError(
-            `Failed to execute sdd-tools: ${err.message}`,
-            command,
-            args,
-            null,
-            '',
-          ),
-        );
-      });
+    return this.executeWithToolsError(command, args, async () => {
+      const out = await this.commandExecutor.exec(command, args, 'raw');
+      return typeof out === 'string' ? out : String(out ?? '');
     });
   }
 
+
   // ─── Typed convenience methods ─────────────────────────────────────────
 
-  async stateLoad(): Promise<string> {
-    return this.execRaw('state', ['load']);
+  async stateLoad(): Promise<unknown> {
+    return this.exec('state', ['load']);
   }
 
   async roadmapAnalyze(): Promise<RoadmapAnalysis> {
@@ -225,15 +171,11 @@ export class SDDTools {
   }
 
   async phaseComplete(phase: string): Promise<string> {
-    return this.execRaw('phase', ['complete', phase]);
+    return this.hotpathMethods.phaseComplete(phase);
   }
 
   async commit(message: string, files?: string[]): Promise<string> {
-    const args = [message];
-    if (files?.length) {
-      args.push('--files', ...files);
-    }
-    return this.execRaw('commit', args);
+    return this.hotpathMethods.commit(message, files);
   }
 
   async verifySummary(path: string): Promise<string> {
@@ -249,16 +191,14 @@ export class SDDTools {
    * Returns a typed PhaseOpInfo describing what exists on disk for this phase.
    */
   async initPhaseOp(phaseNumber: string): Promise<PhaseOpInfo> {
-    const result = await this.exec('init', ['phase-op', phaseNumber]);
-    return result as PhaseOpInfo;
+    return this.hotpathMethods.initPhaseOp(phaseNumber);
   }
 
   /**
-   * Get a config value from sdd-tools.cjs.
+   * Get a config value via the `config-get` surface (CJS and registry use the same key path).
    */
   async configGet(key: string): Promise<string | null> {
-    const result = await this.exec('config', ['get', key]);
-    return result as string | null;
+    return this.hotpathMethods.configGet(key);
   }
 
   /**
@@ -273,8 +213,7 @@ export class SDDTools {
    * Returns typed PhasePlanIndex with wave assignments and completion status.
    */
   async phasePlanIndex(phaseNumber: string): Promise<PhasePlanIndex> {
-    const result = await this.exec('phase-plan-index', [phaseNumber]);
-    return result as PhasePlanIndex;
+    return this.hotpathMethods.phasePlanIndex(phaseNumber);
   }
 
   /**
@@ -282,8 +221,7 @@ export class SDDTools {
    * Returns project metadata, model configs, brownfield detection, etc.
    */
   async initNewProject(): Promise<InitNewProjectInfo> {
-    const result = await this.exec('init', ['new-project']);
-    return result as InitNewProjectInfo;
+    return this.hotpathMethods.initNewProject();
   }
 
   /**
@@ -292,23 +230,8 @@ export class SDDTools {
    * Note: config-set returns `key=value` text, not JSON, so we use execRaw.
    */
   async configSet(key: string, value: string): Promise<string> {
-    return this.execRaw('config-set', [key, value]);
+    return this.hotpathMethods.configSet(key, value);
   }
 }
 
-// ─── Path resolution ────────────────────────────────────────────────────────
-
-/**
- * Resolve sdd-tools.cjs path.
- * Probe order: SDK-bundled repo copy → `project/.claude/sdd/` →
- * `~/.claude/sdd/`.
- */
-export function resolveSddToolsPath(projectDir: string): string {
-  const candidates = [
-    BUNDLED_SDD_TOOLS_PATH,
-    join(projectDir, '.claude', 'get-shit-done', 'bin', 'sdd-tools.cjs'),
-    join(homedir(), '.claude', 'get-shit-done', 'bin', 'sdd-tools.cjs'),
-  ];
-
-  return candidates.find(candidate => existsSync(candidate)) ?? candidates[candidates.length - 1]!;
-}
+export { resolveSddToolsPath } from './query-sdd-tools-path.js';

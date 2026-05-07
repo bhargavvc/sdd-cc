@@ -271,6 +271,28 @@ After (Phase 2 shipped JWT auth, discovered rate limiting needed):
 
 </step>
 
+<step name="graduation_scan">
+
+Scan LEARNINGS.md files from recent phases for recurring patterns and surface promotion candidates to the developer.
+
+**Invoke the graduation helper:**
+
+```text
+@~/.claude/sdd/workflows/graduation.md
+```
+
+This step is fully delegated to `graduation.md`. It handles guard checks (feature flag, window size, threshold), clustering, backlog filtering, HITL prompting, promotion writes, and STATE.md updates.
+
+**This step is always non-blocking:** graduation candidates are surfaced for the developer's decision; no action is required to continue the transition. If the graduation scan produces no qualifying clusters, it prints a single `[graduation: no qualifying clusters]` line and returns.
+
+**Step complete when:**
+
+- [ ] graduation.md guard checks passed (or skipped with silent no-op)
+- [ ] Recurring clusters surfaced (or `[graduation: no qualifying clusters]` printed)
+- [ ] Each cluster resolved as Promote / Defer / Dismiss (or all skipped)
+
+</step>
+
 <step name="update_current_position_after_transition">
 
 **Note:** Basic position updates (Current Phase, Status, Current Plan, Last Activity) were already handled by `sdd-sdk query phase.complete` in the update_roadmap_and_state step.
@@ -483,7 +505,7 @@ Exit skill and invoke SlashCommand("/sdd-discuss-phase [X+1] --auto ${SDD_WS}")
 
 **Also available:**
 - `/sdd-plan-phase [X+1] ${SDD_WS}` — skip discussion, plan directly
-- `/sdd-research-phase [X+1] ${SDD_WS}` — investigate unknowns
+- `/sdd-plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
 
 ---
 ```
@@ -508,7 +530,7 @@ Exit skill and invoke SlashCommand("/sdd-discuss-phase [X+1] --auto ${SDD_WS}")
 
 **Also available:**
 - `/sdd-discuss-phase [X+1] ${SDD_WS}` — revisit context
-- `/sdd-research-phase [X+1] ${SDD_WS}` — investigate unknowns
+- `/sdd-plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
 
 ---
 ```

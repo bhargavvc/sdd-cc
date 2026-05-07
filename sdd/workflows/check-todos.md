@@ -37,8 +37,8 @@ Exit.
 
 <step name="parse_filter">
 Check for area filter in arguments:
-- `/sdd-check-todos` → show all
-- `/sdd-check-todos api` → filter to area:api only
+- `/sdd-capture --list` → show all
+- `/sdd-capture --list api` → filter to area:api only
 </step>
 
 <step name="list_todos">
@@ -56,7 +56,7 @@ Pending Todos:
 ---
 
 Reply with a number to view details, or:
-- `/sdd-check-todos [area]` to filter by area
+- `/sdd-capture --list [area]` to filter by area
 - `q` to exit
 ```
 
@@ -157,7 +157,7 @@ If todo was moved to done/, commit the change:
 
 ```bash
 git rm --cached .planning/todos/pending/[filename] 2>/dev/null || true
-sdd-sdk query commit "docs: start work on todo - [title]" .planning/todos/completed/[filename] .planning/STATE.md
+sdd-sdk query commit "docs: start work on todo - [title]" --files .planning/todos/completed/[filename] .planning/STATE.md
 ```
 
 Tool respects `commit_docs` config and gitignore automatically.

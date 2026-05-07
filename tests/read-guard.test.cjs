@@ -1,3 +1,8 @@
+// allow-test-rule: pending-migration-to-typed-ir [#2974]
+// Tracked in #2974 for migration to typed-IR assertions per CONTRIBUTING.md
+// "Prohibited: Raw Text Matching on Test Outputs". Per-file review may
+// reclassify some entries as source-text-is-the-product during migration.
+
 /**
  * Tests for sdd-read-guard.js PreToolUse hook.
  *
@@ -28,8 +33,17 @@ const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'sdd-read-guard.js');
  */
 function runHook(payload, envOverrides = {}) {
   const input = JSON.stringify(payload);
-  // Sanitize Claude Code env vars so positive-path tests work inside Claude Code sessions
-  const env = { ...process.env, CLAUDE_SESSION_ID: '', CLAUDECODE: '', ...envOverrides };
+  // Sanitize all Claude Code detection signals so positive-path tests work
+  // when the test runner itself is running inside Claude Code (#2344, #2520).
+  const env = {
+    ...process.env,
+    CLAUDE_SESSION_ID: '',
+    CLAUDECODE: '',
+    CLAUDE_CODE_ENTRYPOINT: '',
+    CLAUDE_CODE_SSE_PORT: '',
+    CLAUDE_PROJECT_DIR: '',
+    ...envOverrides,
+  };
   try {
     const stdout = execFileSync(process.execPath, [HOOK_PATH], {
       input,

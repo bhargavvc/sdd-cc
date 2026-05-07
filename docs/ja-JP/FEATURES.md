@@ -386,7 +386,6 @@
 - REQ-MILE-08: 新しいマイルストーンは new-project と同じフロー（質問 → リサーチ → 要件 → ロードマップ）に従わなければならない
 - REQ-MILE-09: 新しいマイルストーンは既存のワークフロー設定をリセットしてはならない
 
-**ギャップクローズ:** `/sdd-plan-milestone-gaps` は監査で特定されたギャップを埋めるためのフェーズを作成します。
 
 ---
 
@@ -394,7 +393,7 @@
 
 ### 9. フェーズ管理
 
-**コマンド:** `/sdd-add-phase`、`/sdd-insert-phase [N]`、`/sdd-remove-phase [N]`
+**コマンド:** `/sdd-phase`、`/sdd-phase --insert [N]`、`/sdd-phase --remove [N]`
 
 **目的:** 開発中のロードマップの動的な変更。
 
@@ -472,7 +471,7 @@
 
 ### 14. 自動進行（Next）
 
-**コマンド:** `/sdd-next`
+**コマンド:** `/sdd-progress --next`
 
 **目的:** 現在のプロジェクト状態を自動検出し、次の論理的なワークフローステップに進めます。どのフェーズ/ステップにいるかを覚えておく必要がなくなります。
 
@@ -642,7 +641,7 @@
 
 ### 24. セッションレポート
 
-**コマンド:** `/sdd-session-report`
+**コマンド:** `/sdd-pause-work --report`
 
 **目的:** 実施した作業、達成した成果、推定リソース使用量をキャプチャした、構造化されたセッション後のサマリードキュメントを生成します。
 
@@ -681,7 +680,7 @@
 
 ### 26. モデルプロファイル
 
-**コマンド:** `/sdd-set-profile <quality|balanced|budget|inherit>`
+**コマンド:** `/sdd-config --profile <quality|balanced|budget|inherit>`
 
 **目的:** 各エージェントが使用する AI モデルを制御し、品質とコストのバランスを取ります。
 
@@ -763,7 +762,7 @@
 
 ### 29. Todo 管理
 
-**コマンド:** `/sdd-add-todo [desc]`、`/sdd-check-todos`
+**コマンド:** `/sdd-capture [desc]`、`/sdd-capture --list`
 
 **目的:** セッション中にアイデアやタスクをキャプチャし、後で作業できるようにします。
 
@@ -800,7 +799,7 @@
 - REQ-UPDATE-02: システムは更新前に新しいバージョンのチェンジログを表示しなければならない
 - REQ-UPDATE-03: システムはランタイムを認識し、正しいディレクトリを対象としなければならない
 - REQ-UPDATE-04: システムはローカルで変更されたファイルを `sdd-local-patches/` にバックアップしなければならない
-- REQ-UPDATE-05: `/sdd-reapply-patches` は更新後にローカルの変更を復元しなければならない
+- REQ-UPDATE-05: `/sdd-update --reapply` は更新後にローカルの変更を復元しなければならない
 
 ---
 
@@ -1066,7 +1065,7 @@ fix(03-01): correct auth token expiry
 
 ### 43. バックログパーキングロット
 
-**コマンド:** `/sdd-add-backlog <description>`、`/sdd-review-backlog`、`/sdd-plant-seed <idea>`
+**コマンド:** `/sdd-capture --backlog <description>`、`/sdd-review-backlog`、`/sdd-capture --seed <idea>`
 
 **目的:** アクティブなプランニングの準備ができていないアイデアをキャプチャします。バックログ項目は 999.x の番号付けを使用して、アクティブなフェーズシーケンスの外に留まります。シードは、適切なマイルストーンで自動的に表面化するトリガー条件を持つ、将来を見据えたアイデアです。
 
@@ -1516,7 +1515,7 @@ Claude が SDD ワークフローコンテキスト外でファイル編集を�
 
 ### 65. クレーム出所タグ付け
 
-**対象:** `/sdd-research-phase`
+**対象:** `/sdd-plan-phase --research-phase`
 
 **目的:** リサーチのクレームにソースエビデンスのタグを付け、仮定を別途記録します。
 
@@ -1726,7 +1725,7 @@ Claude が SDD ワークフローコンテキスト外でファイル編集を�
 
 ### 77. フェーズ依存関係分析
 
-**コマンド:** `/sdd-analyze-dependencies`
+**コマンド:** `/sdd-manager --analyze-deps`
 
 **目的:** フェーズ依存関係を検出し、`/sdd-manager` 実行前に ROADMAP.md への `Depends on` エントリを提案します。
 

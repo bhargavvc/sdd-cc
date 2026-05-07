@@ -19,6 +19,9 @@ const path = require('path');
 
 const WORKFLOW_PATH = path.join(__dirname, '..', 'sdd', 'workflows', 'quick.md');
 
+// allow-test-rule: source-text-is-the-product
+// quick.md is the AI instruction workflow — the `command -v sdd-sdk` guard IS the fix.
+// There is no behavioral equivalent: the check runs inside the AI agent, not in sdd-tools.
 describe('bug #2334: quick workflow sdd-sdk pre-flight check', () => {
   let content;
 
@@ -53,10 +56,10 @@ describe('bug #2334: quick workflow sdd-sdk pre-flight check', () => {
     const firstSdkCall = content.indexOf('sdd-sdk query init.quick', step2Start);
     const step2Section = content.slice(step2Start, firstSdkCall);
 
-    const hasInstallHint = step2Section.includes('@gsd-build/sdk') || step2Section.includes('sdd-update') || step2Section.includes('/sdd-update');
+    const hasInstallHint = step2Section.includes('@bhargavvc/sdd-cc') || step2Section.includes('sdd-update') || step2Section.includes('/sdd-update');
     assert.ok(
       hasInstallHint,
-      'Pre-flight error must include a hint on how to install sdd-sdk (npm install -g @gsd-build/sdk or /sdd-update)'
+      'Pre-flight error must include a hint on how to install query-capable sdd-sdk (npm install -g @bhargavvc/sdd-cc or /sdd-update)'
     );
   });
 });

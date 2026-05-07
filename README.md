@@ -4,9 +4,9 @@
 
 **English** · [Português](README.pt-BR.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md)
 
-**A light-weight and powerful meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, Qwen Code, Cline, and CodeBuddy.**
+**A light-weight meta-prompting, context engineering, and spec-driven development system for Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, and more.**
 
-**Solves context rot — the quality degradation that happens as Claude fills its context window.**
+**Solves context rot — the quality degradation that happens as your AI fills its context window.**
 
 [![npm version](https://img.shields.io/npm/v/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
 [![npm downloads](https://img.shields.io/npm/dm/@bhargavvc/sdd-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/@bhargavvc/sdd-cc)
@@ -41,23 +41,14 @@ npx @bhargavvc/sdd-cc@latest
 
 **Trusted by engineers at Amazon, Google, Shopify, and Webflow.**
 
-[Why I Built This](#why-i-built-this) · [How It Works](#how-it-works) · [Commands](#commands) · [Why It Works](#why-it-works) · [User Guide](docs/USER-GUIDE.md)
-
 </div>
 
 ---
 
 > [!IMPORTANT]
-> ### Welcome Back to SDD
+> **Returning to SDD?**
 >
-> If you're returning to SDD after the recent Anthropic Terms of Service changes — welcome back. We kept building while you were gone.
->
-> **To re-import an existing project into SDD:**
-> 1. Run `/sdd-map-codebase` to scan and index your current codebase state
-> 2. Run `/sdd-new-project` to initialize a fresh SDD planning structure using the codebase map as context
-> 3. Review [docs/USER-GUIDE.md](docs/USER-GUIDE.md) and the [CHANGELOG](CHANGELOG.md) for updates — a lot has changed since you were last here
->
-> Your code is fine. SDD just needs its planning context rebuilt. The two commands above handle that.
+> Run `/sdd-map-codebase` to re-index your codebase, then `/sdd-new-project` to rebuild SDD's planning context. Your code is fine — SDD just needs its context rebuilt. See the [CHANGELOG](CHANGELOG.md) for what's new.
 
 ---
 
@@ -65,35 +56,75 @@ npx @bhargavvc/sdd-cc@latest
 
 I'm a solo developer. I don't write code — Claude Code does.
 
-Other spec-driven development tools exist; BMAD, Speckit... But they all seem to make things way more complicated than they need to be (sprint ceremonies, story points, stakeholder syncs, retrospectives, Jira workflows) or lack real big picture understanding of what you're building. I'm not a 50-person software company. I don't want to play enterprise theater. I'm just a creative person trying to build great things that work.
+Other spec-driven tools exist, but they're all built for 50-person engineering orgs — sprint ceremonies, story points, stakeholder syncs, Jira workflows. I'm not that. I'm a creative person trying to build great things consistently.
 
 So I built SDD. The complexity is in the system, not in your workflow. Behind the scenes: context engineering, XML prompt formatting, subagent orchestration, state management. What you see: a few commands that just work.
 
 The system gives Claude everything it needs to do the work *and* verify it. I trust the workflow. It just does a good job.
 
-That's what this is. No enterprise roleplay bullshit. Just an incredibly effective system for building cool stuff consistently using Claude Code.
-
 — **TÂCHES**
 
 ---
 
-Vibecoding has a bad reputation. You describe what you want, AI generates code, and you get inconsistent garbage that falls apart at scale.
+## How It Works
 
-SDD fixes that. It's the context engineering layer that makes Claude Code reliable. Describe your idea, let the system extract everything it needs to know, and let Claude Code get to work.
+The loop is six commands. Each one does exactly one thing.
 
----
+### 1. Initialize
 
-## Who This Is For
+```bash
+/sdd-new-project
+```
 
-People who want to describe what they want and have it built correctly — without pretending they're running a 50-person engineering org.
+Questions → research → requirements → roadmap. You approve it, then you're ready to build.
 
-Built-in quality gates catch real problems: schema drift detection flags ORM changes missing migrations, security enforcement anchors verification to threat models, and scope reduction detection prevents the planner from silently dropping your requirements.
+> **Already have code?** Run `/sdd-map-codebase` first. It analyzes your stack, architecture, and conventions so `/sdd-new-project` asks the right questions.
 
-### v1.37.0 Highlights
+### 2. Discuss
 
-- **Spiking & sketching** — `/sdd-spike` runs 2–5 focused experiments with Given/When/Then verdicts; `/sdd-sketch` produces 2–3 interactive HTML mockup variants per design question — both store artifacts in `.planning/` and pair with wrap-up commands to package findings into project-local skills
-- **Agent size-budget enforcement** — Tiered line-count limits (XL: 1 600, Large: 1 000, Default: 500) keep agent prompts lean; violations surface in CI
-- **Shared boilerplate extraction** — Mandatory-initial-read and project-skills-discovery logic extracted to reference files, reducing duplication across a dozen agents
+```bash
+/sdd-discuss-phase 1
+```
+
+Your roadmap has a sentence per phase. That's not enough to build it the way *you* imagine it. Discuss captures your decisions before anything gets planned: layouts, API shapes, error handling, data structures — whatever gray areas exist for this specific phase.
+
+The output feeds directly into research and planning. Skip it, get reasonable defaults. Use it, get your vision.
+
+### 3. Plan
+
+```bash
+/sdd-plan-phase 1
+```
+
+Research → plan → verify, in a loop until the plans pass. Each plan is small enough to execute in a fresh context window.
+
+### 4. Execute
+
+```bash
+/sdd-execute-phase 1
+```
+
+Plans run in parallel waves. Each executor gets a fresh 200k-token context. Each task gets its own atomic commit. Walk away, come back to completed work with a clean git history.
+
+Your main context window stays at 30–40%. The work happens in the subagents.
+
+### 5. Verify
+
+```bash
+/sdd-verify-work 1
+```
+
+Walk through what was built. Anything broken gets a diagnosed fix plan — ready for immediate re-execution. You don't debug manually; you just run execute again.
+
+### 6. Repeat → Ship
+
+```bash
+/sdd-ship 1
+/sdd-complete-milestone
+/sdd-new-milestone
+```
+
+Loop discuss → plan → execute → verify → ship until the milestone is done. Then archive, tag, and start the next one fresh.
 
 ---
 
@@ -103,803 +134,117 @@ Built-in quality gates catch real problems: schema drift detection flags ORM cha
 npx @bhargavvc/sdd-cc@latest
 ```
 
-The installer prompts you to choose:
-1. **Runtime** — Claude Code, OpenCode, Gemini, Kilo, Codex, Copilot, Cursor, Windsurf, Antigravity, Augment, Trae, Qwen Code, CodeBuddy, Cline, or all (interactive multi-select — pick multiple runtimes in a single install session)
-2. **Location** — Global (all projects) or local (current project only)
-
-Verify with:
-- Claude Code / Gemini / Copilot / Antigravity / Qwen Code: `/sdd-help`
-- OpenCode / Kilo / Augment / Trae / CodeBuddy: `/sdd-help`
-- Codex: `$sdd-help`
-- Cline: SDD installs via `.clinerules` — verify by checking `.clinerules` exists
-
-> [!NOTE]
-> Claude Code 2.1.88+, Qwen Code, and Codex install as skills (`.claude/skills/`, `./.codex/skills/`, or the matching global `~/.claude/skills/` / `~/.codex/skills/` roots). Older Claude Code versions use `commands/sdd/`. `~/.claude/sdd/skills/` is import-only for legacy migration. The installer handles all formats automatically.
-
-The canonical discovery contract is documented in [docs/skills/discovery-contract.md](docs/skills/discovery-contract.md).
-
-> [!TIP]
-> For source-based installs or environments where npm is unavailable, see **[docs/manual-update.md](docs/manual-update.md)**.
-
-### Staying Updated
-
-SDD evolves fast. Update periodically:
-
-```bash
-npx @bhargavvc/sdd-cc@latest
-```
-
-<details>
-<summary><strong>Non-interactive Install (Docker, CI, Scripts)</strong></summary>
-
-```bash
-# Claude Code
-npx @bhargavvc/sdd-cc --claude --global   # Install to ~/.claude/
-npx @bhargavvc/sdd-cc --claude --local    # Install to ./.claude/
-
-# OpenCode
-npx @bhargavvc/sdd-cc --opencode --global # Install to ~/.config/opencode/
-
-# Gemini CLI
-npx @bhargavvc/sdd-cc --gemini --global   # Install to ~/.gemini/
-
-# Kilo
-npx @bhargavvc/sdd-cc --kilo --global     # Install to ~/.config/kilo/
-npx @bhargavvc/sdd-cc --kilo --local      # Install to ./.kilo/
-
-# Codex
-npx @bhargavvc/sdd-cc --codex --global    # Install to ~/.codex/
-npx @bhargavvc/sdd-cc --codex --local     # Install to ./.codex/
-
-# Copilot
-npx @bhargavvc/sdd-cc --copilot --global  # Install to ~/.github/
-npx @bhargavvc/sdd-cc --copilot --local   # Install to ./.github/
-
-# Cursor CLI
-npx @bhargavvc/sdd-cc --cursor --global      # Install to ~/.cursor/
-npx @bhargavvc/sdd-cc --cursor --local       # Install to ./.cursor/
-
-# Windsurf
-npx @bhargavvc/sdd-cc --windsurf --global    # Install to ~/.codeium/windsurf/
-npx @bhargavvc/sdd-cc --windsurf --local     # Install to ./.windsurf/
-
-# Antigravity
-npx @bhargavvc/sdd-cc --antigravity --global # Install to ~/.gemini/antigravity/
-npx @bhargavvc/sdd-cc --antigravity --local  # Install to ./.agent/
-
-# Augment
-npx @bhargavvc/sdd-cc --augment --global     # Install to ~/.augment/
-npx @bhargavvc/sdd-cc --augment --local      # Install to ./.augment/
-
-# Trae
-npx @bhargavvc/sdd-cc --trae --global        # Install to ~/.trae/
-npx @bhargavvc/sdd-cc --trae --local         # Install to ./.trae/
-
-# Qwen Code
-npx @bhargavvc/sdd-cc --qwen --global        # Install to ~/.qwen/
-npx @bhargavvc/sdd-cc --qwen --local         # Install to ./.qwen/
-
-# CodeBuddy
-npx @bhargavvc/sdd-cc --codebuddy --global   # Install to ~/.codebuddy/
-npx @bhargavvc/sdd-cc --codebuddy --local    # Install to ./.codebuddy/
-
-# Cline
-npx @bhargavvc/sdd-cc --cline --global       # Install to ~/.cline/
-npx @bhargavvc/sdd-cc --cline --local        # Install to ./.clinerules
-
-# All runtimes
-npx @bhargavvc/sdd-cc --all --global      # Install to all directories
-```
-
-Use `--global` (`-g`) or `--local` (`-l`) to skip the location prompt.
-Use `--claude`, `--opencode`, `--gemini`, `--kilo`, `--codex`, `--copilot`, `--cursor`, `--windsurf`, `--antigravity`, `--augment`, `--trae`, `--qwen`, `--codebuddy`, `--cline`, or `--all` to skip the runtime prompt.
-The SDD SDK CLI (`sdd-sdk`) is installed automatically (required by `/sdd-*` commands). Pass `--no-sdk` to skip the SDK install, or `--sdk` to force a reinstall.
-
-</details>
-
-<details>
-<summary><strong>Development Installation</strong></summary>
-
-Clone the repository, build hooks, and run the installer locally:
-
-```bash
-git clone https://github.com/bhargavvc/sdd-cc.git
-cd sdd
-npm run build:hooks
-node bin/install.js --claude --local
-```
-
-The `build:hooks` step is required — it compiles hook sources into `hooks/dist/` which the installer copies from. Without it, hooks won't be installed and you'll get hook errors in Claude Code. (The npm release handles this automatically via `prepublishOnly`.)
-
-Installs to `./.claude/` for testing modifications before contributing.
-
-</details>
-
-### Recommended: Skip Permissions Mode
-
-SDD is designed for frictionless automation. Run Claude Code with:
+The installer prompts for your runtime (Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, and more) and whether to install globally or locally.
 
 ```bash
 claude --dangerously-skip-permissions
 ```
 
-> [!TIP]
-> This is how SDD is intended to be used — stopping to approve `date` and `git commit` 50 times defeats the purpose.
+SDD is built for frictionless automation. Skip-permissions is how it's intended to run.
 
-<details>
-<summary><strong>Alternative: Granular Permissions</strong></summary>
-
-If you prefer not to use that flag, add this to your project's `.claude/settings.json`:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(date:*)",
-      "Bash(echo:*)",
-      "Bash(cat:*)",
-      "Bash(ls:*)",
-      "Bash(mkdir:*)",
-      "Bash(wc:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(sort:*)",
-      "Bash(grep:*)",
-      "Bash(tr:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git status:*)",
-      "Bash(git log:*)",
-      "Bash(git diff:*)",
-      "Bash(git tag:*)"
-    ]
-  }
-}
-```
-
-</details>
-
----
-
-## How It Works
-
-> **Already have code?** Run `/sdd-map-codebase` first. It spawns parallel agents to analyze your stack, architecture, conventions, and concerns. Then `/sdd-new-project` knows your codebase — questions focus on what you're adding, and planning automatically loads your patterns.
-
-### 1. Initialize Project
-
-```
-/sdd-new-project
-```
-
-One command, one flow. The system:
-
-1. **Questions** — Asks until it understands your idea completely (goals, constraints, tech preferences, edge cases)
-2. **Research** — Spawns parallel agents to investigate the domain (optional but recommended)
-3. **Requirements** — Extracts what's v1, v2, and out of scope
-4. **Roadmap** — Creates phases mapped to requirements
-
-You approve the roadmap. Now you're ready to build.
-
-**Creates:** `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, `.planning/research/`
-
----
-
-### 2. Discuss Phase
-
-```
-/sdd-discuss-phase 1
-```
-
-**This is where you shape the implementation.**
-
-Your roadmap has a sentence or two per phase. That's not enough context to build something the way *you* imagine it. This step captures your preferences before anything gets researched or planned.
-
-The system analyzes the phase and identifies gray areas based on what's being built:
-
-- **Visual features** → Layout, density, interactions, empty states
-- **APIs/CLIs** → Response format, flags, error handling, verbosity
-- **Content systems** → Structure, tone, depth, flow
-- **Organization tasks** → Grouping criteria, naming, duplicates, exceptions
-
-For each area you select, it asks until you're satisfied. The output — `CONTEXT.md` — feeds directly into the next two steps:
-
-1. **Researcher reads it** — Knows what patterns to investigate ("user wants card layout" → research card component libraries)
-2. **Planner reads it** — Knows what decisions are locked ("infinite scroll decided" → plan includes scroll handling)
-
-The deeper you go here, the more the system builds what you actually want. Skip it and you get reasonable defaults. Use it and you get *your* vision.
-
-**Creates:** `{phase_num}-CONTEXT.md`
-
-> **Assumptions Mode:** Prefer codebase analysis over questions? Set `workflow.discuss_mode` to `assumptions` in `/sdd-settings`. The system reads your code, surfaces what it would do and why, and only asks you to correct what's wrong. See [Discuss Mode](docs/workflow-discuss-mode.md).
-
----
-
-### 3. Plan Phase
-
-```
-/sdd-plan-phase 1
-```
-
-The system:
-
-1. **Researches** — Investigates how to implement this phase, guided by your CONTEXT.md decisions
-2. **Plans** — Creates 2-3 atomic task plans with XML structure
-3. **Verifies** — Checks plans against requirements, loops until they pass
-
-Each plan is small enough to execute in a fresh context window. No degradation, no "I'll be more concise now."
-
-**Creates:** `{phase_num}-RESEARCH.md`, `{phase_num}-{N}-PLAN.md`
-
----
-
-### 4. Execute Phase
-
-```
-/sdd-execute-phase 1
-```
-
-The system:
-
-1. **Runs plans in waves** — Parallel where possible, sequential when dependent
-2. **Fresh context per plan** — 200k tokens purely for implementation, zero accumulated garbage
-3. **Commits per task** — Every task gets its own atomic commit
-4. **Verifies against goals** — Checks the codebase delivers what the phase promised
-
-Walk away, come back to completed work with clean git history.
-
-**How Wave Execution Works:**
-
-Plans are grouped into "waves" based on dependencies. Within each wave, plans run in parallel. Waves run sequentially.
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│  PHASE EXECUTION                                                   │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  WAVE 1 (parallel)          WAVE 2 (parallel)          WAVE 3      │
-│  ┌─────────┐ ┌─────────┐    ┌─────────┐ ┌─────────┐    ┌─────────┐ │
-│  │ Plan 01 │ │ Plan 02 │ →  │ Plan 03 │ │ Plan 04 │ →  │ Plan 05 │ │
-│  │         │ │         │    │         │ │         │    │         │ │
-│  │ User    │ │ Product │    │ Orders  │ │ Cart    │    │ Checkout│ │
-│  │ Model   │ │ Model   │    │ API     │ │ API     │    │ UI      │ │
-│  └─────────┘ └─────────┘    └─────────┘ └─────────┘    └─────────┘ │
-│       │           │              ↑           ↑              ↑      │
-│       └───────────┴──────────────┴───────────┘              │      │
-│              Dependencies: Plan 03 needs Plan 01            │      │
-│                          Plan 04 needs Plan 02              │      │
-│                          Plan 05 needs Plans 03 + 04        │      │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-**Why waves matter:**
-- Independent plans → Same wave → Run in parallel
-- Dependent plans → Later wave → Wait for dependencies
-- File conflicts → Sequential plans or same plan
-
-This is why "vertical slices" (Plan 01: User feature end-to-end) parallelize better than "horizontal layers" (Plan 01: All models, Plan 02: All APIs).
-
-**Creates:** `{phase_num}-{N}-SUMMARY.md`, `{phase_num}-VERIFICATION.md`
-
----
-
-### 5. Verify Work
-
-```
-/sdd-verify-work 1
-```
-
-**This is where you confirm it actually works.**
-
-Automated verification checks that code exists and tests pass. But does the feature *work* the way you expected? This is your chance to use it.
-
-The system:
-
-1. **Extracts testable deliverables** — What you should be able to do now
-2. **Walks you through one at a time** — "Can you log in with email?" Yes/no, or describe what's wrong
-3. **Diagnoses failures automatically** — Spawns debug agents to find root causes
-4. **Creates verified fix plans** — Ready for immediate re-execution
-
-If everything passes, you move on. If something's broken, you don't manually debug — you just run `/sdd-execute-phase` again with the fix plans it created.
-
-**Creates:** `{phase_num}-UAT.md`, fix plans if issues found
-
----
-
-### 6. Repeat → Ship → Complete → Next Milestone
-
-```
-/sdd-discuss-phase 2
-/sdd-plan-phase 2
-/sdd-execute-phase 2
-/sdd-verify-work 2
-/sdd-ship 2                  # Create PR from verified work
-...
-/sdd-complete-milestone
-/sdd-new-milestone
-```
-
-Or let SDD figure out the next step automatically:
-
-```
-/sdd-next                    # Auto-detect and run next step
-```
-
-Loop **discuss → plan → execute → verify → ship** until milestone complete.
-
-If you want faster intake during discussion, use `/sdd-discuss-phase <n> --batch` to answer a small grouped set of questions at once instead of one-by-one. Use `--chain` to auto-chain discuss into plan+execute without stopping between steps.
-
-Each phase gets your input (discuss), proper research (plan), clean execution (execute), and human verification (verify). Context stays fresh. Quality stays high.
-
-When all phases are done, `/sdd-complete-milestone` archives the milestone and tags the release.
-
-Then `/sdd-new-milestone` starts the next version — same flow as `new-project` but for your existing codebase. You describe what you want to build next, the system researches the domain, you scope requirements, and it creates a fresh roadmap. Each milestone is a clean cycle: define → build → ship.
-
----
-
-### Quick Mode
-
-```
-/sdd-quick
-```
-
-**For ad-hoc tasks that don't need full planning.**
-
-Quick mode gives you SDD guarantees (atomic commits, state tracking) with a faster path:
-
-- **Same agents** — Planner + executor, same quality
-- **Skips optional steps** — No research, no plan checker, no verifier by default
-- **Separate tracking** — Lives in `.planning/quick/`, not phases
-
-**`--discuss` flag:** Lightweight discussion to surface gray areas before planning.
-
-**`--research` flag:** Spawns a focused researcher before planning. Investigates implementation approaches, library options, and pitfalls. Use when you're unsure how to approach a task.
-
-**`--full` flag:** Enables all phases — discussion + research + plan-checking + verification. The full SDD pipeline in quick-task form.
-
-**`--validate` flag:** Enables plan-checking + post-execution verification only (the previous `--full` behavior).
-
-Flags are composable: `--discuss --research --validate` gives discussion + research + plan-checking + verification.
-
-```
-/sdd-quick
-> What do you want to do? "Add dark mode toggle to settings"
-```
-
-**Creates:** `.planning/quick/001-add-dark-mode-toggle/PLAN.md`, `SUMMARY.md`
-
----
-
-## Why It Works
-
-### Context Engineering
-
-Claude Code is incredibly powerful *if* you give it the context it needs. Most people don't.
-
-SDD handles it for you:
-
-| File | What it does |
-|------|--------------|
-| `PROJECT.md` | Project vision, always loaded |
-| `research/` | Ecosystem knowledge (stack, features, architecture, pitfalls) |
-| `REQUIREMENTS.md` | Scoped v1/v2 requirements with phase traceability |
-| `ROADMAP.md` | Where you're going, what's done |
-| `STATE.md` | Decisions, blockers, position — memory across sessions |
-| `PLAN.md` | Atomic task with XML structure, verification steps |
-| `SUMMARY.md` | What happened, what changed, committed to history |
-| `todos/` | Captured ideas and tasks for later work |
-| `threads/` | Persistent context threads for cross-session work |
-| `seeds/` | Forward-looking ideas that surface at the right milestone |
-
-Size limits based on where Claude's quality degrades. Stay under, get consistent excellence.
-
-### XML Prompt Formatting
-
-Every plan is structured XML optimized for Claude:
-
-```xml
-<task type="auto">
-  <name>Create login endpoint</name>
-  <files>src/app/api/auth/login/route.ts</files>
-  <action>
-    Use jose for JWT (not jsonwebtoken - CommonJS issues).
-    Validate credentials against users table.
-    Return httpOnly cookie on success.
-  </action>
-  <verify>curl -X POST localhost:3000/api/auth/login returns 200 + Set-Cookie</verify>
-  <done>Valid credentials return cookie, invalid return 401</done>
-</task>
-```
-
-Precise instructions. No guessing. Verification built in.
-
-### Multi-Agent Orchestration
-
-Every stage uses the same pattern: a thin orchestrator spawns specialized agents, collects results, and routes to the next step.
-
-| Stage | Orchestrator does | Agents do |
-|-------|------------------|-----------|
-| Research | Coordinates, presents findings | 4 parallel researchers investigate stack, features, architecture, pitfalls |
-| Planning | Validates, manages iteration | Planner creates plans, checker verifies, loop until pass |
-| Execution | Groups into waves, tracks progress | Executors implement in parallel, each with fresh 200k context |
-| Verification | Presents results, routes next | Verifier checks codebase against goals, debuggers diagnose failures |
-
-The orchestrator never does heavy lifting. It spawns agents, waits, integrates results.
-
-**The result:** You can run an entire phase — deep research, multiple plans created and verified, thousands of lines of code written across parallel executors, automated verification against goals — and your main context window stays at 30-40%. The work happens in fresh subagent contexts. Your session stays fast and responsive.
-
-### Atomic Git Commits
-
-Each task gets its own commit immediately after completion:
-
-```bash
-abc123f docs(08-02): complete user registration plan
-def456g feat(08-02): add email confirmation flow
-hij789k feat(08-02): implement password hashing
-lmn012o feat(08-02): create registration endpoint
-```
-
-> [!NOTE]
-> **Benefits:** Git bisect finds exact failing task. Each task independently revertable. Clear history for Claude in future sessions. Better observability in AI-automated workflow.
-
-Every commit is surgical, traceable, and meaningful.
-
-### Modular by Design
-
-- Add phases to current milestone
-- Insert urgent work between phases
-- Complete milestones and start fresh
-- Adjust plans without rebuilding everything
-
-You're never locked in. The system adapts.
+See **[docs/USER-GUIDE.md](docs/USER-GUIDE.md)** for the full walkthrough, non-interactive install flags for all 15 runtimes, minimal install (`--minimal`), Docker setup, and permissions configuration.
 
 ---
 
 ## Commands
 
-### Core Workflow
+The main loop:
 
 | Command | What it does |
 |---------|--------------|
-| `/sdd-new-project [--auto]` | Full initialization: questions → research → requirements → roadmap |
-| `/sdd-discuss-phase [N] [--auto] [--analyze] [--chain]` | Capture implementation decisions before planning (`--analyze` adds trade-off analysis, `--chain` auto-chains into plan+execute) |
-| `/sdd-plan-phase [N] [--auto] [--reviews]` | Research + plan + verify for a phase (`--reviews` loads codebase review findings) |
-| `/sdd-execute-phase <N>` | Execute all plans in parallel waves, verify when complete |
-| `/sdd-verify-work [N]` | Manual user acceptance testing ¹ |
-| `/sdd-ship [N] [--draft]` | Create PR from verified phase work with auto-generated body |
-| `/sdd-next` | Automatically advance to the next logical workflow step |
-| `/sdd-fast <text>` | Inline trivial tasks — skips planning entirely, executes immediately |
-| `/sdd-audit-milestone` | Verify milestone achieved its definition of done |
-| `/sdd-complete-milestone` | Archive milestone, tag release |
-| `/sdd-new-milestone [name]` | Start next version: questions → research → requirements → roadmap |
-| `/sdd-forensics [desc]` | Post-mortem investigation of failed workflow runs (diagnoses stuck loops, missing artifacts, git anomalies) |
-| `/sdd-milestone-summary [version]` | Generate comprehensive project summary for team onboarding and review |
+| `/sdd-new-project` | Questions → research → requirements → roadmap |
+| `/sdd-discuss-phase [N]` | Capture implementation decisions before planning |
+| `/sdd-plan-phase [N]` | Research + plan + verify |
+| `/sdd-execute-phase <N>` | Execute plans in parallel waves |
+| `/sdd-verify-work [N]` | Manual acceptance testing |
+| `/sdd-ship [N]` | Create PR from verified phase work |
+| `/sdd-progress --next` | Auto-detect and run the next step |
+| `/sdd-complete-milestone` | Archive milestone and tag release |
+| `/sdd-new-milestone` | Start next version |
 
-### Workstreams
+Notable extras:
 
 | Command | What it does |
 |---------|--------------|
-| `/sdd-workstreams list` | Show all workstreams and their status |
-| `/sdd-workstreams create <name>` | Create a namespaced workstream for parallel milestone work |
-| `/sdd-workstreams switch <name>` | Switch active workstream |
-| `/sdd-workstreams complete <name>` | Complete and merge a workstream |
+| `/sdd-quick` | Ad-hoc tasks with SDD guarantees — skips planning overhead |
+| `/sdd-map-codebase` | Analyze an existing codebase before starting a new project |
+| `/sdd-autonomous` | Drive all remaining phases without stopping |
+| `/sdd-forensics` | Post-mortem a failed or stuck run |
+| `/sdd-help` | Full command reference inside your runtime |
 
-### Multi-Project Workspaces
+For the complete command reference — workstreams, workspaces, phase management, code quality, backlog, session tools — see **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 
-| Command | What it does |
-|---------|--------------|
-| `/sdd-new-workspace` | Create isolated workspace with repo copies (worktrees or clones) |
-| `/sdd-list-workspaces` | Show all SDD workspaces and their status |
-| `/sdd-remove-workspace` | Remove workspace and clean up worktrees |
+---
 
-### Spiking & Sketching
+## Why It Works
 
-| Command | What it does |
-|---------|--------------|
-| `/sdd-spike [idea] [--quick]` | Throwaway experiments to validate feasibility before planning — no project init required |
-| `/sdd-sketch [idea] [--quick]` | Throwaway HTML mockups with multi-variant exploration — no project init required |
-| `/sdd-spike-wrap-up` | Package spike findings into a project-local skill for future build conversations |
-| `/sdd-sketch-wrap-up` | Package sketch design findings into a project-local skill for future builds |
+Three things most AI-coding setups get wrong:
 
-### UI Design
+**1. Context bloat.** As a session grows, quality degrades. SDD keeps your main context clean by doing the heavy work in fresh subagent contexts. Researchers, planners, and executors each start fresh with exactly what they need.
 
-| Command | What it does |
-|---------|--------------|
-| `/sdd-ui-phase [N]` | Generate UI design contract (UI-SPEC.md) for frontend phases |
-| `/sdd-ui-review [N]` | Retroactive 6-pillar visual audit of implemented frontend code |
+**2. No shared memory.** SDD maintains structured artifacts that survive session boundaries: `PROJECT.md` (vision), `REQUIREMENTS.md` (scope), `ROADMAP.md` (where you're going), `STATE.md` (current position and decisions), `CONTEXT.md` (per-phase implementation decisions). Every new session loads these and knows exactly where things stand.
 
-### Navigation
+**3. No verification.** Code that "runs" isn't code that "works." SDD's verify step walks you through what was built, diagnoses failures with dedicated debug agents, and generates fix plans before you declare a phase done.
 
-| Command | What it does |
-|---------|--------------|
-| `/sdd-progress` | Where am I? What's next? |
-| `/sdd-next` | Auto-detect state and run the next step |
-| `/sdd-help` | Show all commands and usage guide |
-| `/sdd-update` | Update SDD with changelog preview |
-| `/sdd-join-discord` | Join the SDD Discord community |
-| `/sdd-manager` | Interactive command center for managing multiple phases |
-
-### Brownfield
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-map-codebase [area]` | Analyze existing codebase before new-project |
-| `/sdd-ingest-docs [dir]` | Scan a repo of mixed ADRs, PRDs, SPECs, and DOCs and bootstrap or merge the full `.planning/` setup in one pass — parallel classification, synthesis with precedence rules, and a three-bucket conflicts report |
-
-### Phase Management
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-add-phase` | Append phase to roadmap |
-| `/sdd-insert-phase [N]` | Insert urgent work between phases |
-| `/sdd-remove-phase [N]` | Remove future phase, renumber |
-| `/sdd-list-phase-assumptions [N]` | See Claude's intended approach before planning |
-| `/sdd-plan-milestone-gaps` | Create phases to close gaps from audit |
-
-### Session
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-pause-work` | Create handoff when stopping mid-phase (writes HANDOFF.json) |
-| `/sdd-resume-work` | Restore from last session |
-| `/sdd-session-report` | Generate session summary with work performed and outcomes |
-
-### Workstreams
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-workstreams` | Manage parallel workstreams (list, create, switch, status, progress, complete) |
-
-### Code Quality
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-review` | Cross-AI peer review of current phase or branch |
-| `/sdd-secure-phase [N]` | Security enforcement with threat-model-anchored verification |
-| `/sdd-pr-branch` | Create clean PR branch filtering `.planning/` commits |
-| `/sdd-audit-uat` | Audit verification debt — find phases missing UAT |
-| `/sdd-docs-update` | Verified documentation generation with doc-writer and doc-verifier agents |
-
-### Backlog & Threads
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-plant-seed <idea>` | Capture forward-looking ideas with trigger conditions — surfaces at the right milestone |
-| `/sdd-add-backlog <desc>` | Add idea to backlog parking lot (999.x numbering, outside active sequence) |
-| `/sdd-review-backlog` | Review and promote backlog items to active milestone or remove stale entries |
-| `/sdd-thread [name]` | Persistent context threads — lightweight cross-session knowledge for work spanning multiple sessions |
-
-### Utilities
-
-| Command | What it does |
-|---------|--------------|
-| `/sdd-settings` | Configure model profile and workflow agents |
-| `/sdd-set-profile <profile>` | Switch model profile (quality/balanced/budget/inherit) |
-| `/sdd-add-todo [desc]` | Capture idea for later |
-| `/sdd-check-todos` | List pending todos |
-| `/sdd-debug [desc]` | Systematic debugging with persistent state |
-| `/sdd-do <text>` | Route freeform text to the right SDD command automatically |
-| `/sdd-note <text>` | Zero-friction idea capture — append, list, or promote notes to todos |
-| `/sdd-quick [--full] [--validate] [--discuss] [--research]` | Execute ad-hoc task with SDD guarantees (`--full` enables all phases, `--validate` adds plan-checking and verification, `--discuss` gathers context first, `--research` investigates approaches before planning) |
-| `/sdd-health [--repair]` | Validate `.planning/` directory integrity, auto-repair with `--repair` |
-| `/sdd-stats` | Display project statistics — phases, plans, requirements, git metrics |
-| `/sdd-profile-user [--questionnaire] [--refresh]` | Generate developer behavioral profile from session analysis for personalized responses |
-
-<sup>¹ Contributed by reddit user OracleGreyBeard</sup>
+See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for how the multi-agent orchestration and context engineering work in detail.
 
 ---
 
 ## Configuration
 
-SDD stores project settings in `.planning/config.json`. Configure during `/sdd-new-project` or update later with `/sdd-settings`. For the full config schema, workflow toggles, git branching options, and per-agent model breakdown, see the [User Guide](docs/USER-GUIDE.md#configuration-reference).
+Settings live in `.planning/config.json`. Configure during `/sdd-new-project` or update with `/sdd-settings`.
 
-### Core Settings
+Key dials:
 
-| Setting | Options | Default | What it controls |
-|---------|---------|---------|------------------|
-| `mode` | `yolo`, `interactive` | `interactive` | Auto-approve vs confirm at each step |
-| `granularity` | `coarse`, `standard`, `fine` | `standard` | Phase granularity — how finely scope is sliced (phases × plans) |
-| `project_code` | string | `""` | Prefix phase directories with a project code |
+| Setting | What it controls |
+|---------|-----------------|
+| `mode` | `interactive` (confirm each step) or `yolo` (auto-approve) |
+| Model profiles | `quality` / `balanced` / `budget` — controls which model each agent uses |
+| `workflow.research` / `plan_check` / `verifier` | Toggle the quality agents that add tokens and time |
+| `parallelization.enabled` | Run independent plans simultaneously |
 
-### Model Profiles
-
-Control which Claude model each agent uses. Balance quality vs token spend.
-
-| Profile | Planning | Execution | Verification |
-|---------|----------|-----------|--------------|
-| `quality` | Opus | Opus | Sonnet |
-| `balanced` (default) | Opus | Sonnet | Sonnet |
-| `budget` | Sonnet | Sonnet | Haiku |
-| `inherit` | Inherit | Inherit | Inherit |
-
-Switch profiles:
-```
-/sdd-set-profile budget
-```
-
-Use `inherit` when using non-Anthropic providers (OpenRouter, local models) or to follow the current runtime model selection (e.g. OpenCode `/model`).
-
-Or configure via `/sdd-settings`.
-
-### Workflow Agents
-
-These spawn additional agents during planning/execution. They improve quality but add tokens and time.
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `workflow.research` | `true` | Researches domain before planning each phase |
-| `workflow.plan_check` | `true` | Verifies plans achieve phase goals before execution |
-| `workflow.verifier` | `true` | Confirms must-haves were delivered after execution |
-| `workflow.auto_advance` | `false` | Auto-chain discuss → plan → execute without stopping |
-| `workflow.research_before_questions` | `false` | Run research before discussion questions instead of after |
-| `workflow.discuss_mode` | `'discuss'` | Discussion mode: `discuss` (interview), `assumptions` (codebase-first) |
-| `workflow.skip_discuss` | `false` | Skip discuss-phase in autonomous mode |
-| `workflow.text_mode` | `false` | Text-only mode for remote sessions (no TUI menus) |
-| `workflow.use_worktrees` | `true` | Toggle worktree isolation for execution |
-
-Use `/sdd-settings` to toggle these, or override per-invocation:
-- `/sdd-plan-phase --skip-research`
-- `/sdd-plan-phase --skip-verify`
-
-### Execution
-
-| Setting | Default | What it controls |
-|---------|---------|------------------|
-| `parallelization.enabled` | `true` | Run independent plans simultaneously |
-| `planning.commit_docs` | `true` | Track `.planning/` in git |
-| `hooks.context_warnings` | `true` | Show context window usage warnings |
-
-### Agent Skills
-
-Inject project-specific skills into subagents during execution.
-
-| Setting | Type | What it does |
-|---------|------|--------------|
-| `agent_skills.<agent_type>` | `string[]` | Paths to skill directories loaded into that agent type at spawn time |
-
-Skills are injected as `<agent_skills>` blocks in agent prompts, giving subagents access to project-specific knowledge.
-
-### Git Branching
-
-Control how SDD handles branches during execution.
-
-| Setting | Options | Default | What it does |
-|---------|---------|---------|--------------|
-| `git.branching_strategy` | `none`, `phase`, `milestone` | `none` | Branch creation strategy |
-| `git.phase_branch_template` | string | `sdd/phase-{phase}-{slug}` | Template for phase branches |
-| `git.milestone_branch_template` | string | `sdd/{milestone}-{slug}` | Template for milestone branches |
-
-**Strategies:**
-- **`none`** — Commits to current branch (default SDD behavior)
-- **`phase`** — Creates a branch per phase, merges at phase completion
-- **`milestone`** — Creates one branch for entire milestone, merges at completion
-
-At milestone completion, SDD offers squash merge (recommended) or merge with history.
+For the full configuration reference — all settings, git branching strategies, per-runtime model overrides, workstream config inheritance, agent skills injection — see **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**.
 
 ---
 
-## Security
+## Documentation
 
-### Built-in Security Hardening
-
-SDD includes defense-in-depth security since v1.27:
-
-- **Path traversal prevention** — All user-supplied file paths (`--text-file`, `--prd`) are validated to resolve within the project directory
-- **Prompt injection detection** — Centralized `security.cjs` module scans for injection patterns in user-supplied text before it enters planning artifacts
-- **PreToolUse prompt guard hook** — `sdd-prompt-guard` scans writes to `.planning/` for embedded injection vectors (advisory, not blocking)
-- **Safe JSON parsing** — Malformed `--fields` arguments are caught before they corrupt state
-- **Shell argument validation** — User text is sanitized before shell interpolation
-- **CI-ready injection scanner** — `prompt-injection-scan.test.cjs` scans all agent/workflow/command files for embedded injection vectors
-
-> [!NOTE]
-> Because SDD generates markdown files that become LLM system prompts, any user-controlled text flowing into planning artifacts is a potential indirect prompt injection vector. These protections are designed to catch such vectors at multiple layers.
-
-### Protecting Sensitive Files
-
-SDD's codebase mapping and analysis commands read files to understand your project. **Protect files containing secrets** by adding them to Claude Code's deny list:
-
-1. Open Claude Code settings (`.claude/settings.json` or global)
-2. Add sensitive file patterns to the deny list:
-
-```json
-{
-  "permissions": {
-    "deny": [
-      "Read(.env)",
-      "Read(.env.*)",
-      "Read(**/secrets/*)",
-      "Read(**/*credential*)",
-      "Read(**/*.pem)",
-      "Read(**/*.key)"
-    ]
-  }
-}
-```
-
-This prevents Claude from reading these files entirely, regardless of what commands you run.
-
-> [!IMPORTANT]
-> SDD includes built-in protections against committing secrets, but defense-in-depth is best practice. Deny read access to sensitive files as a first line of defense.
+| Doc | What's in it |
+|-----|-------------|
+| [User Guide](docs/USER-GUIDE.md) | End-to-end walkthrough, install options, all runtime flags, configuration reference |
+| [Commands](docs/COMMANDS.md) | Every command with flags and examples |
+| [Configuration](docs/CONFIGURATION.md) | Full config schema, model profiles, git branching |
+| [Architecture](docs/ARCHITECTURE.md) | How the multi-agent orchestration works |
+| [CLI Tools](docs/CLI-TOOLS.md) | `sdd-sdk query` and programmatic SDK dispatch seams |
+| [Features](docs/FEATURES.md) | Complete feature index |
+| [Changelog](CHANGELOG.md) | What changed in each release |
 
 ---
 
 ## Troubleshooting
 
-**Commands not found after install?**
-- Restart your runtime to reload commands/skills
-- Verify files exist in `~/.claude/skills/sdd-*/SKILL.md` or `~/.codex/skills/sdd-*/SKILL.md` for managed global installs
-- For local installs, verify `.claude/skills/sdd-*/SKILL.md` or `./.codex/skills/sdd-*/SKILL.md`
-- Legacy Claude Code installs still use `~/.claude/commands/sdd/`
+**Commands not showing up?** Restart your runtime after install. SDD installs to `~/.claude/skills/sdd-*/` (Claude Code), `~/.codex/skills/sdd-*/` (Codex), or the equivalent for your runtime.
 
-**Commands not working as expected?**
-- Run `/sdd-help` to verify installation
-- Re-run `npx @bhargavvc/sdd-cc` to reinstall
-
-**Updating to the latest version?**
+**Something broken?** Re-run the installer — it's idempotent:
 ```bash
 npx @bhargavvc/sdd-cc@latest
 ```
 
-**Using Docker or containerized environments?**
-
-If file reads fail with tilde paths (`~/.claude/...`), set `CLAUDE_CONFIG_DIR` before installing:
+**Containers or Docker?** Set `CLAUDE_CONFIG_DIR` before installing to avoid tilde-expansion issues:
 ```bash
 CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 ```
-This ensures absolute paths are used instead of `~` which may not expand correctly in containers.
 
-### Uninstalling
-
-To remove SDD completely:
-
-```bash
-# Global installs
-npx @bhargavvc/sdd-cc --claude --global --uninstall
-npx @bhargavvc/sdd-cc --opencode --global --uninstall
-npx @bhargavvc/sdd-cc --gemini --global --uninstall
-npx @bhargavvc/sdd-cc --kilo --global --uninstall
-npx @bhargavvc/sdd-cc --codex --global --uninstall
-npx @bhargavvc/sdd-cc --copilot --global --uninstall
-npx @bhargavvc/sdd-cc --cursor --global --uninstall
-npx @bhargavvc/sdd-cc --windsurf --global --uninstall
-npx @bhargavvc/sdd-cc --antigravity --global --uninstall
-npx @bhargavvc/sdd-cc --augment --global --uninstall
-npx @bhargavvc/sdd-cc --trae --global --uninstall
-npx @bhargavvc/sdd-cc --qwen --global --uninstall
-npx @bhargavvc/sdd-cc --codebuddy --global --uninstall
-npx @bhargavvc/sdd-cc --cline --global --uninstall
-
-# Local installs (current project)
-npx @bhargavvc/sdd-cc --claude --local --uninstall
-npx @bhargavvc/sdd-cc --opencode --local --uninstall
-npx @bhargavvc/sdd-cc --gemini --local --uninstall
-npx @bhargavvc/sdd-cc --kilo --local --uninstall
-npx @bhargavvc/sdd-cc --codex --local --uninstall
-npx @bhargavvc/sdd-cc --copilot --local --uninstall
-npx @bhargavvc/sdd-cc --cursor --local --uninstall
-npx @bhargavvc/sdd-cc --windsurf --local --uninstall
-npx @bhargavvc/sdd-cc --antigravity --local --uninstall
-npx @bhargavvc/sdd-cc --augment --local --uninstall
-npx @bhargavvc/sdd-cc --trae --local --uninstall
-npx @bhargavvc/sdd-cc --qwen --local --uninstall
-npx @bhargavvc/sdd-cc --codebuddy --local --uninstall
-npx @bhargavvc/sdd-cc --cline --local --uninstall
-```
-
-This removes all SDD commands, agents, hooks, and settings while preserving your other configurations.
+Full troubleshooting and uninstall instructions in **[docs/USER-GUIDE.md](docs/USER-GUIDE.md#troubleshooting)**.
 
 ---
 
-## Community Ports
+## Community
 
-OpenCode, Gemini CLI, Kilo, and Codex are now natively supported via `npx @bhargavvc/sdd-cc`.
-
-These community ports pioneered multi-runtime support:
-
-| Project | Platform | Description |
-|---------|----------|-------------|
-| [sdd-opencode](https://github.com/rokicool/sdd-opencode) | OpenCode | Original OpenCode adaptation |
-| sdd-gemini (archived) | Gemini CLI | Original Gemini adaptation by uberfuzzy |
+| Project | Platform |
+|---------|----------|
+| [sdd-opencode](https://github.com/rokicool/sdd-opencode) | Original OpenCode port |
+| [Discord](https://discord.gg/mYgfVNfA2r) | Community support |
 
 ---
 

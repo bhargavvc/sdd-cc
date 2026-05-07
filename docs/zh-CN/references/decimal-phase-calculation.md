@@ -2,11 +2,11 @@
 
 为紧急插入计算下一个小数阶段编号。
 
-## 使用 sdd-tools
+## 使用 sdd-sdk query
 
 ```bash
 # 获取阶段 6 之后的下一个小数阶段
-node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase next-decimal 6
+sdd-sdk query phase.next-decimal 6
 ```
 
 输出：
@@ -32,14 +32,13 @@ node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase next-decimal 6
 ## 提取值
 
 ```bash
-DECIMAL_INFO=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase next-decimal "${AFTER_PHASE}")
-DECIMAL_PHASE=$(printf '%s\n' "$DECIMAL_INFO" | jq -r '.next')
-BASE_PHASE=$(printf '%s\n' "$DECIMAL_INFO" | jq -r '.base_phase')
+DECIMAL_PHASE=$(sdd-sdk query phase.next-decimal "${AFTER_PHASE}" --pick next)
+BASE_PHASE=$(sdd-sdk query phase.next-decimal "${AFTER_PHASE}" --pick base_phase)
 ```
 
 或使用 --raw 标志：
 ```bash
-DECIMAL_PHASE=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase next-decimal "${AFTER_PHASE}" --raw)
+DECIMAL_PHASE=$(sdd-sdk query phase.next-decimal "${AFTER_PHASE}" --raw)
 # 返回: 06.1
 ```
 
@@ -57,7 +56,7 @@ DECIMAL_PHASE=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" phase next-decimal "$
 小数阶段目录使用完整的小数编号：
 
 ```bash
-SLUG=$(node "$HOME/.claude/sdd/bin/sdd-tools.cjs" generate-slug "$DESCRIPTION" --raw)
+SLUG=$(sdd-sdk query generate-slug "$DESCRIPTION" --raw)
 PHASE_DIR=".planning/phases/${DECIMAL_PHASE}-${SLUG}"
 mkdir -p "$PHASE_DIR"
 ```

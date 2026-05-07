@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { SDD } from '@gsd-build/sdk';
+ * import { SDD } from '@bhargavvc/sdk';
  *
  * const sdd = new SDD({ projectDir: '/path/to/project' });
  * const result = await sdd.executePlan('.planning/phases/01-auth/01-auth-01-PLAN.md');
@@ -35,27 +35,37 @@ import { PhaseRunner } from './phase-runner.js';
 import { ContextEngine } from './context-engine.js';
 import { PromptFactory } from './phase-prompt.js';
 
+export { PlanningJournal } from './planning-journal.js';
+export type { PlanningEvent, PlanningEventActor, PlanningJournalAppendInput } from './planning-journal.js';
+export { PlanningRuntime } from './planning-runtime.js';
+
 // ─── SDD class ───────────────────────────────────────────────────────────────
 
 export class SDD {
   private readonly projectDir: string;
   private readonly sddToolsPath: string;
+  private readonly sessionId?: string;
   private readonly defaultModel?: string;
   private readonly defaultMaxBudgetUsd: number;
   private readonly defaultMaxTurns: number;
   private readonly autoMode: boolean;
   private readonly workstream?: string;
+  private readonly strictSdk?: boolean;
+  private readonly allowFallbackToSubprocess?: boolean;
   readonly eventStream: SDDEventStream;
 
   constructor(options: SDDOptions) {
     this.projectDir = resolve(options.projectDir);
     this.sddToolsPath =
       options.sddToolsPath ?? resolveSddToolsPath(this.projectDir);
+    this.sessionId = options.sessionId;
     this.defaultModel = options.model;
     this.defaultMaxBudgetUsd = options.maxBudgetUsd ?? 5.0;
     this.defaultMaxTurns = options.maxTurns ?? 50;
     this.autoMode = options.autoMode ?? false;
     this.workstream = options.workstream;
+    this.strictSdk = options.strictSdk;
+    this.allowFallbackToSubprocess = options.allowFallbackToSubprocess;
     this.eventStream = new SDDEventStream();
   }
 
@@ -120,6 +130,18 @@ export class SDD {
       projectDir: this.projectDir,
       sddToolsPath: this.sddToolsPath,
       workstream: this.workstream,
+      eventStream: this.eventStream,
+      sessionId: this.sessionId,
+      strictSdk: this.strictSdk,
+      allowFallbackToSubprocess: this.allowFallbackToSubprocess,
+      onDispatchEvent: (event) => {
+        this.eventStream.emitEvent({
+          type: SDDEventType.StreamEvent,
+          timestamp: new Date().toISOString(),
+          sessionId: this.sessionId ?? '',
+          event,
+        });
+      },
     });
   }
 
@@ -135,7 +157,7 @@ export class SDD {
    */
   async runPhase(phaseNumber: string, options?: PhaseRunnerOptions): Promise<PhaseRunnerResult> {
     const tools = this.createTools();
-    const promptFactory = new PromptFactory();
+    const promptFactory = new PromptFactory({ projectDir: this.projectDir });
     const contextEngine = new ContextEngine(this.projectDir, undefined, undefined, this.workstream);
     const config = await loadConfig(this.projectDir, this.workstream);
 
@@ -264,7 +286,7 @@ export class SDD {
   private async loadAgentDefinition(): Promise<string | undefined> {
     const paths = [
       // Repo-local SDD installation
-      join(this.projectDir, '.claude', 'get-shit-done', 'agents', 'sdd-executor.md'),
+      join(this.projectDir, '.claude', 'sdd', 'agents', 'sdd-executor.md'),
       // Repo-local agents directory
       join(this.projectDir, '.claude', 'agents', 'sdd-executor.md'),
       // Global home directory
@@ -292,6 +314,7 @@ export type { SDDConfig } from './config.js';
 export { SDDTools, SDDToolsError, resolveSddToolsPath } from './sdd-tools.js';
 export { runPlanSession, runPhaseStepSession } from './session-runner.js';
 export { buildExecutorPrompt, parseAgentTools } from './prompt-builder.js';
+export type { ExecutorPromptOptions } from './prompt-builder.js';
 export * from './types.js';
 
 // S02: Event stream, context, prompt, and logging modules
@@ -316,6 +339,9 @@ export type { PhaseRunnerDeps, VerificationOutcome } from './phase-runner.js';
 export { CLITransport } from './cli-transport.js';
 export { WSTransport } from './ws-transport.js';
 export type { WSTransportOptions } from './ws-transport.js';
+
+// Query registry argv normalization (matches `sdd-sdk query` and `SDDTools` hot path)
+export { createRegistry, normalizeQueryCommand } from './query/index.js';
 
 // Workstream utilities
 export { validateWorkstreamName, relPlanningPath } from './workstream-utils.js';

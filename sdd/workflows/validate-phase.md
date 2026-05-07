@@ -18,7 +18,7 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 ```bash
 INIT=$(sdd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_AUDITOR=$(sdd-sdk query agent-skills sdd-nyquist-auditor 2>/dev/null)
+AGENT_SKILLS_AUDITOR=$(sdd-sdk query agent-skills sdd-nyquist-auditor)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`.
@@ -93,7 +93,7 @@ Call AskUserQuestion with gap table and options:
 ## 5. Spawn sdd-nyquist-auditor
 
 ```
-Task(
+Agent(
   prompt="Read ~/.claude/agents/sdd-nyquist-auditor.md for instructions.\n\n" +
     "<files_to_read>{PLAN, SUMMARY, impl files, VALIDATION.md}</files_to_read>" +
     "<gaps>{gap list}</gaps>" +
@@ -105,6 +105,8 @@ Task(
   description="Fill validation gaps for Phase {N}"
 )
 ```
+
+> **ORCHESTRATOR RULE — CODEX RUNTIME**: After calling Agent() above, stop working on this task immediately. Do not read more files, edit code, or run tests related to this task while the subagent is active. Wait for the subagent to return its result. This prevents duplicate work, conflicting edits, and wasted context. Only resume when the subagent result is available.
 
 Handle return:
 - `## GAPS FILLED` → record tests + map updates, Step 6

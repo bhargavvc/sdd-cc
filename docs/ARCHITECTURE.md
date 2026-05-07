@@ -55,7 +55,7 @@ SDD is a **meta-prompting framework** that sits between the user and AI coding a
 ┌──────▼──────────────▼─────────────────▼──────────────┐
 │              CLI TOOLS LAYER                          │
 │   sdd-sdk query (sdk/src/query) + sdd-tools.cjs       │
-│   (State, config, phase, roadmap, verify, templates)  │
+│   Programmatic SDK bridge: SDDTools/query-runtime-bridge.ts │
 └──────────────────────┬───────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────┐
@@ -76,6 +76,7 @@ Every agent spawned by an orchestrator gets a clean context window (up to 200K t
 ### 2. Thin Orchestrators
 
 Workflow files (`sdd/workflows/*.md`) never do heavy lifting. They:
+
 - Load context via `sdd-sdk query init.<workflow>` (or legacy `sdd-tools.cjs init <workflow>`)
 - Spawn specialized agents with focused prompts
 - Collect results and route to the next step
@@ -84,6 +85,7 @@ Workflow files (`sdd/workflows/*.md`) never do heavy lifting. They:
 ### 3. File-Based State
 
 All state lives in `.planning/` as human-readable Markdown and JSON. No database, no server, no external dependencies. This means:
+
 - State survives context resets (`/clear`)
 - State is inspectable by both humans and agents
 - State can be committed to git for team visibility
@@ -95,6 +97,7 @@ Workflow feature flags follow the **absent = enabled** pattern. If a key is miss
 ### 5. Defense in Depth
 
 Multiple layers prevent common failure modes:
+
 - Plans are verified before execution (plan-checker agent)
 - Execution produces atomic commits per task
 - Post-execution verification checks against phase goals
@@ -107,28 +110,69 @@ Multiple layers prevent common failure modes:
 ### Commands (`commands/sdd/*.md`)
 
 User-facing entry points. Each file contains YAML frontmatter (name, description, allowed-tools) and a prompt body that bootstraps the workflow. Commands are installed as:
-- **Claude Code:** Custom slash commands (`/sdd-command-name`)
-- **OpenCode / Kilo:** Slash commands (`/sdd-command-name`)
+
+- **Claude Code:** Custom slash commands (hyphen form, `/sdd-command-name`)
+- **OpenCode / Kilo:** Slash commands (hyphen form, `/sdd-command-name`)
 - **Codex:** Skills (`$sdd-command-name`)
-- **Copilot:** Slash commands (`/sdd-command-name`)
+- **Copilot:** Slash commands (hyphen form, `/sdd-command-name`)
+- **Gemini CLI:** Slash commands under the `sdd:` namespace (colon form, `/sdd:command-name`) — Gemini namespaces all custom commands under their plugin id, so the install path rewrites every body-text reference to colon form
 - **Antigravity:** Skills
 
-**Total commands:** 81
+**Total commands:** see [`docs/INVENTORY.md`](INVENTORY.md#commands) for the authoritative count and full roster.
+
+#### Two-stage hierarchical routing (v1.40, [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792))
+
+To keep the eager skill-listing token cost low, v1.40 introduces six namespace **meta-skills** (`sdd-workflow`, `sdd-project`, `sdd-review`, `sdd-context`, `sdd-manage`, `sdd-ideate` — sourced from `commands/sdd/ns-*.md`, but the invocable `name:` is the bare form shown here) layered above the concrete sub-skills. The model sees 6 namespace routers (~120 tokens) instead of a flat 86-skill listing (~2,150 tokens), selects a namespace, then routes to the concrete sub-skill via a routing table embedded in the namespace router's body. Namespace skills are **additive** — every concrete command is still directly invocable.
+
+The router descriptions use pipe-separated keyword tags (≤ 60 chars) per the Tool Attention research showing keyword-dense tags outperform prose for routing at ~40 % the token cost.
+
+#### MCP token-budget interaction
+
+The eager skill listing is one of two recurring per-turn token costs. The other is the MCP tool schema injected by every enabled MCP server in `.claude/settings.json`. Heavyweight MCP servers (browser/playwright, Mac-tools, Windows-tools) can each cost 20 k+ tokens per turn — often dwarfing what `model_profile` tuning saves. The toggle lives in the Claude Code harness (`enabledMcpjsonServers` / `disabledMcpjsonServers` in `.claude/settings.json`) and is **not** a SDD concern. Together, the two-stage routing layer (#2792) and disciplined MCP enablement are the largest cost levers per turn. See [`docs/USER-GUIDE.md`](USER-GUIDE.md) and `references/context-budget.md` for the audit checklist.
 
 ### Workflows (`sdd/workflows/*.md`)
 
 Orchestration logic that commands reference. Contains the step-by-step process including:
+
 - Context loading via `sdd-sdk query` init handlers (or legacy `sdd-tools.cjs init`)
 - Agent spawn instructions with model resolution
 - Gate/checkpoint definitions
 - State update patterns
 - Error handling and recovery
 
-**Total workflows:** 78
+**Total workflows:** see [`docs/INVENTORY.md`](INVENTORY.md#workflows) for the authoritative count and full roster.
+
+#### Progressive disclosure for workflows
+
+Workflow files are loaded verbatim into Claude's context every time the
+corresponding `/sdd-*` command is invoked. To keep that cost bounded, the
+workflow size budget enforced by `tests/workflow-size-budget.test.cjs`
+mirrors the agent budget from #2361:
+
+| Tier      | Per-file line limit |
+|-----------|--------------------|
+| `XL`      | 1700 — top-level orchestrators (`execute-phase`, `plan-phase`, `new-project`) |
+| `LARGE`   | 1500 — multi-step planners and large feature workflows |
+| `DEFAULT` | 1000 — focused single-purpose workflows (the target tier) |
+
+`workflows/discuss-phase.md` is held to a stricter <500-line ceiling per
+issue #2551. When a workflow grows beyond its tier, extract per-mode bodies
+into `workflows/<workflow>/modes/<mode>.md`, templates into
+`workflows/<workflow>/templates/`, and shared knowledge into
+`sdd/references/`. The parent file becomes a thin dispatcher that
+Reads only the mode and template files needed for the current invocation.
+
+`workflows/discuss-phase/` is the canonical example of this pattern —
+parent dispatches, modes/ holds per-flag behavior (`power.md`, `all.md`,
+`auto.md`, `chain.md`, `text.md`, `batch.md`, `analyze.md`, `default.md`,
+`advisor.md`), and templates/ holds CONTEXT.md, DISCUSSION-LOG.md, and
+checkpoint.json schemas that are read only when the corresponding output
+file is being written.
 
 ### Agents (`agents/*.md`)
 
 Specialized agent definitions with frontmatter specifying:
+
 - `name` — Agent identifier
 - `description` — Role and purpose
 - `tools` — Allowed tool access (Read, Write, Edit, Bash, Grep, Glob, WebSearch, etc.)
@@ -138,9 +182,10 @@ Specialized agent definitions with frontmatter specifying:
 
 ### References (`sdd/references/*.md`)
 
-Shared knowledge documents that workflows and agents `@-reference` (35 total):
+Shared knowledge documents that workflows and agents `@-reference` (see [`docs/INVENTORY.md`](INVENTORY.md#references-41-shipped) for the authoritative count and full roster):
 
 **Core references:**
+
 - `checkpoints.md` — Checkpoint type definitions and interaction patterns
 - `gates.md` — 4 canonical gate types (Confirm, Quality, Safety, Transition) wired into plan-checker and verifier
 - `model-profiles.md` — Per-agent model tier assignments
@@ -156,6 +201,7 @@ Shared knowledge documents that workflows and agents `@-reference` (35 total):
 - `common-bug-patterns.md` — Common bug patterns for code review and verification
 
 **Workflow references:**
+
 - `agent-contracts.md` — Formal interface between orchestrators and agents
 - `context-budget.md` — Context window budget allocation rules
 - `continuation-format.md` — Session continuation/resume format
@@ -190,7 +236,7 @@ The planner agent (`agents/sdd-planner.md`) was decomposed from a single monolit
 
 ### Templates (`sdd/templates/`)
 
-Markdown templates for all planning artifacts. Used by `sdd-tools.cjs template fill` and `scaffold` commands to create pre-structured files:
+Markdown templates for all planning artifacts. Used by `sdd-sdk query template.fill` / `phase.scaffold` (and legacy `sdd-tools.cjs template fill` / top-level `scaffold`) to create pre-structured files:
 - `project.md`, `requirements.md`, `roadmap.md`, `state.md` — Core project files
 - `phase-prompt.md` — Phase execution prompt template
 - `summary.md` (+ `summary-minimal.md`, `summary-standard.md`, `summary-complex.md`) — Granularity-aware summary templates
@@ -208,39 +254,57 @@ Runtime hooks that integrate with the host AI agent:
 |------|-------|---------|
 | `sdd-statusline.js` | `statusLine` | Displays model, task, directory, and context usage bar |
 | `sdd-context-monitor.js` | `PostToolUse` / `AfterTool` | Injects agent-facing context warnings at 35%/25% remaining |
-| `sdd-check-update.js` | `SessionStart` | Background check for new SDD versions |
+| `sdd-check-update.js` | `SessionStart` | Foreground trigger for the background update check |
+| `sdd-check-update-worker.js` | (helper) | Background worker spawned by `sdd-check-update.js`; no direct event registration |
 | `sdd-prompt-guard.js` | `PreToolUse` | Scans `.planning/` writes for prompt injection patterns (advisory) |
+| `sdd-read-injection-scanner.js` | `PostToolUse` | Scans Read tool output for injected instructions in untrusted content |
 | `sdd-workflow-guard.js` | `PreToolUse` | Detects file edits outside SDD workflow context (advisory, opt-in via `hooks.workflow_guard`) |
 | `sdd-read-guard.js` | `PreToolUse` | Advisory guard preventing Edit/Write on files not yet read in the session |
 | `sdd-session-state.sh` | `PostToolUse` | Session state tracking for shell-based runtimes |
 | `sdd-validate-commit.sh` | `PostToolUse` | Commit validation for conventional commit enforcement |
 | `sdd-phase-boundary.sh` | `PostToolUse` | Phase boundary detection for workflow transitions |
 
+See [`docs/INVENTORY.md`](INVENTORY.md#hooks-11-shipped) for the authoritative 11-hook roster.
+
+### SDK Runtime Bridge Module (`sdk/src/query-runtime-bridge.ts`)
+
+Programmatic SDK callers (`SDDTools`) route through one seam that owns query dispatch policy:
+
+- Native registry dispatch preference
+- Explicit subprocess fallback policy (`allowFallbackToSubprocess`)
+- Strict SDK mode (`strictSdk`) for fail-fast native-only enforcement
+- Structured dispatch observability (`onDispatchEvent`) with mode, reason, duration, and outcome
+
+This keeps callers thin adapters and centralizes transport decisions for SDK publishability.
+
 ### CLI Tools (`sdd/bin/`)
 
-Node.js CLI utility (`sdd-tools.cjs`) with 19 domain modules:
+Node.js CLI utility (`sdd-tools.cjs`) with domain modules split across `sdd/bin/lib/` (see [`docs/INVENTORY.md`](INVENTORY.md#cli-modules-33-shipped) for the authoritative roster):
 
-| Module | Responsibility |
-|--------|---------------|
-| `core.cjs` | Error handling, output formatting, shared utilities |
-| `state.cjs` | STATE.md parsing, updating, progression, metrics |
-| `phase.cjs` | Phase directory operations, decimal numbering, plan indexing |
-| `roadmap.cjs` | ROADMAP.md parsing, phase extraction, plan progress |
-| `config.cjs` | config.json read/write, section initialization |
-| `verify.cjs` | Plan structure, phase completeness, reference, commit validation |
-| `template.cjs` | Template selection and filling with variable substitution |
-| `frontmatter.cjs` | YAML frontmatter CRUD operations |
-| `init.cjs` | Compound context loading for each workflow type |
-| `milestone.cjs` | Milestone archival, requirements marking |
-| `commands.cjs` | Misc commands (slug, timestamp, todos, scaffolding, stats) |
-| `model-profiles.cjs` | Model profile resolution table |
-| `security.cjs` | Path traversal prevention, prompt injection detection, safe JSON parsing, shell argument validation |
-| `uat.cjs` | UAT file parsing, verification debt tracking, audit-uat support |
-| `docs.cjs` | Docs-update workflow init, Markdown scanning, monorepo detection |
-| `workstream.cjs` | Workstream CRUD, migration, session-scoped active pointer |
-| `schema-detect.cjs` | Schema-drift detection for ORM patterns (Prisma, Drizzle, etc.) |
-| `profile-pipeline.cjs` | User behavioral profiling data pipeline, session file scanning |
-| `profile-output.cjs` | Profile rendering, USER-PROFILE.md and dev-preferences.md generation |
+
+| Module                 | Responsibility                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `core.cjs`             | Error handling, output formatting, shared utilities; compatibility re-exports for planning helpers |
+| `planning-workspace.cjs` | Planning seam (`planningDir`, `planningPaths`, active workstream routing, `.planning/.lock`)      |
+| `state.cjs`            | STATE.md parsing, updating, progression, metrics                                                    |
+| `phase.cjs`            | Phase directory operations, decimal numbering, plan indexing                                        |
+| `roadmap.cjs`          | ROADMAP.md parsing, phase extraction, plan progress                                                 |
+| `config.cjs`           | config.json read/write, section initialization                                                      |
+| `verify.cjs`           | Plan structure, phase completeness, reference, commit validation                                    |
+| `template.cjs`         | Template selection and filling with variable substitution                                           |
+| `frontmatter.cjs`      | YAML frontmatter CRUD operations                                                                    |
+| `init.cjs`             | Compound context loading for each workflow type                                                     |
+| `milestone.cjs`        | Milestone archival, requirements marking                                                            |
+| `commands.cjs`         | Misc commands (slug, timestamp, todos, scaffolding, stats)                                          |
+| `model-profiles.cjs`   | Model profile resolution table                                                                      |
+| `security.cjs`         | Path traversal prevention, prompt injection detection, safe JSON parsing, shell argument validation |
+| `uat.cjs`              | UAT file parsing, verification debt tracking, audit-uat support                                     |
+| `docs.cjs`             | Docs-update workflow init, Markdown scanning, monorepo detection                                    |
+| `workstream.cjs`       | Workstream CRUD, migration, session-scoped active pointer                                           |
+| `schema-detect.cjs`    | Schema-drift detection for ORM patterns (Prisma, Drizzle, etc.)                                     |
+| `profile-pipeline.cjs` | User behavioral profiling data pipeline, session file scanning                                      |
+| `profile-output.cjs`   | Profile rendering, USER-PROFILE.md and dev-preferences.md generation                                |
+
 
 ---
 
@@ -251,10 +315,10 @@ Node.js CLI utility (`sdd-tools.cjs`) with 19 domain modules:
 ```
 Orchestrator (workflow .md)
     │
-    ├── Load context: sdd-tools.cjs init <workflow> <phase>
+    ├── Load context: sdd-sdk query init.<workflow> <phase> (or legacy sdd-tools.cjs init)
     │   Returns JSON with: project info, config, state, phase details
     │
-    ├── Resolve model: sdd-tools.cjs resolve-model <agent-name>
+    ├── Resolve model: sdd-sdk query resolve-model <agent-name>
     │   Returns: opus | sonnet | haiku | inherit
     │
     ├── Spawn Agent (Task/SubAgent call)
@@ -265,25 +329,29 @@ Orchestrator (workflow .md)
     │
     ├── Collect result
     │
-    └── Update state: sdd-tools.cjs state update/patch/advance-plan
+    └── Update state: sdd-sdk query state.update / state.patch / state.advance-plan (or legacy sdd-tools.cjs)
 ```
 
-### Agent Spawn Categories
+### Primary Agent Spawn Categories
 
-| Category | Agents | Parallelism |
-|----------|--------|-------------|
-| **Researchers** | sdd-project-researcher, sdd-phase-researcher, sdd-ui-researcher, sdd-advisor-researcher | 4 parallel (stack, features, architecture, pitfalls); advisor spawns during discuss-phase |
-| **Synthesizers** | sdd-research-synthesizer | Sequential (after researchers complete) |
-| **Planners** | sdd-planner, sdd-roadmapper | Sequential |
-| **Checkers** | sdd-plan-checker, sdd-integration-checker, sdd-ui-checker, sdd-nyquist-auditor | Sequential (verification loop, max 3 iterations) |
-| **Executors** | sdd-executor | Parallel within waves, sequential across waves |
-| **Verifiers** | sdd-verifier | Sequential (after all executors complete) |
-| **Mappers** | sdd-codebase-mapper | 4 parallel (tech, arch, quality, concerns) |
-| **Debuggers** | sdd-debugger | Sequential (interactive) |
-| **Auditors** | sdd-ui-auditor, sdd-security-auditor | Sequential |
-| **Doc Writers** | sdd-doc-writer, sdd-doc-verifier | Sequential (writer then verifier) |
-| **Profilers** | sdd-user-profiler | Sequential |
-| **Analyzers** | sdd-assumptions-analyzer | Sequential (during discuss-phase) |
+Conceptual spawn-pattern taxonomy for the 21 primary agents. For the authoritative 31-agent roster (including the 10 advanced/specialized agents such as `sdd-pattern-mapper`, `sdd-code-reviewer`, `sdd-code-fixer`, `sdd-ai-researcher`, `sdd-domain-researcher`, `sdd-eval-planner`, `sdd-eval-auditor`, `sdd-framework-selector`, `sdd-debug-session-manager`, `sdd-intel-updater`), see [`docs/INVENTORY.md`](INVENTORY.md#agents-31-shipped).
+
+
+| Category         | Agents                                                                                  | Parallelism                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Researchers**  | sdd-project-researcher, sdd-phase-researcher, sdd-ui-researcher, sdd-advisor-researcher | 4 parallel (stack, features, architecture, pitfalls); advisor spawns during discuss-phase |
+| **Synthesizers** | sdd-research-synthesizer                                                                | Sequential (after researchers complete)                                                   |
+| **Planners**     | sdd-planner, sdd-roadmapper                                                             | Sequential                                                                                |
+| **Checkers**     | sdd-plan-checker, sdd-integration-checker, sdd-ui-checker, sdd-nyquist-auditor          | Sequential (verification loop, max 3 iterations)                                          |
+| **Executors**    | sdd-executor                                                                            | Parallel within waves, sequential across waves                                            |
+| **Verifiers**    | sdd-verifier                                                                            | Sequential (after all executors complete)                                                 |
+| **Mappers**      | sdd-codebase-mapper                                                                     | 4 parallel (tech, arch, quality, concerns)                                                |
+| **Debuggers**    | sdd-debugger                                                                            | Sequential (interactive)                                                                  |
+| **Auditors**     | sdd-ui-auditor, sdd-security-auditor                                                    | Sequential                                                                                |
+| **Doc Writers**  | sdd-doc-writer, sdd-doc-verifier                                                        | Sequential (writer then verifier)                                                         |
+| **Profilers**    | sdd-user-profiler                                                                       | Sequential                                                                                |
+| **Analyzers**    | sdd-assumptions-analyzer                                                                | Sequential (during discuss-phase)                                                         |
+
 
 ### Wave Execution Model
 
@@ -299,6 +367,7 @@ Wave Analysis:
 ```
 
 Each executor gets:
+
 - Fresh 200K context window (or up to 1M for models that support it)
 - The specific PLAN.md to execute
 - Project context (PROJECT.md, STATE.md)
@@ -311,14 +380,13 @@ When the context window is 500K+ tokens (1M-class models like Opus 4.6, Sonnet 4
 - **Executor agents** receive prior wave SUMMARY.md files and the phase CONTEXT.md/RESEARCH.md, enabling cross-plan awareness within a phase
 - **Verifier agents** receive all PLAN.md, SUMMARY.md, CONTEXT.md files plus REQUIREMENTS.md, enabling history-aware verification
 
-The orchestrator reads `context_window` from config (`sdd-tools.cjs config-get context_window`) and conditionally includes richer context when the value is >= 500,000. For standard 200K windows, prompts use truncated versions with cache-friendly ordering to maximize context efficiency.
+The orchestrator reads `context_window` from config (`sdd-sdk query config-get context_window`, or legacy `sdd-tools.cjs config-get`) and conditionally includes richer context when the value is >= 500,000. For standard 200K windows, prompts use truncated versions with cache-friendly ordering to maximize context efficiency.
 
 #### Parallel Commit Safety
 
 When multiple executors run within the same wave, two mechanisms prevent conflicts:
 
-1. **`--no-verify` commits** — Parallel agents skip pre-commit hooks (which can cause build lock contention, e.g., cargo lock fights in Rust projects). The orchestrator runs `git hook run pre-commit` once after each wave completes.
-
+1. `--no-verify` commits — Parallel agents skip pre-commit hooks (which can cause build lock contention, e.g., cargo lock fights in Rust projects). The orchestrator runs `git hook run pre-commit` once after each wave completes.
 2. **STATE.md file locking** — All `writeStateMd()` calls use lockfile-based mutual exclusion (`STATE.md.lock` with `O_EXCL` atomic creation). This prevents the read-modify-write race condition where two agents read STATE.md, modify different fields, and the last writer overwrites the other's changes. Includes stale lock detection (10s timeout) and spin-wait with jitter.
 
 ---
@@ -366,7 +434,9 @@ plan-phase
     ├── Research gate (blocks if RESEARCH.md has unresolved open questions)
     ├── Phase Researcher → RESEARCH.md
     ├── Planner (with reachability check) → PLAN.md files
-    └── Plan Checker → Verify loop (max 3x)
+    ├── Plan Checker → Verify loop (max 3x)
+    ├── Requirements coverage gate (REQ-IDs → plans)
+    └── Decision coverage gate (CONTEXT.md `<decisions>` → plans, BLOCKING — #2492)
     │
     ▼
 state planned-phase → STATE.md (Planned/Ready to execute)
@@ -377,6 +447,7 @@ execute-phase (context reduction: truncated prompts, cache-friendly ordering)
     ├── Executor per plan → code + atomic commits
     ├── SUMMARY.md per plan
     └── Verifier → VERIFICATION.md
+        └── Decision coverage gate (CONTEXT.md decisions → shipped artifacts, NON-BLOCKING — #2492)
     │
     ▼
 verify-work → UAT.md (user acceptance testing)
@@ -409,23 +480,22 @@ UI-SPEC.md (per phase) ───────────────────
 
 ```
 ~/.claude/                          # Claude Code (global install)
-├── commands/sdd/*.md               # 81 slash commands
+├── commands/sdd/*.md               # Slash commands (authoritative roster: docs/INVENTORY.md)
 ├── sdd/
 │   ├── bin/sdd-tools.cjs           # CLI utility
-│   ├── bin/lib/*.cjs               # 19 domain modules
-│   ├── workflows/*.md              # 78 workflow definitions
-│   ├── references/*.md             # 35 shared reference docs
+│   ├── bin/lib/*.cjs               # Domain modules (authoritative roster: docs/INVENTORY.md)
+│   ├── workflows/*.md              # Workflow definitions (authoritative roster: docs/INVENTORY.md)
+│   ├── references/*.md             # Shared reference docs (authoritative roster: docs/INVENTORY.md)
 │   └── templates/                  # Planning artifact templates
-├── agents/*.md                     # 33 agent definitions
-├── hooks/
-│   ├── sdd-statusline.js           # Statusline hook
-│   ├── sdd-context-monitor.js      # Context warning hook
-│   └── sdd-check-update.js         # Update check hook
+├── agents/*.md                     # Agent definitions (authoritative roster: docs/INVENTORY.md)
+├── hooks/*.js                      # Node.js hooks (statusline, guards, monitors, update check)
+├── hooks/*.sh                      # Shell hooks (session state, commit validation, phase boundary)
 ├── settings.json                   # Hook registrations
 └── VERSION                         # Installed version number
 ```
 
 Equivalent paths for other runtimes:
+
 - **OpenCode:** `~/.config/opencode/` or `~/.opencode/`
 - **Kilo:** `~/.config/kilo/` or `~/.kilo/`
 - **Gemini CLI:** `~/.gemini/`
@@ -450,8 +520,8 @@ Equivalent paths for other runtimes:
 │   ├── ARCHITECTURE.md
 │   └── PITFALLS.md
 ├── codebase/               # Brownfield mapping (from /sdd-map-codebase)
-│   ├── STACK.md
-│   ├── ARCHITECTURE.md
+│   ├── STACK.md            # YAML frontmatter carries `last_mapped_commit`
+│   ├── ARCHITECTURE.md     # for the post-execute drift gate (#2003)
 │   ├── CONVENTIONS.md
 │   ├── CONCERNS.md
 │   ├── STRUCTURE.md
@@ -476,7 +546,7 @@ Equivalent paths for other runtimes:
 │   ├── pending/            # Captured ideas
 │   └── done/               # Completed todos
 ├── threads/               # Persistent context threads (from /sdd-thread)
-├── seeds/                 # Forward-looking ideas (from /sdd-plant-seed)
+├── seeds/                 # Forward-looking ideas (from /sdd-capture --seed)
 ├── debug/                  # Active debug sessions
 │   ├── *.md                # Active sessions
 │   ├── resolved/           # Archived sessions
@@ -484,6 +554,30 @@ Equivalent paths for other runtimes:
 ├── ui-reviews/             # Screenshots from /sdd-ui-review (gitignored)
 └── continue-here.md        # Context handoff (from pause-work)
 ```
+
+### Post-Execute Codebase Drift Gate (#2003)
+
+After the last wave of `/sdd-execute-phase` commits, the workflow runs a
+non-blocking `codebase_drift_gate` step (between `schema_drift_gate` and
+`verify_phase_goal`). It compares the diff `last_mapped_commit..HEAD`
+against `.planning/codebase/STRUCTURE.md` and counts four kinds of
+structural elements:
+
+1. New directories outside mapped paths
+2. New barrel exports at `(packages|apps)/<name>/src/index.*`
+3. New migration files
+4. New route modules under `routes/` or `api/`
+
+If the count meets `workflow.drift_threshold` (default 3), the gate either
+**warns** (default) with the suggested `/sdd-map-codebase --paths …` command,
+or **auto-remaps** (`workflow.drift_action = auto-remap`) by spawning
+`sdd-codebase-mapper` scoped to the affected paths. Any error in detection
+or remap is logged and the phase continues — drift detection cannot fail
+verification.
+
+`last_mapped_commit` lives in YAML frontmatter at the top of each
+`.planning/codebase/*.md` file; `bin/lib/drift.cjs` provides
+`readMappedCommit` and `writeMappedCommit` round-trip helpers.
 
 ---
 
@@ -495,19 +589,19 @@ The installer (`bin/install.js`, ~3,000 lines) handles:
 2. **Location selection** — Global (`--global`) or local (`--local`)
 3. **File deployment** — Copies commands, workflows, references, templates, agents, hooks
 4. **Runtime adaptation** — Transforms file content per runtime:
-   - Claude Code: Uses as-is
-   - OpenCode: Converts commands/agents to OpenCode-compatible flat command + subagent format
-   - Kilo: Reuses the OpenCode conversion pipeline with Kilo config paths
-   - Codex: Generates TOML config + skills from commands
-   - Copilot: Maps tool names (Read→read, Bash→execute, etc.)
-   - Gemini: Adjusts hook event names (`AfterTool` instead of `PostToolUse`)
-   - Antigravity: Skills-first with Google model equivalents
-   - Trae: Skills-first install to `~/.trae` / `./.trae` with no `settings.json` or hook integration
-   - Cline: Writes `.clinerules` for rule-based integration
-   - Augment Code: Skills-first with full skill conversion and config management
+  - Claude Code: Uses as-is
+  - OpenCode: Converts commands/agents to OpenCode-compatible flat command + subagent format
+  - Kilo: Reuses the OpenCode conversion pipeline with Kilo config paths
+  - Codex: Generates TOML config + skills from commands
+  - Copilot: Maps tool names (Read→read, Bash→execute, etc.)
+  - Gemini: Adjusts hook event names (`AfterTool` instead of `PostToolUse`)
+  - Antigravity: Skills-first with Google model equivalents
+  - Trae: Skills-first install to `~/.trae` / `./.trae` with no `settings.json` or hook integration
+  - Cline: Writes `.clinerules` for rule-based integration
+  - Augment Code: Skills-first with full skill conversion and config management
 5. **Path normalization** — Replaces `~/.claude/` paths with runtime-specific paths
 6. **Settings integration** — Registers hooks in runtime's `settings.json`
-7. **Patch backup** — Since v1.17, backs up locally modified files to `sdd-local-patches/` for `/sdd-reapply-patches`
+7. **Patch backup** — Since v1.17, backs up locally modified files to `sdd-local-patches/` for `/sdd-update --reapply`
 8. **Manifest tracking** — Writes `sdd-file-manifest.json` for clean uninstall
 9. **Uninstall mode** — `--uninstall` removes all SDD files, hooks, and settings
 
@@ -541,11 +635,13 @@ Runtime Engine (Claude Code / Gemini CLI)
 
 ### Context Monitor Thresholds
 
-| Remaining Context | Level | Agent Behavior |
-|-------------------|-------|----------------|
-| > 35% | Normal | No warning injected |
-| ≤ 35% | WARNING | "Avoid starting new complex work" |
-| ≤ 25% | CRITICAL | "Context nearly exhausted, inform user" |
+
+| Remaining Context | Level    | Agent Behavior                          |
+| ----------------- | -------- | --------------------------------------- |
+| > 35%             | Normal   | No warning injected                     |
+| ≤ 35%             | WARNING  | "Avoid starting new complex work"       |
+| ≤ 25%             | CRITICAL | "Context nearly exhausted, inform user" |
+
 
 Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→CRITICAL) bypasses debounce.
 
@@ -560,12 +656,14 @@ Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→
 ### Security Hooks (v1.27)
 
 **Prompt Guard** (`sdd-prompt-guard.js`):
+
 - Triggers on Write/Edit to `.planning/` files
 - Scans content for prompt injection patterns (role override, instruction bypass, system tag injection)
 - Advisory-only — logs detection, does not block
 - Patterns are inlined (subset of `security.cjs`) for hook independence
 
 **Workflow Guard** (`sdd-workflow-guard.js`):
+
 - Triggers on Write/Edit to non-`.planning/` files
 - Detects edits outside SDD workflow context (no active `/sdd-` command or Task subagent)
 - Advises using `/sdd-quick` or `/sdd-fast` for state-tracked changes
@@ -577,18 +675,20 @@ Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→
 
 SDD supports multiple AI coding runtimes through a unified command/workflow architecture:
 
-| Runtime | Command Format | Agent System | Config Location |
-|---------|---------------|--------------|-----------------|
-| Claude Code | `/sdd-command` | Task spawning | `~/.claude/` |
-| OpenCode | `/sdd-command` | Subagent mode | `~/.config/opencode/` |
-| Kilo | `/sdd-command` | Subagent mode | `~/.config/kilo/` |
-| Gemini CLI | `/sdd-command` | Task spawning | `~/.gemini/` |
-| Codex | `$sdd-command` | Skills | `~/.codex/` |
-| Copilot | `/sdd-command` | Agent delegation | `~/.github/` |
-| Antigravity | Skills | Skills | `~/.gemini/antigravity/` |
-| Trae | Skills | Skills | `~/.trae/` |
-| Cline | Rules | Rules | `.clinerules` |
-| Augment Code | Skills | Skills | Augment config |
+
+| Runtime      | Command Format | Agent System     | Config Location          |
+| ------------ | -------------- | ---------------- | ------------------------ |
+| Claude Code  | `/sdd-command` | Task spawning    | `~/.claude/`             |
+| OpenCode     | `/sdd-command` | Subagent mode    | `~/.config/opencode/`    |
+| Kilo         | `/sdd-command` | Subagent mode    | `~/.config/kilo/`        |
+| Gemini CLI   | `/sdd-command` | Task spawning    | `~/.gemini/`             |
+| Codex        | `$sdd-command` | Skills           | `~/.codex/`              |
+| Copilot      | `/sdd-command` | Agent delegation | `~/.github/`             |
+| Antigravity  | Skills         | Skills           | `~/.gemini/antigravity/` |
+| Trae         | Skills         | Skills           | `~/.trae/`               |
+| Cline        | Rules          | Rules            | `.clinerules`            |
+| Augment Code | Skills         | Skills           | Augment config           |
+
 
 ### Abstraction Points
 

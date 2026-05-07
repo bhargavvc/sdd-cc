@@ -32,7 +32,7 @@
 
 ---
 
-### `/sdd-new-workspace`
+### `/sdd-workspace --new`
 
 リポジトリのコピーと独立した `.planning/` ディレクトリを持つ分離されたワークスペースを作成します。
 
@@ -46,33 +46,33 @@
 | `--auto` | 対話的な質問をスキップ |
 
 **ユースケース:**
-- マルチリポ: リポジトリのサブセットを分離されたGSD状態で作業
+- マルチリポ: リポジトリのサブセットを分離されたSDD状態で作業
 - 機能の分離: `--repos .` で現在のリポジトリのworktreeを作成
 
 **生成物:** `WORKSPACE.md`、`.planning/`、リポジトリコピー（worktreeまたはclone）
 
 ```bash
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI
-/sdd-new-workspace --name feature-b --repos . --strategy worktree  # 同一リポジトリの分離
-/sdd-new-workspace --name spike --repos api,web --strategy clone   # フルクローン
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI
+/sdd-workspace --new --name feature-b --repos . --strategy worktree  # 同一リポジトリの分離
+/sdd-workspace --new --name spike --repos api,web --strategy clone   # フルクローン
 ```
 
 ---
 
-### `/sdd-list-workspaces`
+### `/sdd-workspace --list`
 
-アクティブなGSDワークスペースとそのステータスを一覧表示します。
+アクティブなSDDワークスペースとそのステータスを一覧表示します。
 
 **スキャン対象:** `~/sdd-workspaces/` 内の `WORKSPACE.md` マニフェスト
-**表示内容:** 名前、リポジトリ数、戦略、GSDプロジェクトのステータス
+**表示内容:** 名前、リポジトリ数、戦略、SDDプロジェクトのステータス
 
 ```bash
-/sdd-list-workspaces
+/sdd-workspace --list
 ```
 
 ---
 
-### `/sdd-remove-workspace`
+### `/sdd-workspace --remove`
 
 ワークスペースを削除し、git worktreeをクリーンアップします。
 
@@ -83,7 +83,7 @@
 **安全性:** コミットされていない変更があるリポジトリの削除を拒否します。名前の確認が必要です。
 
 ```bash
-/sdd-remove-workspace feature-b
+/sdd-workspace --remove feature-b
 ```
 
 ---
@@ -198,7 +198,7 @@
 
 ---
 
-### `/sdd-next`
+### `/sdd-progress --next`
 
 次の論理的なワークフローステップに自動的に進みます。プロジェクトの状態を読み取り、適切なコマンドを実行します。
 
@@ -212,12 +212,12 @@
 - 全フェーズ完了 → `/sdd-complete-milestone` を提案
 
 ```bash
-/sdd-next                           # 次のステップを自動検出して実行
+/sdd-progress --next                           # 次のステップを自動検出して実行
 ```
 
 ---
 
-### `/sdd-session-report`
+### `/sdd-pause-work --report`
 
 作業サマリー、成果、推定リソース使用量を含むセッションレポートを生成します。
 
@@ -225,7 +225,7 @@
 **生成物:** `.planning/reports/SESSION_REPORT.md`
 
 ```bash
-/sdd-session-report                 # セッション後のサマリーを生成
+/sdd-pause-work --report                 # セッション後のサマリーを生成
 ```
 
 **レポートに含まれる内容:**
@@ -271,7 +271,7 @@
 |----------|----------|-------------|
 | `N` | いいえ | フェーズ番号（デフォルトは最後に実行されたフェーズ） |
 
-**前提条件:** プロジェクトにフロントエンドコードがあること（単体で動作、GSDプロジェクト不要）
+**前提条件:** プロジェクトにフロントエンドコードがあること（単体で動作、SDDプロジェクト不要）
 **生成物:** `{phase}-UI-REVIEW.md`、`.planning/ui-reviews/` 内のスクリーンショット
 
 ```bash
@@ -368,15 +368,15 @@
 
 ## フェーズ管理コマンド
 
-### `/sdd-add-phase`
+### `/sdd-phase`
 
 ロードマップに新しいフェーズを追加します。
 
 ```bash
-/sdd-add-phase                      # 対話型 — フェーズの説明を入力
+/sdd-phase                      # 対話型 — フェーズの説明を入力
 ```
 
-### `/sdd-insert-phase`
+### `/sdd-phase --insert`
 
 小数番号を使用して、フェーズ間に緊急の作業を挿入します。
 
@@ -385,10 +385,10 @@
 | `N` | いいえ | このフェーズ番号の後に挿入 |
 
 ```bash
-/sdd-insert-phase 3                 # フェーズ3と4の間に挿入 → 3.1を作成
+/sdd-phase --insert 3                 # フェーズ3と4の間に挿入 → 3.1を作成
 ```
 
-### `/sdd-remove-phase`
+### `/sdd-phase --remove`
 
 将来のフェーズを削除し、後続のフェーズの番号を振り直します。
 
@@ -397,10 +397,10 @@
 | `N` | いいえ | 削除するフェーズ番号 |
 
 ```bash
-/sdd-remove-phase 7                 # フェーズ7を削除、8→7、9→8等に番号振り直し
+/sdd-phase --remove 7                 # フェーズ7を削除、8→7、9→8等に番号振り直し
 ```
 
-### `/sdd-list-phase-assumptions`
+### `/sdd-discuss-phase --assumptions`
 
 計画前にClaudeの意図するアプローチをプレビューします。
 
@@ -409,18 +409,11 @@
 | `N` | いいえ | フェーズ番号 |
 
 ```bash
-/sdd-list-phase-assumptions 2       # フェーズ2の前提を確認
+/sdd-discuss-phase --assumptions 2       # フェーズ2の前提を確認
 ```
 
-### `/sdd-plan-milestone-gaps`
 
-マイルストーン監査のギャップを解消するフェーズを作成します。
-
-```bash
-/sdd-plan-milestone-gaps             # 各監査ギャップに対してフェーズを作成
-```
-
-### `/sdd-research-phase`
+### `/sdd-plan-phase --research-phase`
 
 詳細なエコシステム調査のみを実行します（単体機能 — 通常は `/sdd-plan-phase` を使用してください）。
 
@@ -429,7 +422,7 @@
 | `N` | いいえ | フェーズ番号 |
 
 ```bash
-/sdd-research-phase 4               # フェーズ4のドメインを調査
+/sdd-plan-phase --research-phase 4               # フェーズ4のドメインを調査
 ```
 
 ### `/sdd-validate-phase`
@@ -489,7 +482,7 @@
 
 ---
 
-### `/sdd-analyze-dependencies`
+### `/sdd-manager --analyze-deps`
 
 フェーズ依存関係を検出し、ROADMAP.md に `Depends on` エントリを提案します。(v1.32)
 
@@ -498,7 +491,7 @@
 **動作:** 依存関係提案テーブルを表示し、ユーザー確認後に ROADMAP.md の `Depends on` フィールドを更新します。
 
 ```bash
-/sdd-analyze-dependencies            # 依存関係の分析と提案
+/sdd-manager --analyze-deps            # 依存関係の分析と提案
 ```
 
 ---
@@ -517,7 +510,7 @@
 
 ### `/sdd-quick`
 
-GSDの保証付きでアドホックタスクを実行します。
+SDDの保証付きでアドホックタスクを実行します。
 
 | フラグ | 説明 |
 |------|-------------|
@@ -555,7 +548,7 @@ GSDの保証付きでアドホックタスクを実行します。
 
 ### `/sdd-do`
 
-フリーテキストを適切なGSDコマンドにルーティングします。
+フリーテキストを適切なSDDコマンドにルーティングします。
 
 ```bash
 /sdd-do                             # その後、やりたいことを説明
@@ -598,7 +591,7 @@ GSDの保証付きでアドホックタスクを実行します。
 /sdd-debug --diagnose "API returning 500 on /users endpoint"
 ```
 
-### `/sdd-add-todo`
+### `/sdd-capture`
 
 後で取り組むアイデアやタスクをキャプチャします。
 
@@ -607,15 +600,15 @@ GSDの保証付きでアドホックタスクを実行します。
 | `description` | いいえ | Todoの説明 |
 
 ```bash
-/sdd-add-todo "Consider adding dark mode support"
+/sdd-capture "Consider adding dark mode support"
 ```
 
-### `/sdd-check-todos`
+### `/sdd-capture --list`
 
 保留中のTodoを一覧表示し、取り組むものを選択します。
 
 ```bash
-/sdd-check-todos
+/sdd-capture --list
 ```
 
 ### `/sdd-add-tests`
@@ -685,7 +678,7 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 
 ### `/sdd-forensics`
 
-失敗またはスタックしたGSDワークフローの事後調査。
+失敗またはスタックしたSDDワークフローの事後調査。
 
 | 引数 | 必須 | 説明 |
 |----------|----------|-------------|
@@ -727,7 +720,7 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 | `complete <name>` | 完了したワークストリームをアーカイブ |
 | `resume <name>` | ワークストリームでの作業を再開 |
 
-**前提条件:** アクティブなGSDプロジェクト
+**前提条件:** アクティブなSDDプロジェクト
 **生成物:** `.planning/` 配下のワークストリームディレクトリ、ワークストリームごとの状態追跡
 
 ```bash
@@ -752,7 +745,7 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 /sdd-settings                       # 対話型設定
 ```
 
-### `/sdd-set-profile`
+### `/sdd-config --profile`
 
 クイックプロファイル切り替え。
 
@@ -761,8 +754,8 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 | `profile` | **はい** | `quality`、`balanced`、`budget`、または `inherit` |
 
 ```bash
-/sdd-set-profile budget             # budgetプロファイルに切り替え
-/sdd-set-profile quality            # qualityプロファイルに切り替え
+/sdd-config --profile budget             # budgetプロファイルに切り替え
+/sdd-config --profile quality            # qualityプロファイルに切り替え
 ```
 
 ---
@@ -788,18 +781,18 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 
 ### `/sdd-update`
 
-変更履歴のプレビュー付きでGSDをアップデートします。
+変更履歴のプレビュー付きでSDDをアップデートします。
 
 ```bash
 /sdd-update                         # アップデートを確認してインストール
 ```
 
-### `/sdd-reapply-patches`
+### `/sdd-update --reapply`
 
-GSDアップデート後にローカルの変更を復元します。
+SDDアップデート後にローカルの変更を復元します。
 
 ```bash
-/sdd-reapply-patches                # ローカルの変更をマージバック
+/sdd-update --reapply               # ローカルの変更をマージバック
 ```
 
 ---
@@ -861,7 +854,7 @@ GSDアップデート後にローカルの変更を復元します。
 |----------|----------|-------------|
 | `target branch` | いいえ | ベースブランチ（デフォルト: `main`） |
 
-**目的:** レビュアーにはコード変更のみを表示し、GSD計画アーティファクトは含めません。
+**目的:** レビュアーにはコード変更のみを表示し、SDD計画アーティファクトは含めません。
 
 ```bash
 /sdd-pr-branch                     # mainに対してフィルタリング
@@ -885,7 +878,7 @@ GSDアップデート後にローカルの変更を復元します。
 
 ## バックログ＆スレッドコマンド
 
-### `/sdd-add-backlog`
+### `/sdd-capture --backlog`
 
 999.x番号付けを使用して、バックログのパーキングロットにアイデアを追加します。
 
@@ -896,8 +889,8 @@ GSDアップデート後にローカルの変更を復元します。
 **999.x番号付け**により、バックログ項目はアクティブなフェーズシーケンスの外に保持されます。フェーズディレクトリは即座に作成されるため、`/sdd-discuss-phase` や `/sdd-plan-phase` がそれらに対して動作します。
 
 ```bash
-/sdd-add-backlog "GraphQL API layer"
-/sdd-add-backlog "Mobile responsive redesign"
+/sdd-capture --backlog "GraphQL API layer"
+/sdd-capture --backlog "Mobile responsive redesign"
 ```
 
 ---
@@ -914,7 +907,7 @@ GSDアップデート後にローカルの変更を復元します。
 
 ---
 
-### `/sdd-plant-seed`
+### `/sdd-capture --seed`
 
 トリガー条件付きの将来のアイデアをキャプチャ — 適切なマイルストーンで自動的に表面化します。
 
@@ -928,7 +921,7 @@ GSDアップデート後にローカルの変更を復元します。
 **利用先:** `/sdd-new-milestone`（シードをスキャンしてマッチするものを提示）
 
 ```bash
-/sdd-plant-seed "Add real-time collaboration when WebSocket infra is in place"
+/sdd-capture --seed "Add real-time collaboration when WebSocket infra is in place"
 ```
 
 ---
@@ -955,10 +948,3 @@ GSDアップデート後にローカルの変更を復元します。
 
 ## コミュニティコマンド
 
-### `/sdd-join-discord`
-
-Discordコミュニティの招待を開きます。
-
-```bash
-/sdd-join-discord
-```

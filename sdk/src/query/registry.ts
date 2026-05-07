@@ -22,6 +22,7 @@
 
 import type { QueryResult, QueryHandler } from './utils.js';
 import { SDDError, ErrorClassification } from '../errors.js';
+import { resolveQueryTokens } from './query-command-resolution-strategy.js';
 
 // ─── extractField ──────────────────────────────────────────────────────────
 
@@ -61,8 +62,8 @@ export function extractField(obj: unknown, fieldPath: string): unknown {
  * Flat command registry that routes query commands to native handlers.
  *
  * `dispatch()` throws `SDDError` for unknown command keys. The `sdd-sdk query`
- * CLI uses `resolveQueryArgv()` to map argv to a registered handler; there is
- * no passthrough to `sdd-tools.cjs` — CJS-only commands stay on the legacy CLI.
+ * CLI uses `resolveQueryArgv()` first; when no handler matches, it may shell out
+ * to `sdd-tools.cjs` (see `cli.ts` and `QUERY-HANDLERS.md` fallback policy).
  */
 export class QueryRegistry {
   private handlers = new Map<string, QueryHandler>();
@@ -110,10 +111,11 @@ export class QueryRegistry {
    * @param command - The command name to dispatch
    * @param args - Arguments to pass to the handler
    * @param projectDir - The project directory for context
+   * @param workstream - Optional workstream name to scope .planning paths
    * @returns The query result from the handler
    * @throws SDDError if no handler is registered for the command
    */
-  async dispatch(command: string, args: string[], projectDir: string): Promise<QueryResult> {
+  async dispatch(command: string, args: string[], projectDir: string, workstream?: string): Promise<QueryResult> {
     const handler = this.handlers.get(command);
     if (!handler) {
       throw new SDDError(
@@ -121,37 +123,8 @@ export class QueryRegistry {
         ErrorClassification.Validation,
       );
     }
-    return handler(args, projectDir);
+    return handler(args, projectDir, workstream);
   }
-}
-
-function expandSingleDottedToken(tokens: string[]): string[] {
-  if (tokens.length !== 1 || tokens[0].startsWith('--')) {
-    return tokens;
-  }
-  const t = tokens[0];
-  if (!t.includes('.')) {
-    return tokens;
-  }
-  return t.split('.');
-}
-
-function matchRegisteredPrefix(
-  tokens: string[],
-  registry: QueryRegistry,
-): { cmd: string; args: string[] } | null {
-  for (let i = tokens.length; i >= 1; i--) {
-    const head = tokens.slice(0, i);
-    const dotted = head.join('.');
-    const spaced = head.join(' ');
-    if (registry.has(dotted)) {
-      return { cmd: dotted, args: tokens.slice(i) };
-    }
-    if (registry.has(spaced)) {
-      return { cmd: spaced, args: tokens.slice(i) };
-    }
-  }
-  return null;
 }
 
 /**
@@ -163,12 +136,7 @@ export function resolveQueryArgv(
   tokens: string[],
   registry: QueryRegistry,
 ): { cmd: string; args: string[] } | null {
-  let matched = matchRegisteredPrefix(tokens, registry);
-  if (!matched) {
-    const expanded = expandSingleDottedToken(tokens);
-    if (expanded !== tokens) {
-      matched = matchRegisteredPrefix(expanded, registry);
-    }
-  }
-  return matched;
+  const resolved = resolveQueryTokens(tokens, registry);
+  if (!resolved) return null;
+  return { cmd: resolved.cmd, args: resolved.args };
 }

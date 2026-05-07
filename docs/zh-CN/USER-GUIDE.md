@@ -199,20 +199,18 @@
 | `/sdd-pause-work` | 保存上下文交接 | 阶段中途停止 |
 | `/sdd-help` | 显示所有命令 | 快速参考 |
 | `/sdd-update` | 更新 SDD 并预览变更日志 | 检查新版本 |
-| `/sdd-join-discord` | 打开 Discord 社区邀请 | 问题或社区 |
 
 ### 阶段管理
 
 | 命令 | 用途 | 何时使用 |
 |---------|---------|-------------|
-| `/sdd-add-phase` | 向路线图追加新阶段 | 初始规划后范围增长 |
-| `/sdd-insert-phase [N]` | 插入紧急工作（小数编号） | 里程碑中途紧急修复 |
-| `/sdd-remove-phase [N]` | 删除未来阶段并重新编号 | 移除某个功能 |
-| `/sdd-list-phase-assumptions [N]` | 预览 Claude 的预期方法 | 规划前，验证方向 |
-| `/sdd-plan-milestone-gaps` | 为审计缺口创建阶段 | 审计发现缺失项后 |
-| `/sdd-research-phase [N]` | 仅深度生态研究 | 复杂或不熟悉的领域 |
+| `/sdd-phase` | 向路线图追加新阶段 | 初始规划后范围增长 |
+| `/sdd-phase --insert [N]` | 插入紧急工作（小数编号） | 里程碑中途紧急修复 |
+| `/sdd-phase --remove [N]` | 删除未来阶段并重新编号 | 移除某个功能 |
+| `/sdd-discuss-phase --assumptions [N]` | 预览 Claude 的预期方法 | 规划前，验证方向 |
+| `/sdd-plan-phase --research-phase [N]` | 仅深度生态研究 | 复杂或不熟悉的领域 |
 | `/sdd-autonomous [--from N] [--to N] [--only N]` | 自主执行剩余阶段（`--to N` 到阶段 N 停止） | 批量自动处理 |
-| `/sdd-analyze-dependencies` | 检测阶段间依赖关系 | `/sdd-manager` 前分析 |
+| `/sdd-manager --analyze-deps` | 检测阶段间依赖关系 | `/sdd-manager` 前分析 |
 
 ### 状态管理
 
@@ -230,11 +228,11 @@
 | `/sdd-map-codebase` | 分析现有代码库 | 在现有代码上运行 `/sdd-new-project` 之前 |
 | `/sdd-quick` | 带 SDD 保证的临时任务 | Bug 修复、小功能、配置更改 |
 | `/sdd-debug [desc] [--diagnose]` | 带持久状态的系统化调试（`--diagnose` 仅诊断） | 出问题时 |
-| `/sdd-add-todo [desc]` | 捕获想法留待后用 | 会话期间想到什么 |
-| `/sdd-check-todos` | 列出待处理事项 | 查看捕获的想法 |
+| `/sdd-capture [desc]` | 捕获想法留待后用 | 会话期间想到什么 |
+| `/sdd-capture --list` | 列出待处理事项 | 查看捕获的想法 |
 | `/sdd-settings` | 配置工作流开关和模型配置 | 更改模型、切换代理 |
-| `/sdd-set-profile <profile>` | 快速切换配置 | 更改成本/质量权衡 |
-| `/sdd-reapply-patches` | 更新后恢复本地修改 | 如果你有本地编辑，在 `/sdd-update` 后 |
+| `/sdd-config --profile <profile>` | 快速切换配置 | 更改成本/质量权衡 |
+| `/sdd-update --reapply` | 更新后恢复本地修改 | 如果你有本地编辑，在 `/sdd-update` 后 |
 
 ---
 
@@ -390,7 +388,6 @@ claude --dangerously-skip-permissions
 
 ```bash
 /sdd-audit-milestone        # 检查需求覆盖率，检测存根
-/sdd-plan-milestone-gaps    # 如果审计发现缺口，创建阶段来填补
 /sdd-complete-milestone     # 归档，标记，完成
 ```
 
@@ -405,11 +402,11 @@ claude --dangerously-skip-permissions
 ### 里程碑中途范围变更
 
 ```bash
-/sdd-add-phase              # 向路线图追加新阶段
+/sdd-phase              # 向路线图追加新阶段
 # 或
-/sdd-insert-phase 3         # 在阶段 3 和 4 之间插入紧急工作
+/sdd-phase --insert 3         # 在阶段 3 和 4 之间插入紧急工作
 # 或
-/sdd-remove-phase 7         # 移除阶段 7 并重新编号
+/sdd-phase --remove 7         # 移除阶段 7 并重新编号
 ```
 
 ---
@@ -426,7 +423,7 @@ claude --dangerously-skip-permissions
 
 ### 计划看起来错误或不一致
 
-在规划前运行 `/sdd-discuss-phase [N]`。大多数计划质量问题来自 Claude 做出了 `CONTEXT.md` 本可以防止的假设。你也可以运行 `/sdd-list-phase-assumptions [N]` 在提交计划前查看 Claude 打算做什么。
+在规划前运行 `/sdd-discuss-phase [N]`。大多数计划质量问题来自 Claude 做出了 `CONTEXT.md` 本可以防止的假设。你也可以运行 `/sdd-discuss-phase --assumptions [N]` 在提交计划前查看 Claude 打算做什么。
 
 ### 执行失败或产生存根
 
@@ -458,7 +455,7 @@ node sdd-tools.cjs state sync              # 从磁盘重建 STATE.md
 
 ### 模型成本太高
 
-切换到 budget 配置：`/sdd-set-profile budget`。如果领域对你（或 Claude）熟悉，通过 `/sdd-settings` 禁用研究和计划检查代理。
+切换到 budget 配置：`/sdd-config --profile budget`。如果领域对你（或 Claude）熟悉，通过 `/sdd-settings` 禁用研究和计划检查代理。
 
 ### 处理敏感/私有项目
 
@@ -466,7 +463,7 @@ node sdd-tools.cjs state sync              # 从磁盘重建 STATE.md
 
 ### SDD 更新覆盖了我的本地更改
 
-从 v1.17 开始，安装程序将本地修改的文件备份到 `sdd-local-patches/`。运行 `/sdd-reapply-patches` 将你的更改合并回来。
+从 v1.17 开始，安装程序将本地修改的文件备份到 `sdd-local-patches/`。运行 `/sdd-update --reapply` 将你的更改合并回来。
 
 ### 子代理似乎失败但工作已完成
 
@@ -480,14 +477,13 @@ node sdd-tools.cjs state sync              # 从磁盘重建 STATE.md
 |---------|----------|
 | 丢失上下文 / 新会话 | `/sdd-resume-work` 或 `/sdd-progress` |
 | 阶段出错 | `git revert` 阶段提交，然后重新规划 |
-| 需要更改范围 | `/sdd-add-phase`、`/sdd-insert-phase` 或 `/sdd-remove-phase` |
-| 里程碑审计发现缺口 | `/sdd-plan-milestone-gaps` |
+| 需要更改范围 | `/sdd-phase`、`/sdd-phase --insert` 或 `/sdd-phase --remove` |
 | 出问题了 | `/sdd-debug "描述"` |
 | STATE.md 不同步 | `state validate` 然后 `state sync` |
 | 快速针对性修复 | `/sdd-quick` |
 | 计划与你的愿景不符 | `/sdd-discuss-phase [N]` 然后重新规划 |
-| 成本过高 | `/sdd-set-profile budget` 和 `/sdd-settings` 关闭代理 |
-| 更新破坏了本地更改 | `/sdd-reapply-patches` |
+| 成本过高 | `/sdd-config --profile budget` 和 `/sdd-settings` 关闭代理 |
+| 更新破坏了本地更改 | `/sdd-update --reapply` |
 
 ---
 

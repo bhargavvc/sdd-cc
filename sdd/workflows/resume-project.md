@@ -140,7 +140,7 @@ Present complete project status to user:
     Resume with: Task tool (resume parameter with agent ID)
 
 [If pending todos exist:]
-📋 [N] pending todos — /sdd-check-todos to review
+📋 [N] pending todos — /sdd-capture --list to review
 
 [If blockers exist:]
 ⚠️  Carried concerns:
@@ -225,9 +225,11 @@ Wait for user selection.
 </step>
 
 <step name="route_to_workflow">
-Based on user selection, route to appropriate workflow:
+Based on user selection, route to appropriate workflow.
 
-- **Execute plan** → Show command for user to run after clearing:
+Resume-specific exception: do **not** emit `/clear then:` here. Resume is already a session-entry flow, so the next command should be shown directly.
+
+- **Execute plan** → Show direct next command:
   ```
   ---
 
@@ -235,13 +237,11 @@ Based on user selection, route to appropriate workflow:
 
   **{phase}-{plan}: [Plan Name]** — [objective from PLAN.md]
 
-  `/clear` then:
-
   `/sdd-execute-phase {phase} ${SDD_WS}`
 
   ---
   ```
-- **Plan phase** → Show command for user to run after clearing:
+- **Plan phase** → Show direct next command:
   ```
   ---
 
@@ -249,15 +249,13 @@ Based on user selection, route to appropriate workflow:
 
   **Phase [N]: [Name]** — [Goal from ROADMAP.md]
 
-  `/clear` then:
-
   `/sdd-plan-phase [phase-number] ${SDD_WS}`
 
   ---
 
   **Also available:**
   - `/sdd-discuss-phase [N] ${SDD_WS}` — gather context first
-  - `/sdd-research-phase [N] ${SDD_WS}` — investigate unknowns
+  - `/sdd-plan-phase --research-phase [N] ${SDD_WS}` — investigate unknowns
 
   ---
   ```

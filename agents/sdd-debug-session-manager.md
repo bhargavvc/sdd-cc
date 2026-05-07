@@ -1,7 +1,7 @@
 ---
 name: sdd-debug-session-manager
 description: Manages multi-cycle /sdd-debug checkpoint and continuation loop in isolated context. Spawns sdd-debugger agents, handles checkpoints via AskUserQuestion, dispatches specialist skills, applies fixes. Returns compact summary to main context. Spawned by /sdd-debug command.
-tools: Read, Write, Bash, Grep, Glob, Task, AskUserQuestion
+tools: Read, Write, Bash, Grep, Glob, Agent, AskUserQuestion
 color: orange
 # hooks:
 #   PostToolUse:

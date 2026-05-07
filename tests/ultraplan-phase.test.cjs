@@ -1,3 +1,8 @@
+// allow-test-rule: pending-migration-to-typed-ir [#2974]
+// Tracked in #2974 for migration to typed-IR assertions per CONTRIBUTING.md
+// "Prohibited: Raw Text Matching on Test Outputs". Per-file review may
+// reclassify some entries as source-text-is-the-product during migration.
+
 /**
  * /sdd-ultraplan-phase [BETA] Tests
  *
@@ -87,7 +92,7 @@ describe('ultraplan-phase workflow runtime gate', () => {
 
   test('error message references /sdd-plan-phase as local alternative', () => {
     assert.ok(
-      content.includes('sdd-plan-phase'),
+      content.includes('sdd:plan-phase') || content.includes('sdd-plan-phase'),
       'error message should direct users to /sdd-plan-phase as the local alternative'
     );
   });
@@ -104,7 +109,7 @@ describe('ultraplan-phase workflow initialization', () => {
 
   test('handles missing .planning directory', () => {
     assert.ok(
-      content.includes('sdd-new-project') || content.includes('/sdd-new-project'),
+      content.includes('sdd-new-project') || content.includes('/sdd-new-project') || content.includes('sdd:new-project'),
       'workflow should direct user to /sdd-new-project when .planning is missing'
     );
   });
@@ -154,7 +159,7 @@ describe('ultraplan-phase workflow return path', () => {
   });
 
   test('directs user to run /sdd-import --from after ultraplan completes', () => {
-    assert.ok(content.includes('sdd-import'), 'workflow must direct user to run /sdd-import --from with the saved file path');
+    assert.ok(content.includes('sdd-import') || content.includes('sdd:import'), 'workflow must direct user to run /sdd:import --from with the saved file path');
   });
 
   test('mentions the --from flag for sdd-import', () => {

@@ -121,7 +121,7 @@ Choice [S]:
 
 **Goal:** Resolve plans that ran without producing summaries during Phase {src} execution
 **Source phase:** {src}
-**Deferred at:** {date} during /sdd-next advancement to Phase {dest}
+**Deferred at:** {date} during /sdd-progress --next advancement to Phase {dest}
 **Plans:**
 - [ ] {N}-{M}: {slug} (ran, no SUMMARY.md)
 ```
@@ -207,7 +207,7 @@ Display the determination:
 ```
 
 Then immediately invoke the determined command via SlashCommand.
-Do not ask for confirmation — the whole point of `/sdd-next` is zero-friction advancement.
+Do not ask for confirmation — the whole point of `/sdd-progress --next` is zero-friction advancement.
 </step>
 
 </process>

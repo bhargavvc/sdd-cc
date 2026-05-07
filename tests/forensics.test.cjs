@@ -1,3 +1,8 @@
+// allow-test-rule: pending-migration-to-typed-ir [#2974]
+// Tracked in #2974 for migration to typed-IR assertions per CONTRIBUTING.md
+// "Prohibited: Raw Text Matching on Test Outputs". Per-file review may
+// reclassify some entries as source-text-is-the-product during migration.
+
 /**
  * SDD Forensics Tests
  *
@@ -135,6 +140,28 @@ describe('forensics workflow', () => {
     assert.ok(
       content.includes('gh issue create'),
       'should offer to create GitHub issue from findings'
+    );
+  });
+
+  test('workflow submits issues to bhargavvc/sdd-cc, not the current repo', () => {
+    const content = fs.readFileSync(workflowPath, 'utf-8');
+    // Scope check to the gh issue create invocation — a whole-file search would
+    // pass even if gh issue create lacked --repo, because gh label list also
+    // contains the repo string.
+    assert.match(
+      content,
+      /gh issue create[\s\S]{0,250}--repo\s+sdd-build\/sdd/,
+      'gh issue create must use --repo bhargavvc/sdd-cc to avoid submitting to the user\'s current project repo'
+    );
+  });
+
+  test('workflow checks bug label in bhargavvc/sdd-cc, not the current repo', () => {
+    const content = fs.readFileSync(workflowPath, 'utf-8');
+    // Regex is more robust than a fixed-length slice to formatting changes
+    assert.match(
+      content,
+      /gh label list[\s\S]{0,250}--repo\s+sdd-build\/sdd/,
+      'gh label list must target bhargavvc/sdd-cc'
     );
   });
 

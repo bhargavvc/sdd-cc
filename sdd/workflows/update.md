@@ -113,6 +113,12 @@ if [ -n "$PREFERRED_CONFIG_DIR" ] && { [ -f "$PREFERRED_CONFIG_DIR/sdd/VERSION" 
   echo "$INSTALLED_VERSION"
   echo "$INSTALL_SCOPE"
   echo "${PREFERRED_RUNTIME:-claude}"
+  # 4-line output contract (#2993 CR): early-return path must also emit
+  # SDD_DIR or downstream check_latest_version misreads the install as
+  # UNKNOWN. PREFERRED_CONFIG_DIR is the resolved config dir we just
+  # validated above (line 95-96); it is the right SDD_DIR value for
+  # this fast path.
+  echo "$PREFERRED_CONFIG_DIR"
   exit 0
 fi
 
@@ -222,34 +228,41 @@ if [ "$IS_LOCAL" = true ]; then
   INSTALLED_VERSION="$(cat "$LOCAL_VERSION_FILE")"
   INSTALL_SCOPE="LOCAL"
   TARGET_RUNTIME="$LOCAL_RUNTIME"
+  RESOLVED_SDD_DIR="$LOCAL_DIR"
 elif [ -n "$GLOBAL_VERSION_FILE" ] && [ -f "$GLOBAL_VERSION_FILE" ] && [ -f "$GLOBAL_MARKER_FILE" ] && grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' "$GLOBAL_VERSION_FILE"; then
   INSTALLED_VERSION="$(cat "$GLOBAL_VERSION_FILE")"
   INSTALL_SCOPE="GLOBAL"
   TARGET_RUNTIME="$GLOBAL_RUNTIME"
+  RESOLVED_SDD_DIR="$GLOBAL_DIR"
 elif [ -n "$LOCAL_RUNTIME" ] && [ -f "$LOCAL_MARKER_FILE" ]; then
   # Runtime detected but VERSION missing/corrupt: treat as unknown version, keep runtime target
   INSTALLED_VERSION="0.0.0"
   INSTALL_SCOPE="LOCAL"
   TARGET_RUNTIME="$LOCAL_RUNTIME"
+  RESOLVED_SDD_DIR="$LOCAL_DIR"
 elif [ -n "$GLOBAL_RUNTIME" ] && [ -f "$GLOBAL_MARKER_FILE" ]; then
   INSTALLED_VERSION="0.0.0"
   INSTALL_SCOPE="GLOBAL"
   TARGET_RUNTIME="$GLOBAL_RUNTIME"
+  RESOLVED_SDD_DIR="$GLOBAL_DIR"
 else
   INSTALLED_VERSION="0.0.0"
   INSTALL_SCOPE="UNKNOWN"
   TARGET_RUNTIME="claude"
+  RESOLVED_SDD_DIR=""
 fi
 
 echo "$INSTALLED_VERSION"
 echo "$INSTALL_SCOPE"
 echo "$TARGET_RUNTIME"
+echo "$RESOLVED_SDD_DIR"
 ```
 
 Parse output:
 - Line 1 = installed version (`0.0.0` means unknown version)
 - Line 2 = install scope (`LOCAL`, `GLOBAL`, or `UNKNOWN`)
 - Line 3 = target runtime (`claude`, `opencode`, `gemini`, `kilo`, or `codex`)
+- Line 4 = resolved SDD config dir (e.g. `/Users/me/.claude`, `/Users/me/.gemini`); empty if scope is `UNKNOWN`. Capture this as `SDD_DIR` and pass it to subsequent steps so they don't have to re-derive the runtime path.
 - If scope is `UNKNOWN`, proceed to install step using `--claude --global` fallback.
 
 If multiple runtime installs are detected and the invoking runtime cannot be determined from execution_context, ask the user which runtime to update before running install.
@@ -269,17 +282,45 @@ Proceed to install step (treat as version 0.0.0 for comparison).
 </step>
 
 <step name="check_latest_version">
-Check npm for latest version:
+Check npm for latest version via the deterministic script. **Do NOT run `npm view` or `npm search` directly** — the package name must come from the script, not from a free choice at execution time. (#2992: LLM-driven prescriptions of npm package names produced wrong-package queries; moving the package name into a script constant closes that gap.)
+
+The `SDD_DIR` value emitted by `get_installed_version` (line 4) resolves to the runtime-specific config dir (`~/.claude/`, `~/.gemini/`, `~/.codex/`, etc.), so the script invocation works for every runtime — not just Claude. If `SDD_DIR` is empty (scope `UNKNOWN`), skip this step and go directly to install.
+
+`LATEST_RESULT` is a JSON document with the documented shape `{ ok: bool, version: string, reason: string, detail?: string }`. Parse via `jq` ONLY when the script actually ran. When `SDD_DIR` is empty (scope `UNKNOWN`), skip the check entirely and seed the parsed fields with their no-op values so downstream logic does not mistake an unset `LATEST_RESULT` for a failed network check (#2993 CR feedback):
 
 ```bash
-npm view @bhargavvc/sdd-cc version 2>/dev/null
+if [ -z "$SDD_DIR" ]; then
+  # No install detected — fall through to install step; version-check is skipped.
+  LATEST_RESULT=""
+  LATEST_STATUS=0
+  LATEST_OK=false
+  LATEST_VERSION=""
+  LATEST_REASON="no_install_detected"
+else
+  LATEST_RESULT="$(node "$SDD_DIR/sdd/bin/check-latest-version.cjs" --json 2>/dev/null)"
+  LATEST_STATUS=$?
+  # #2993 CR: when node is missing or the script doesn't exist, LATEST_RESULT
+  # is empty and piping it to `jq` produces a parse error on stderr while
+  # leaving LATEST_OK / LATEST_REASON as empty strings. Fail the check with a
+  # meaningful reason instead of a blank diagnostic.
+  if [ -n "$LATEST_RESULT" ]; then
+    LATEST_OK="$(printf '%s' "$LATEST_RESULT" | jq -r '.ok // false')"
+    LATEST_VERSION="$(printf '%s' "$LATEST_RESULT" | jq -r '.version // empty')"
+    LATEST_REASON="$(printf '%s' "$LATEST_RESULT" | jq -r '.reason // empty')"
+  else
+    LATEST_OK=false
+    LATEST_VERSION=""
+    LATEST_REASON="script_not_found_or_node_unavailable"
+  fi
+fi
 ```
 
-**If npm check fails:**
-```
-Couldn't check for updates (offline or npm unavailable).
+**If `LATEST_OK` is not `true`** (or `LATEST_STATUS` is non-zero):
 
-To update manually: `npx @bhargavvc/sdd-cc --global`
+```text
+Couldn't check for updates (reason: {LATEST_REASON}, exit: {LATEST_STATUS}).
+
+To update manually: `npx -y --package=@bhargavvc/sdd-cc@latest -- @bhargavvc/sdd-cc --global`
 ```
 
 Exit.
@@ -365,7 +406,7 @@ Your custom files in other locations are preserved:
 - Custom hooks ✓
 - Your CLAUDE.md files ✓
 
-If you've modified any SDD files directly, they'll be automatically backed up to `sdd-local-patches/` and can be reapplied with `/sdd-reapply-patches` after the update.
+If you've modified any SDD files directly, they'll be automatically backed up to `sdd-local-patches/` and can be reapplied with `/sdd-update --reapply` after the update.
 ```
 
 
@@ -388,14 +429,15 @@ installer does not know about and will delete during the wipe.
 **Do not use bash path-stripping (`${filepath#$RUNTIME_DIR/}`) or `node -e require()`
 inline** — those patterns fail when `$RUNTIME_DIR` is unset and the stripped
 relative path may not match manifest key format, which causes CUSTOM_COUNT=0
-even when custom files exist (bug #1997). Use `sdd-tools detect-custom-files`
-instead, which resolves paths reliably with Node.js `path.relative()`.
+even when custom files exist (bug #1997). Use `sdd-sdk query detect-custom-files`
+when `sdd-sdk` is on `PATH`, or the bundled `sdd-tools.cjs detect-custom-files`
+otherwise — both resolve paths reliably with Node.js `path.relative()`.
 
 First, resolve the config directory (`RUNTIME_DIR`) from the install scope
 detected in `get_installed_version`:
 
 ```bash
-# RUNTIME_DIR is the resolved config directory (e.g. ~/.claude, ~/.config/opencode)
+# RUNTIME_DIR is the resolved config directory (e.g. ~/.config/opencode, ~/.gemini)
 # It should already be set from get_installed_version as GLOBAL_DIR or LOCAL_DIR.
 # Use the appropriate variable based on INSTALL_SCOPE.
 if [ "$INSTALL_SCOPE" = "LOCAL" ]; then
@@ -410,17 +452,20 @@ fi
 If `RUNTIME_DIR` is empty or does not exist, skip this step (no config dir to
 inspect).
 
-Otherwise, resolve the path to `sdd-tools.cjs` and run:
+Otherwise run `detect-custom-files` (prefer SDK when available):
 
 ```bash
 SDD_TOOLS="$RUNTIME_DIR/sdd/bin/sdd-tools.cjs"
-if [ -f "$SDD_TOOLS" ] && [ -n "$RUNTIME_DIR" ]; then
+CUSTOM_JSON=''
+if [ -n "$RUNTIME_DIR" ] && command -v sdd-sdk >/dev/null 2>&1; then
+  CUSTOM_JSON=$(sdd-sdk query detect-custom-files --config-dir "$RUNTIME_DIR" 2>/dev/null)
+elif [ -f "$SDD_TOOLS" ] && [ -n "$RUNTIME_DIR" ]; then
   CUSTOM_JSON=$(node "$SDD_TOOLS" detect-custom-files --config-dir "$RUNTIME_DIR" 2>/dev/null)
-  CUSTOM_COUNT=$(echo "$CUSTOM_JSON" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).custom_count);}catch{console.log(0);}})" 2>/dev/null || echo "0")
-else
-  CUSTOM_COUNT=0
+fi
+if [ -z "$CUSTOM_JSON" ]; then
   CUSTOM_JSON='{"custom_files":[],"custom_count":0}'
 fi
+CUSTOM_COUNT=$(echo "$CUSTOM_JSON" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).custom_count);}catch{console.log(0);}})" 2>/dev/null || echo "0")
 ```
 
 **If `CUSTOM_COUNT` > 0:**
@@ -441,10 +486,15 @@ const path = require('path');
 for (const relPath of custom_files) {
   const src = path.join(runtimeDir, relPath);
   const dst = path.join(backupDir, relPath);
-  if (fs.existsSync(src)) {
+  if (!fs.existsSync(src)) continue;
+
+  try {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     fs.copyFileSync(src, dst);
     console.log('  Backed up: ' + relPath);
+  } catch (err) {
+    const code = err && err.code ? String(err.code) : 'ERROR';
+    console.log('  Skipped (non-fatal): ' + relPath + ' [' + code + ']');
   }
 }
 JSEOF
@@ -471,17 +521,17 @@ RUNTIME_FLAG="--$TARGET_RUNTIME"
 
 **If LOCAL install:**
 ```bash
-npx -y @bhargavvc/sdd-cc@latest "$RUNTIME_FLAG" --local
+npx -y --package=@bhargavvc/sdd-cc@latest -- @bhargavvc/sdd-cc "$RUNTIME_FLAG" --local
 ```
 
 **If GLOBAL install:**
 ```bash
-npx -y @bhargavvc/sdd-cc@latest "$RUNTIME_FLAG" --global
+npx -y --package=@bhargavvc/sdd-cc@latest -- @bhargavvc/sdd-cc "$RUNTIME_FLAG" --global
 ```
 
 **If UNKNOWN install:**
 ```bash
-npx -y @bhargavvc/sdd-cc@latest --claude --global
+npx -y --package=@bhargavvc/sdd-cc@latest -- @bhargavvc/sdd-cc --claude --global
 ```
 
 Capture output. If install fails, show error and exit.
@@ -535,6 +585,11 @@ for dir in .claude .config/opencode .opencode .gemini .config/kilo .kilo .codex;
   rm -f "./$dir/cache/sdd-update-check.json"
   rm -f "$HOME/$dir/cache/sdd-update-check.json"
 done
+
+# Clear the shared tool-agnostic cache written by sdd-check-update.js hook (#2784).
+# The hook uses ~/.cache/sdd/sdd-update-check.json regardless of runtime; clear it
+# so the statusline stops showing the stale "⬆ /sdd-update" indicator after update.
+rm -f "$HOME/.cache/sdd/sdd-update-check.json"
 ```
 
 The SessionStart hook (`sdd-check-update.js`) writes to the detected runtime's cache directory, so preferred/env-derived paths and default paths must all be cleared to prevent stale update indicators.
@@ -564,7 +619,7 @@ Check for sdd-local-patches/backup-meta.json in the config directory.
 
 ```
 Local patches were backed up before the update.
-Run /sdd-reapply-patches to merge your modifications into the new version.
+Run `/sdd-update --reapply` to merge your modifications into the new version.
 ```
 
 **If no patches:** Continue normally.

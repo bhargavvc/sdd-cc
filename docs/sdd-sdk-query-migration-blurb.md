@@ -4,7 +4,7 @@ Copy-paste friendly for Discord and GitHub comments.
 
 ---
 
-**@bhargavvc/sdk** replaces the untyped, monolithic `sdd-tools.cjs` subprocess with a typed, tested, registry-based query system and **`sdd-sdk query`**, giving SDD structured results, classified errors (`GSDQueryError`), and golden-verified parity with the old CLI. That gives the framework one stable contract instead of a fragile, very large CLI that every workflow had to spawn and parse by hand.
+**@bhargavvc/sdk** replaces the untyped, monolithic `sdd-tools.cjs` subprocess with a typed, tested, registry-based query system and **`sdd-sdk query`**, giving SDD structured results, classified errors (`SDDError` with `ErrorClassification`), and golden-verified parity with the old CLI. That gives the framework one stable contract instead of a fragile, very large CLI that every workflow had to spawn and parse by hand.
 
 **What users can expect**
 

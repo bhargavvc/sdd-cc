@@ -1,3 +1,8 @@
+// allow-test-rule: pending-migration-to-typed-ir [#2974]
+// Tracked in #2974 for migration to typed-IR assertions per CONTRIBUTING.md
+// "Prohibited: Raw Text Matching on Test Outputs". Per-file review may
+// reclassify some entries as source-text-is-the-product during migration.
+
 /**
  * Agent size budget.
  *
@@ -14,7 +19,7 @@
  * rationale in the PR, and make sure the bloat is not duplicated content
  * that belongs in `sdd/references/`.
  *
- * See: https://github.com/gsd-build/sdd/issues/2361
+ * See: https://github.com/bhargavvc/sdd-cc/issues/2361
  */
 
 const { test, describe } = require('node:test');

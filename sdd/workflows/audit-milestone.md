@@ -18,7 +18,7 @@ Valid SDD subagent types (use exact names — do not fall back to 'general-purpo
 ```bash
 INIT=$(sdd-sdk query init.milestone-op)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_CHECKER=$(sdd-sdk query agent-skills sdd-integration-checker 2>/dev/null)
+AGENT_SKILLS_CHECKER=$(sdd-sdk query agent-skills sdd-integration-checker)
 ```
 
 Extract from init JSON: `milestone_version`, `milestone_name`, `phase_count`, `completed_phases`, `commit_docs`.
@@ -67,7 +67,7 @@ With phase context collected:
 Extract `MILESTONE_REQ_IDS` from REQUIREMENTS.md traceability table — all REQ-IDs assigned to phases in this milestone.
 
 ```
-Task(
+Agent(
   prompt="Check cross-phase integration and E2E flows.
 
 Phases: {phase_dirs}
@@ -85,6 +85,8 @@ ${AGENT_SKILLS_CHECKER}",
   model="{integration_checker_model}"
 )
 ```
+
+> **ORCHESTRATOR RULE — CODEX RUNTIME**: After calling Agent() above, stop working on this task immediately. Do not read more files, edit code, or run tests related to this task while the subagent is active. Wait for the subagent to return its result. This prevents duplicate work, conflicting edits, and wasted context. Only resume when the subagent result is available.
 
 ## 4. Collect Results
 
@@ -272,11 +274,22 @@ Phases needing validation: run `/sdd-validate-phase {N}` for each flagged phase.
 
 ## ▶ Next Up — [${PROJECT_CODE}] ${PROJECT_TITLE}
 
-**Plan gap closure** — create phases to complete milestone
+**Close the gaps inline** — gap planning happens as part of this audit's
+output (see the Unsatisfied Requirements, Cross-Phase Issues, Broken Flows,
+and Nyquist Coverage sections above). Insert one closure phase per gap (or
+per group of related gaps) using the standard phase chain:
 
 /clear then:
 
-/sdd-plan-milestone-gaps
+/sdd-phase --insert <N> "Close gap: <REQ-ID> — <description>"
+/sdd-discuss-phase <N>
+/sdd-plan-phase <N>
+/sdd-execute-phase <N>
+
+For Nyquist-coverage gaps flagged in the table above, prefer running
+`/sdd-validate-phase <N>` for each flagged phase (and `/sdd-secure-phase
+<N>` if SECURITY.md was flagged) before inserting a new closure phase —
+they may close the gap retroactively without a new phase.
 
 ───────────────────────────────────────────────────────────────
 
@@ -314,11 +327,15 @@ All requirements met. No critical blockers. Accumulated tech debt needs review.
 
 /sdd-complete-milestone {version}
 
-**B. Plan cleanup phase** — address debt before completing
+**B. Plan a cleanup phase** — address the debt above before completing.
+Insert a closure phase using the standard chain:
 
 /clear then:
 
-/sdd-plan-milestone-gaps
+/sdd-phase --insert <N> "Address tech debt: <area>"
+/sdd-discuss-phase <N>
+/sdd-plan-phase <N>
+/sdd-execute-phase <N>
 
 ───────────────────────────────────────────────────────────────
 </offer_next>

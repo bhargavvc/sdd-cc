@@ -52,7 +52,7 @@
 
 **也可选：**
 - 执行前审查计划
-- `/sdd-list-phase-assumptions 2` — 检查假设
+- `/sdd-discuss-phase --assumptions 2` — 检查假设
 
 ---
 ```
@@ -99,7 +99,7 @@
 
 **也可选：**
 - `/sdd-discuss-phase 2` — 先收集上下文
-- `/sdd-research-phase 2` — 调查未知项
+- `/sdd-plan-phase --research-phase 2` — 调查未知项
 - 审查路线图
 
 ---
@@ -128,7 +128,7 @@
 
 **也可选：**
 - `/sdd-discuss-phase 3` — 先收集上下文
-- `/sdd-research-phase 3` — 调查未知项
+- `/sdd-plan-phase --research-phase 3` — 调查未知项
 - 回顾阶段 2 构建的内容
 
 ---
@@ -149,7 +149,7 @@
 
 **先讨论上下文：** `/sdd-discuss-phase 3`
 
-**研究未知项：** `/sdd-research-phase 3`
+**研究未知项：** `/sdd-plan-phase --research-phase 3`
 
 <sub>`/clear` 优先 → 全新上下文窗口</sub>
 

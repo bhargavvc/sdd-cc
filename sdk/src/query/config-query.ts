@@ -16,10 +16,12 @@
  * ```
  */
 
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { SDDError, ErrorClassification } from '../errors.js';
 import { loadConfig } from '../config.js';
 import { planningPaths } from './helpers.js';
+import { maskIfSecret } from './secrets.js';
 import type { QueryHandler } from './utils.js';
 
 // ─── MODEL_PROFILES ─────────────────────────────────────────────────────────
@@ -42,6 +44,7 @@ export const MODEL_PROFILES: Record<string, Record<string, string>> = {
   'sdd-plan-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
   'sdd-integration-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
   'sdd-nyquist-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
+  'sdd-pattern-mapper': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
   'sdd-ui-researcher': { quality: 'opus', balanced: 'sonnet', budget: 'haiku', adaptive: 'sonnet' },
   'sdd-ui-checker': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
   'sdd-ui-auditor': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku', adaptive: 'haiku' },
@@ -51,6 +54,19 @@ export const MODEL_PROFILES: Record<string, Record<string, string>> = {
 
 /** Valid model profile names. */
 export const VALID_PROFILES: string[] = Object.keys(MODEL_PROFILES['sdd-planner']);
+
+/**
+ * Flat map of agent name → model alias for one profile tier (matches `model-profiles.cjs`).
+ */
+export function getAgentToModelMapForProfile(normalizedProfile: string): Record<string, string> {
+  const profile = VALID_PROFILES.includes(normalizedProfile) ? normalizedProfile : 'balanced';
+  const agentToModelMap: Record<string, string> = {};
+  for (const [agent, profileToModelMap] of Object.entries(MODEL_PROFILES)) {
+    const mapped = profileToModelMap[profile] ?? profileToModelMap.balanced;
+    agentToModelMap[agent] = mapped ?? 'sonnet';
+  }
+  return agentToModelMap;
+}
 
 // ─── configGet ──────────────────────────────────────────────────────────────
 
@@ -65,13 +81,26 @@ export const VALID_PROFILES: string[] = Object.keys(MODEL_PROFILES['sdd-planner'
  * @returns QueryResult with the config value at the given path
  * @throws SDDError with Validation classification if key missing or not found
  */
-export const configGet: QueryHandler = async (args, projectDir) => {
-  const keyPath = args[0];
-  if (!keyPath) {
-    throw new SDDError('Usage: config-get <key.path>', ErrorClassification.Validation);
+export const configGet: QueryHandler = async (args, projectDir, workstream) => {
+  // Support --default <value> flag (#2803): return this value (exit 0) when the
+  // key is absent, mirroring sdd-tools.cjs config-get behavior from #1893.
+  const defaultIdx = args.indexOf('--default');
+  let defaultValue: string | undefined;
+  let filteredArgs = args;
+  if (defaultIdx !== -1) {
+    if (defaultIdx + 1 >= args.length) {
+      throw new SDDError('Usage: config-get <key.path> [--default <value>]', ErrorClassification.Validation);
+    }
+    defaultValue = String(args[defaultIdx + 1]);
+    filteredArgs = [...args.slice(0, defaultIdx), ...args.slice(defaultIdx + 2)];
   }
 
-  const paths = planningPaths(projectDir);
+  const keyPath = filteredArgs[0];
+  if (!keyPath) {
+    throw new SDDError('Usage: config-get <key.path> [--default <value>]', ErrorClassification.Validation);
+  }
+
+  const paths = planningPaths(projectDir, workstream);
   let raw: string;
   try {
     raw = await readFile(paths.config, 'utf-8');
@@ -90,15 +119,39 @@ export const configGet: QueryHandler = async (args, projectDir) => {
   let current: unknown = config;
   for (const key of keys) {
     if (current === undefined || current === null || typeof current !== 'object') {
-      throw new SDDError(`Key not found: ${keyPath}`, ErrorClassification.Validation);
+      // UNIX convention (cf. `git config --get`): missing key exits 1, not 10.
+      // See issue #2544 — callers use `if ! sdd-sdk query config-get k; then` patterns.
+      if (defaultValue !== undefined) return { data: defaultValue };
+      throw new SDDError(`Key not found: ${keyPath}`, ErrorClassification.Execution);
     }
     current = (current as Record<string, unknown>)[key];
   }
   if (current === undefined) {
-    throw new SDDError(`Key not found: ${keyPath}`, ErrorClassification.Validation);
+    if (defaultValue !== undefined) return { data: defaultValue };
+    throw new SDDError(`Key not found: ${keyPath}`, ErrorClassification.Execution);
   }
 
-  return { data: current };
+  // Mask plaintext for keys in SECRET_CONFIG_KEYS to match CJS behavior at
+  // config.cjs:440-441 — without this, `sdd-sdk query config-get brave_search`
+  // would echo the plaintext credential into machine-readable output. (#2997)
+  return { data: maskIfSecret(keyPath, current) };
+};
+
+// ─── configPath ─────────────────────────────────────────────────────────────
+
+/**
+ * Query handler for config-path — resolved `.planning/config.json` path (workstream-aware via cwd).
+ *
+ * Port of `cmdConfigPath` from `config.cjs`. The JSON query API returns `{ path }`; the CJS CLI
+ * emits the path as plain text for shell substitution.
+ *
+ * @param _args - Unused
+ * @param projectDir - Project root directory
+ * @returns QueryResult with `{ path: string }` absolute or project-relative resolution via planningPaths
+ */
+export const configPath: QueryHandler = async (_args, projectDir, workstream) => {
+  const paths = planningPaths(projectDir, workstream);
+  return { data: { path: paths.config } };
 };
 
 // ─── resolveModel ───────────────────────────────────────────────────────────
@@ -111,16 +164,20 @@ export const configGet: QueryHandler = async (args, projectDir) => {
  *
  * @param args - args[0] is the agent type (e.g., 'sdd-planner')
  * @param projectDir - Project root directory
+ * @param workstream - Optional workstream name; forwarded to loadConfig so per-workstream
+ *   model_profile settings are respected (mirrors configGet/configPath behavior)
  * @returns QueryResult with { model, profile } or { model, profile, unknown_agent: true }
  * @throws SDDError with Validation classification if agent type not provided
  */
-export const resolveModel: QueryHandler = async (args, projectDir) => {
+export const resolveModel: QueryHandler = async (args, projectDir, workstream) => {
   const agentType = args[0];
   if (!agentType) {
     throw new SDDError('agent-type required', ErrorClassification.Validation);
   }
 
-  const config = await loadConfig(projectDir);
+  const configFilePath = planningPaths(projectDir, workstream).config;
+  const configExists = existsSync(configFilePath);
+  const config = await loadConfig(projectDir, workstream);
   const profile = String(config.model_profile || 'balanced').toLowerCase();
 
   // Check per-agent override first
@@ -134,9 +191,9 @@ export const resolveModel: QueryHandler = async (args, projectDir) => {
     return { data: result };
   }
 
-  // resolve_model_ids: "omit" -- return empty string
+  // No project config (or explicit omit policy) -> return empty model id (CJS parity)
   const resolveModelIds = (config as Record<string, unknown>).resolve_model_ids;
-  if (resolveModelIds === 'omit') {
+  if (!configExists || resolveModelIds === 'omit') {
     const agentModels = MODEL_PROFILES[agentType];
     const result = agentModels
       ? { model: '', profile }

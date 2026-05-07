@@ -21,7 +21,7 @@
 
 ## システム概要
 
-GSDは、ユーザーとAIコーディングエージェント（Claude Code、Gemini CLI、OpenCode、Kilo、Codex、Copilot、Antigravity、Trae、Cline、Augment Code）の間に位置する**メタプロンプティングフレームワーク**です。以下の機能を提供します：
+SDDは、ユーザーとAIコーディングエージェント（Claude Code、Gemini CLI、OpenCode、Kilo、Codex、Copilot、Antigravity、Trae、Cline、Augment Code）の間に位置する**メタプロンプティングフレームワーク**です。以下の機能を提供します：
 
 1. **コンテキストエンジニアリング** — タスクごとにAIが必要とするすべてを提供する構造化アーティファクト
 2. **マルチエージェントオーケストレーション** — 専門エージェントをフレッシュなコンテキストウィンドウで起動する軽量オーケストレーター
@@ -168,9 +168,9 @@ GSDは、ユーザーとAIコーディングエージェント（Claude Code、G
 |------|-------|---------|
 | `sdd-statusline.js` | `statusLine` | モデル、タスク、ディレクトリ、コンテキスト使用量バーを表示 |
 | `sdd-context-monitor.js` | `PostToolUse` / `AfterTool` | コンテキスト残量35%/25%でエージェント向け警告を注入 |
-| `sdd-check-update.js` | `SessionStart` | GSDの新バージョンをバックグラウンドで確認 |
+| `sdd-check-update.js` | `SessionStart` | SDDの新バージョンをバックグラウンドで確認 |
 | `sdd-prompt-guard.js` | `PreToolUse` | `.planning/` への書き込みにプロンプトインジェクションパターンがないかスキャン（アドバイザリー） |
-| `sdd-workflow-guard.js` | `PreToolUse` | GSDワークフローコンテキスト外でのファイル編集を検出（アドバイザリー、`hooks.workflow_guard` によるオプトイン） |
+| `sdd-workflow-guard.js` | `PreToolUse` | SDDワークフローコンテキスト外でのファイル編集を検出（アドバイザリー、`hooks.workflow_guard` によるオプトイン） |
 
 ### CLIツール（`sdd/bin/`）
 
@@ -411,7 +411,7 @@ UI-SPEC.md (per phase) ───────────────────
 │   ├── pending/            # キャプチャされたアイデア
 │   └── done/               # 完了済みtodo
 ├── threads/               # 永続コンテキストスレッド（/sdd-thread から）
-├── seeds/                 # 将来に向けたアイデア（/sdd-plant-seed から）
+├── seeds/                 # 将来に向けたアイデア（/sdd-capture --seed から）
 ├── debug/                  # アクティブなデバッグセッション
 │   ├── *.md                # アクティブセッション
 │   ├── resolved/           # アーカイブ済みセッション
@@ -439,9 +439,9 @@ UI-SPEC.md (per phase) ───────────────────
    - Antigravity: Googleモデル同等品によるスキルファースト
 5. **パス正規化** — `~/.claude/` パスをランタイム固有のパスに置換
 6. **設定統合** — ランタイムの `settings.json` にフックを登録
-7. **パッチバックアップ** — v1.17以降、ローカルで変更されたファイルを `/sdd-reapply-patches` 用に `sdd-local-patches/` へバックアップ
+7. **パッチバックアップ** — v1.17以降、ローカルで変更されたファイルを `/sdd-update --reapply` 用に `sdd-local-patches/` へバックアップ
 8. **マニフェスト追跡** — クリーンアンインストールのために `sdd-file-manifest.json` を書き込み
-9. **アンインストールモード** — `--uninstall` ですべてのGSDファイル、フック、設定を削除
+9. **アンインストールモード** — `--uninstall` ですべてのSDDファイル、フック、設定を削除
 
 ### プラットフォーム対応
 
@@ -499,7 +499,7 @@ Runtime Engine (Claude Code / Gemini CLI)
 
 **Workflow Guard**（`sdd-workflow-guard.js`）：
 - `.planning/` 以外のファイルへのWrite/Edit時にトリガー
-- GSDワークフローコンテキスト外での編集を検出（アクティブな `/sdd-` コマンドやTaskサブエージェントがない場合）
+- SDDワークフローコンテキスト外での編集を検出（アクティブな `/sdd-` コマンドやTaskサブエージェントがない場合）
 - 状態追跡される変更には `/sdd-quick` や `/sdd-fast` の使用をアドバイス
 - `hooks.workflow_guard: true` によるオプトイン（デフォルト: false）
 
@@ -507,7 +507,7 @@ Runtime Engine (Claude Code / Gemini CLI)
 
 ## ランタイム抽象化
 
-GSDは統一されたコマンド/ワークフローアーキテクチャを通じて複数のAIコーディングランタイムをサポートしています：
+SDDは統一されたコマンド/ワークフローアーキテクチャを通じて複数のAIコーディングランタイムをサポートしています：
 
 | ランタイム | コマンド形式 | エージェントシステム | 設定場所 |
 |---------|---------------|--------------|-----------------|
@@ -525,6 +525,6 @@ GSDは統一されたコマンド/ワークフローアーキテクチャを通�
 2. **フックイベント名** — Claude Codeは `PostToolUse`、Geminiは `AfterTool` を使用
 3. **エージェントフロントマター** — 各ランタイムは独自のエージェント定義形式を持つ
 4. **パス規約** — 各ランタイムは異なるディレクトリに設定を保存
-5. **モデル参照** — `inherit` プロファイルにより、GSDはランタイムのモデル選択に委譲
+5. **モデル参照** — `inherit` プロファイルにより、SDDはランタイムのモデル選択に委譲
 
 インストーラーはインストール時にすべての変換を処理します。ワークフローとエージェントはClaude Codeのネイティブ形式で記述され、デプロイ時に変換されます。

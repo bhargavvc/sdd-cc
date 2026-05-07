@@ -199,6 +199,14 @@ export interface SDDOptions {
   projectDir: string;
   /** Path to sdd-tools.cjs. Falls back to <projectDir>/.claude/, then the bundled repo path, then ~/.claude/. */
   sddToolsPath?: string;
+  /**
+   * Optional session correlation id for query mutation events when using {@link SDD.createTools}.
+   */
+  sessionId?: string;
+  /** Strict SDK runtime bridge mode: fail fast when a query command has no native adapter. */
+  strictSdk?: boolean;
+  /** Explicit subprocess fallback policy for the runtime bridge. Default false. */
+  allowFallbackToSubprocess?: boolean;
   /** Model to use for execution sessions. */
   model?: string;
   /** Maximum budget per plan execution in USD. Default: 5.0. */

@@ -266,7 +266,7 @@ Write the file.
 **Commit:**
 
 ```bash
-sdd-sdk query commit "docs(${PADDED_PHASE}): smart discuss context" "${phase_dir}/${padded_phase}-CONTEXT.md"
+sdd-sdk query commit "docs(${PADDED_PHASE}): smart discuss context" --files "${phase_dir}/${padded_phase}-CONTEXT.md"
 ```
 
 Display confirmation:

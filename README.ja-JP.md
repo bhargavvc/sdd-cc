@@ -53,11 +53,11 @@ npx @bhargavvc/sdd-cc@latest
 
 仕様駆動開発ツールは他にもあります。BMAD、Spekkitなど。しかしどれも必要以上に複雑にしているように見えます（スプリントセレモニー、ストーリーポイント、ステークホルダーとの同期、振り返り、Jiraワークフローなど）。あるいは、何を作ろうとしているのかの全体像を本当には理解していません。私は50人規模のソフトウェア会社ではありません。エンタープライズごっこをしたいわけではありません。ただ、うまく動く素晴らしいものを作りたいクリエイティブな人間です。
 
-だからGSDを作りました。複雑さはシステムの中にあり、ワークフローの中にはありません。裏側では、コンテキストエンジニアリング、XMLプロンプトフォーマッティング、サブエージェントのオーケストレーション、状態管理が動いています。あなたが目にするのは、ただ動くいくつかのコマンドだけです。
+だからSDDを作りました。複雑さはシステムの中にあり、ワークフローの中にはありません。裏側では、コンテキストエンジニアリング、XMLプロンプトフォーマッティング、サブエージェントのオーケストレーション、状態管理が動いています。あなたが目にするのは、ただ動くいくつかのコマンドだけです。
 
 このシステムは、Claudeが仕事をし、*かつ*検証するために必要なすべてを提供します。私はこのワークフローを信頼しています。ちゃんといい仕事をしてくれます。
 
-これがGSDです。エンタープライズごっこは一切なし。Claude Codeを使って一貫してクールなものを作るための、非常に効果的なシステムです。
+これがSDDです。エンタープライズごっこは一切なし。Claude Codeを使って一貫してクールなものを作るための、非常に効果的なシステムです。
 
 — **TÂCHES**
 
@@ -65,7 +65,7 @@ npx @bhargavvc/sdd-cc@latest
 
 バイブコーディングは評判が悪い。やりたいことを説明し、AIがコードを生成し、スケールすると崩壊する一貫性のないゴミが出来上がる。
 
-GSDはそれを解決します。Claude Codeを信頼性の高いものにするコンテキストエンジニアリングレイヤーです。アイデアを説明し、システムに必要なすべてを抽出させ、Claude Codeに仕事をさせましょう。
+SDDはそれを解決します。Claude Codeを信頼性の高いものにするコンテキストエンジニアリングレイヤーです。アイデアを説明し、システムに必要なすべてを抽出させ、Claude Codeに仕事をさせましょう。
 
 ---
 
@@ -75,15 +75,17 @@ GSDはそれを解決します。Claude Codeを信頼性の高いものにする
 
 ビルトインの品質ゲートが本当の問題を検出します：スキーマドリフト検出はマイグレーション漏れのORM変更をフラグし、セキュリティ強制は検証を脅威モデルに紐付け、スコープ削減検出はプランナーが要件を暗黙的に落とすのを防止します。
 
-### v1.32.0 ハイライト
+### v1.39.0 ハイライト
 
-- **STATE.md整合性ゲート** — `state validate`がSTATE.mdとファイルシステムの差分を検出、`state sync`が実際のプロジェクト状態から再構築
-- **`--to N`フラグ** — 自律実行を特定のフェーズ完了後に停止
-- **リサーチゲート** — RESEARCH.mdに未解決の質問がある場合、計画をブロック
-- **検証マイルストーンスコープフィルタリング** — 後のフェーズで対処されるギャップは「ギャップ」ではなく「延期」としてマーク
-- **読み取り後編集ガード** — 非Claudeランタイムでの無限リトライループを防止するアドバイザリーフック
-- **コンテキスト削減** — Markdownのトランケーションとキャッシュフレンドリーなプロンプト順序でトークン使用量を削減
-- **4つの新ランタイム** — Trae、Kilo、Augment、Cline（合計12ランタイム）
+完全なリストは [v1.39.0 リリースノート](https://github.com/bhargavvc/sdd-cc/releases/tag/v1.39.0) を参照してください。
+
+- **`--minimal` インストールプロファイル** — エイリアス `--core-only`。メインループの6スキル（`new-project`、`discuss-phase`、`plan-phase`、`execute-phase`、`help`、`update`）のみをインストールし、`sdd-*` サブエージェントはゼロ。コールドスタート時のシステムプロンプトのオーバーヘッドを ~12kトークンから ~700トークンへ削減（≥94%減）。32K〜128Kコンテキストのローカル LLM やトークン課金 API に有効。
+- **`/sdd-phase --edit`** — `ROADMAP.md` 上の既存フェーズの任意フィールドをその場で編集（番号や位置は変更されない）。`--force` で確認 diff をスキップ、`depends_on` の参照を検証し、書き込み時に `STATE.md` も更新。
+- **マージ後ビルド & テストゲート** — `execute-phase` のステップ 5.6 が `workflow.build_command` の設定を自動検出し、無ければ Xcode（`.xcodeproj`）、Makefile、Justfile、Cargo、Go、Python、npm の順にフォールバック。Xcode/iOS プロジェクトでは `xcodebuild build` と `xcodebuild test` を自動実行。並列・直列両モードで動作。
+- **ランタイム別レビューモデル選択** — `review.models.<cli>` で各外部レビュー CLI（codex、gemini など）が使うモデルをプランナー/実行プロファイルとは独立に指定可能。
+- **ワークストリーム設定の継承** — `SDD_WORKSTREAM` が設定されている場合、ルートの `.planning/config.json` を先に読み込み、ワークストリーム設定をディープマージ（衝突時はワークストリーム側が優先）。ワークストリーム設定で明示的に `null` を指定するとルート値を上書き可能。
+- **手動カナリアリリースワークフロー** — `.github/workflows/canary.yml` が `workflow_dispatch` 経由で `dev` ブランチから `{base}-canary.{N}` ビルドを `@canary` dist-tag に手動公開（`@bhargavvc/sdd-cc` と `@bhargavvc/sdk`）。
+- **スキルの統合：86 → 59** — 4つの新しいグループ化スキル（`capture`、`phase`、`config`、`workspace`）が31のマイクロスキルを吸収。既存の親スキル6つはラップアップやサブ操作をフラグ化：`update --sync/--reapply`、`sketch --wrap-up`、`spike --wrap-up`、`map-codebase --fast/--query`、`code-review --fix`、`progress --do/--next`。機能の欠損なし。
 
 ---
 
@@ -101,7 +103,7 @@ npx @bhargavvc/sdd-cc@latest
 - Claude Code / Gemini / Copilot / Antigravity: `/sdd-help`
 - OpenCode / Kilo / Augment / Trae: `/sdd-help`
 - Codex: `$sdd-help`
-- Cline: GSDは`.clinerules`経由でインストール — `.clinerules`の存在を確認
+- Cline: SDDは`.clinerules`経由でインストール — `.clinerules`の存在を確認
 
 > [!NOTE]
 > Claude Code 2.1.88+とCodexはスキル（`skills/sdd-*/SKILL.md`）としてインストールされます。Clineは`.clinerules`を使用します。インストーラーがすべての形式を自動的に処理します。
@@ -111,7 +113,7 @@ npx @bhargavvc/sdd-cc@latest
 
 ### 最新の状態を保つ
 
-GSDは急速に進化しています。定期的にアップデートしてください：
+SDDは急速に進化しています。定期的にアップデートしてください：
 
 ```bash
 npx @bhargavvc/sdd-cc@latest
@@ -189,14 +191,14 @@ node bin/install.js --claude --local
 
 ### 推奨：パーミッションスキップモード
 
-GSDは摩擦のない自動化のために設計されています。Claude Codeを以下のように実行してください：
+SDDは摩擦のない自動化のために設計されています。Claude Codeを以下のように実行してください：
 
 ```bash
 claude --dangerously-skip-permissions
 ```
 
 > [!TIP]
-> これがGSDの意図された使い方です — `date` や `git commit` を50回も承認するために止まっていては目的が台無しです。
+> これがSDDの意図された使い方です — `date` や `git commit` を50回も承認するために止まっていては目的が台無しです。
 
 <details>
 <summary><strong>代替案：詳細なパーミッション設定</strong></summary>
@@ -391,10 +393,10 @@ claude --dangerously-skip-permissions
 /sdd-new-milestone
 ```
 
-またはGSDに次のステップを自動判定させます：
+またはSDDに次のステップを自動判定させます：
 
 ```
-/sdd-next                    # 次のステップを自動検出して実行
+/sdd-progress --next                    # 次のステップを自動検出して実行
 ```
 
 **discuss → plan → execute → verify → ship** のループをマイルストーン完了まで繰り返します。
@@ -417,7 +419,7 @@ claude --dangerously-skip-permissions
 
 **フル計画が不要なアドホックタスク向け。**
 
-クイックモードはGSDの保証（アトミックコミット、状態トラッキング）をより速いパスで提供します：
+クイックモードはSDDの保証（アトミックコミット、状態トラッキング）をより速いパスで提供します：
 
 - **同じエージェント** — プランナー + エグゼキューター、同じ品質
 - **オプションステップをスキップ** — デフォルトではリサーチ、プランチェッカー、ベリファイアなし
@@ -427,7 +429,7 @@ claude --dangerously-skip-permissions
 
 **`--research` フラグ：** 計画前にフォーカスされたリサーチャーを起動。実装アプローチ、ライブラリの選択肢、落とし穴を調査します。タスクへのアプローチが不明な場合に使用してください。
 
-**`--full` フラグ：** 全フェーズを有効化 — ディスカッション + リサーチ + プランチェック + 検証。クイックタスク形式のフルGSDパイプライン。
+**`--full` フラグ：** 全フェーズを有効化 — ディスカッション + リサーチ + プランチェック + 検証。クイックタスク形式のフルSDDパイプライン。
 
 **`--validate` フラグ：** プランチェック + 実行後の検証のみを有効化（以前の `--full` の動作）。
 
@@ -448,7 +450,7 @@ claude --dangerously-skip-permissions
 
 Claude Codeは必要なコンテキストを与えれば非常に強力です。ほとんどの人はそれをしていません。
 
-GSDがそれを代わりに処理します：
+SDDがそれを代わりに処理します：
 
 | ファイル | 役割 |
 |------|--------------|
@@ -542,7 +544,7 @@ lmn012o feat(08-02): create registration endpoint
 | `/sdd-execute-phase <N>` | 全プランを並列ウェーブで実行し、完了時に検証 |
 | `/sdd-verify-work [N]` | 手動ユーザー受入テスト ¹ |
 | `/sdd-ship [N] [--draft]` | 検証済みのフェーズ作業から自動生成された本文付きのPRを作成 |
-| `/sdd-next` | 次の論理的なワークフローステップに自動的に進む |
+| `/sdd-progress --next` | 次の論理的なワークフローステップに自動的に進む |
 | `/sdd-fast <text>` | インラインの軽微タスク — 計画を完全にスキップし即座に実行 |
 | `/sdd-audit-milestone` | マイルストーンが完了の定義を達成したか検証 |
 | `/sdd-complete-milestone` | マイルストーンをアーカイブし、リリースをタグ付け |
@@ -563,9 +565,9 @@ lmn012o feat(08-02): create registration endpoint
 
 | コマンド | 説明 |
 |---------|--------------|
-| `/sdd-new-workspace` | リポジトリのコピー（worktreeまたはクローン）で隔離されたワークスペースを作成 |
-| `/sdd-list-workspaces` | すべてのGSDワークスペースとそのステータスを表示 |
-| `/sdd-remove-workspace` | ワークスペースを削除しworktreeをクリーンアップ |
+| `/sdd-workspace --new` | リポジトリのコピー（worktreeまたはクローン）で隔離されたワークスペースを作成 |
+| `/sdd-workspace --list` | すべてのSDDワークスペースとそのステータスを表示 |
+| `/sdd-workspace --remove` | ワークスペースを削除しworktreeをクリーンアップ |
 
 ### UIデザイン
 
@@ -579,10 +581,9 @@ lmn012o feat(08-02): create registration endpoint
 | コマンド | 説明 |
 |---------|--------------|
 | `/sdd-progress` | 今どこにいる？次は何？ |
-| `/sdd-next` | 状態を自動検出し次のステップを実行 |
+| `/sdd-progress --next` | 状態を自動検出し次のステップを実行 |
 | `/sdd-help` | 全コマンドと使い方ガイドを表示 |
-| `/sdd-update` | チェンジログプレビュー付きでGSDをアップデート |
-| `/sdd-join-discord` | SDD Discordコミュニティに参加 |
+| `/sdd-update` | チェンジログプレビュー付きでSDDをアップデート |
 | `/sdd-manager` | 複数フェーズ管理用のインタラクティブコマンドセンター |
 
 ### ブラウンフィールド
@@ -595,11 +596,12 @@ lmn012o feat(08-02): create registration endpoint
 
 | コマンド | 説明 |
 |---------|--------------|
-| `/sdd-add-phase` | ロードマップにフェーズを追加 |
-| `/sdd-insert-phase [N]` | フェーズ間に緊急作業を挿入 |
-| `/sdd-remove-phase [N]` | 将来のフェーズを削除し番号を振り直し |
-| `/sdd-list-phase-assumptions [N]` | 計画前にClaudeの意図するアプローチを確認 |
-| `/sdd-plan-milestone-gaps` | 監査で見つかったギャップを埋めるフェーズを作成 |
+| `/sdd-phase` | ロードマップにフェーズを追加 |
+| `/sdd-phase --insert [N]` | フェーズ間に緊急作業を挿入 |
+| `/sdd-phase --edit [N] [--force]` | 既存フェーズの任意フィールドをその場で編集 — 番号と位置は変更されない |
+| `/sdd-phase --remove [N]` | 将来のフェーズを削除し番号を振り直し |
+| `/sdd-discuss-phase --assumptions [N]` | 計画前にClaudeの意図するアプローチを確認 |
+| `/sdd-audit-milestone --fix` | 監査で見つかったギャップを埋めるフェーズを作成 |
 
 ### セッション
 
@@ -607,7 +609,7 @@ lmn012o feat(08-02): create registration endpoint
 |---------|--------------|
 | `/sdd-pause-work` | フェーズ途中で停止する際の引き継ぎを作成（HANDOFF.jsonを書き込み） |
 | `/sdd-resume-work` | 前回のセッションから復元 |
-| `/sdd-session-report` | 実行した作業と結果のセッションサマリーを生成 |
+| `/sdd-pause-work --report` | 実行した作業と結果のセッションサマリーを生成 |
 
 ### ワークストリーム
 
@@ -627,8 +629,8 @@ lmn012o feat(08-02): create registration endpoint
 
 | コマンド | 説明 |
 |---------|--------------|
-| `/sdd-plant-seed <idea>` | トリガー条件付きの将来志向のアイデアをキャプチャ — 適切なマイルストーンで浮上 |
-| `/sdd-add-backlog <desc>` | バックログのパーキングロットにアイデアを追加（999.xナンバリング、アクティブシーケンス外） |
+| `/sdd-capture --seed <idea>` | トリガー条件付きの将来志向のアイデアをキャプチャ — 適切なマイルストーンで浮上 |
+| `/sdd-capture --backlog <desc>` | バックログのパーキングロットにアイデアを追加（999.xナンバリング、アクティブシーケンス外） |
 | `/sdd-review-backlog` | バックログ項目をレビューし、アクティブマイルストーンに昇格またはstaleエントリを削除 |
 | `/sdd-thread [name]` | 永続コンテキストスレッド — 複数セッションにまたがる作業用の軽量クロスセッション知識 |
 
@@ -637,13 +639,13 @@ lmn012o feat(08-02): create registration endpoint
 | コマンド | 説明 |
 |---------|--------------|
 | `/sdd-settings` | モデルプロファイルとワークフローエージェントを設定 |
-| `/sdd-set-profile <profile>` | モデルプロファイルを切り替え（quality/balanced/budget/inherit） |
-| `/sdd-add-todo [desc]` | 後で取り組むアイデアをキャプチャ |
-| `/sdd-check-todos` | 保留中のtodoを一覧表示 |
+| `/sdd-config --profile <profile>` | モデルプロファイルを切り替え（quality/balanced/budget/inherit） |
+| `/sdd-capture [desc]` | 後で取り組むアイデアをキャプチャ |
+| `/sdd-capture --list` | 保留中のtodoを一覧表示 |
 | `/sdd-debug [desc]` | 永続状態を持つ体系的デバッグ |
-| `/sdd-do <text>` | フリーフォームテキストを適切なGSDコマンドに自動ルーティング |
+| `/sdd-do <text>` | フリーフォームテキストを適切なSDDコマンドに自動ルーティング |
 | `/sdd-note <text>` | ゼロフリクションのアイデアキャプチャ — ノートの追加、一覧、todoへの昇格 |
-| `/sdd-quick [--full] [--discuss] [--research]` | GSDの保証付きでアドホックタスクを実行（`--full` で全フェーズを有効化、`--discuss` で事前にコンテキストを収集、`--research` で計画前にアプローチを調査） |
+| `/sdd-quick [--full] [--discuss] [--research]` | SDDの保証付きでアドホックタスクを実行（`--full` で全フェーズを有効化、`--discuss` で事前にコンテキストを収集、`--research` で計画前にアプローチを調査） |
 | `/sdd-health [--repair]` | `.planning/` ディレクトリの整合性を検証、`--repair` で自動修復 |
 | `/sdd-stats` | プロジェクト統計を表示 — フェーズ、プラン、要件、gitメトリクス |
 | `/sdd-profile-user [--questionnaire] [--refresh]` | セッション分析から開発者行動プロファイルを生成し、パーソナライズされた応答を提供 |
@@ -654,7 +656,7 @@ lmn012o feat(08-02): create registration endpoint
 
 ## 設定
 
-GSDはプロジェクト設定を `.planning/config.json` に保存します。`/sdd-new-project` 実行時に設定するか、後から `/sdd-settings` で更新できます。完全な設定スキーマ、ワークフロートグル、gitブランチオプション、エージェントごとのモデル内訳については、[ユーザーガイド](docs/ja-JP/USER-GUIDE.md#configuration-reference)をご覧ください。
+SDDはプロジェクト設定を `.planning/config.json` に保存します。`/sdd-new-project` 実行時に設定するか、後から `/sdd-settings` で更新できます。完全な設定スキーマ、ワークフロートグル、gitブランチオプション、エージェントごとのモデル内訳については、[ユーザーガイド](docs/ja-JP/USER-GUIDE.md#configuration-reference)をご覧ください。
 
 ### コア設定
 
@@ -676,7 +678,7 @@ GSDはプロジェクト設定を `.planning/config.json` に保存します。`
 
 プロファイルの切り替え：
 ```
-/sdd-set-profile budget
+/sdd-config --profile budget
 ```
 
 非Anthropicプロバイダー（OpenRouter、ローカルモデル）を使用する場合や、現在のランタイムのモデル選択に従う場合（例：OpenCode `/model`）は `inherit` を使用してください。
@@ -712,7 +714,7 @@ GSDはプロジェクト設定を `.planning/config.json` に保存します。`
 
 ### Gitブランチ
 
-GSDが実行中にブランチをどう扱うかを制御します。
+SDDが実行中にブランチをどう扱うかを制御します。
 
 | 設定 | オプション | デフォルト | 説明 |
 |---------|---------|---------|--------------|
@@ -721,11 +723,11 @@ GSDが実行中にブランチをどう扱うかを制御します。
 | `git.milestone_branch_template` | string | `sdd/{milestone}-{slug}` | マイルストーンブランチのテンプレート |
 
 **戦略：**
-- **`none`** — 現在のブランチにコミット（デフォルトのGSD動作）
+- **`none`** — 現在のブランチにコミット（デフォルトのSDD動作）
 - **`phase`** — フェーズごとにブランチを作成し、フェーズ完了時にマージ
 - **`milestone`** — マイルストーン全体で1つのブランチを作成し、完了時にマージ
 
-マイルストーン完了時、GSDはスカッシュマージ（推奨）または履歴付きマージを提案します。
+マイルストーン完了時、SDDはスカッシュマージ（推奨）または履歴付きマージを提案します。
 
 ---
 
@@ -733,7 +735,7 @@ GSDが実行中にブランチをどう扱うかを制御します。
 
 ### 組み込みセキュリティハードニング
 
-GSDはv1.27以降、多層防御セキュリティを備えています：
+SDDはv1.27以降、多層防御セキュリティを備えています：
 
 - **パストラバーサル防止** — ユーザー提供のすべてのファイルパス（`--text-file`、`--prd`）がプロジェクトディレクトリ内に解決されるか検証
 - **プロンプトインジェクション検出** — 集中型 `security.cjs` モジュールが計画成果物に入る前にユーザー提供テキストのインジェクションパターンをスキャン
@@ -743,11 +745,11 @@ GSDはv1.27以降、多層防御セキュリティを備えています：
 - **CI対応インジェクションスキャナー** — `prompt-injection-scan.test.cjs` が全エージェント/ワークフロー/コマンドファイルの埋め込みインジェクションベクトルをスキャン
 
 > [!NOTE]
-> GSDはLLMシステムプロンプトとなるマークダウンファイルを生成するため、計画成果物に流入するユーザー制御テキストは潜在的な間接プロンプトインジェクションベクトルとなります。これらの保護は、そのようなベクトルを複数のレイヤーで捕捉するように設計されています。
+> SDDはLLMシステムプロンプトとなるマークダウンファイルを生成するため、計画成果物に流入するユーザー制御テキストは潜在的な間接プロンプトインジェクションベクトルとなります。これらの保護は、そのようなベクトルを複数のレイヤーで捕捉するように設計されています。
 
 ### 機密ファイルの保護
 
-GSDのコードベースマッピングおよび分析コマンドは、プロジェクトを理解するためにファイルを読み取ります。**シークレットを含むファイルを保護する**には、Claude Codeの拒否リストに追加してください：
+SDDのコードベースマッピングおよび分析コマンドは、プロジェクトを理解するためにファイルを読み取ります。**シークレットを含むファイルを保護する**には、Claude Codeの拒否リストに追加してください：
 
 1. Claude Code設定（`.claude/settings.json` またはグローバル）を開きます
 2. 機密ファイルパターンを拒否リストに追加します：
@@ -770,7 +772,7 @@ GSDのコードベースマッピングおよび分析コマンドは、プロ�
 これにより、どのコマンドを実行しても、Claudeがこれらのファイルを完全に読み取ることを防ぎます。
 
 > [!IMPORTANT]
-> GSDにはシークレットのコミットに対する組み込み保護がありますが、多層防御がベストプラクティスです。防御の第一線として、機密ファイルへの読み取りアクセスを拒否してください。
+> SDDにはシークレットのコミットに対する組み込み保護がありますが、多層防御がベストプラクティスです。防御の第一線として、機密ファイルへの読み取りアクセスを拒否してください。
 
 ---
 
@@ -800,7 +802,7 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ### アンインストール
 
-GSDを完全に削除するには：
+SDDを完全に削除するには：
 
 ```bash
 # グローバルインストール
@@ -826,7 +828,7 @@ npx @bhargavvc/sdd-cc --antigravity --local --uninstall
 npx @bhargavvc/sdd-cc --trae --local --uninstall
 ```
 
-これにより、他の設定を保持しながら、すべてのGSDコマンド、エージェント、フック、設定が削除されます。
+これにより、他の設定を保持しながら、すべてのSDDコマンド、エージェント、フック、設定が削除されます。
 
 ---
 
@@ -863,6 +865,6 @@ MITライセンス。詳細は [LICENSE](LICENSE) をご覧ください。
 
 <div align="center">
 
-**Claude Codeは強力です。GSDはそれを信頼性の高いものにします。**
+**Claude Codeは強力です。SDDはそれを信頼性の高いものにします。**
 
 </div>

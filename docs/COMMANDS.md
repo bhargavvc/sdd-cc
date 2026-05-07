@@ -1,14 +1,33 @@
 # SDD Command Reference
 
-> Complete command syntax, flags, options, and examples. For feature details, see [Feature Reference](FEATURES.md). For workflow walkthroughs, see [User Guide](USER-GUIDE.md).
+> Command syntax, flags, options, and examples for stable commands. For feature details, see [Feature Reference](FEATURES.md). For workflow walkthroughs, see [User Guide](USER-GUIDE.md).
 
 ---
 
 ## Command Syntax
 
-- **Claude Code / Gemini / Copilot:** `/sdd-command-name [args]`
-- **OpenCode / Kilo:** `/sdd-command-name [args]`
+- **Claude Code / Copilot / OpenCode / Kilo:** `/sdd-command-name [args]` (hyphen form)
+- **Gemini CLI:** `/sdd:command-name [args]` (colon form — Gemini namespaces commands under `sdd:`)
 - **Codex:** `$sdd-command-name [args]`
+
+The hyphen and colon forms are *runtime-specific spellings of the same command*. Whichever runtime you're on, the installer writes the correct form into your runtime's command directory.
+
+---
+
+## Namespace Meta-Skills
+
+Six namespace routers ship as the first-stage entry points in v1.40. They keep the eager skill-listing token cost low (~120 tokens for 6 routers vs ~2,150 for a flat 86-skill listing) while the full surface remains directly invocable. The model selects a namespace, then routes to the concrete sub-skill. See [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792).
+
+| Command | Routes to |
+|---------|-----------|
+| `/sdd-ns-workflow` | Phase pipeline — discuss / plan / execute / verify / phase / progress |
+| `/sdd-ns-project` | Project lifecycle — milestones, audits, summary |
+| `/sdd-ns-review` | Quality gates — code review, debug, audit, security, eval, ui |
+| `/sdd-ns-context` | Codebase intelligence — map, graphify, docs, learnings |
+| `/sdd-ns-manage` | Management — config, workspace, workstreams, thread, update, ship, inbox |
+| `/sdd-ns-ideate` | Exploration & capture — explore, sketch, spike, spec, capture |
+
+The namespace skills are **additive** — every existing concrete command (e.g. `/sdd-plan-phase`, `/sdd-code-review --fix`) is still invocable directly.
 
 ---
 
@@ -32,14 +51,17 @@ Initialize a new project with deep context gathering.
 
 ---
 
-### `/sdd-new-workspace`
+### `/sdd-workspace`
 
-Create an isolated workspace with repo copies and independent `.planning/` directory.
+Manage SDD workspaces — create, list, or remove isolated workspace environments with repo copies and independent `.planning/` directories.
 
 | Flag | Description |
 |------|-------------|
-| `--name <name>` | Workspace name (required) |
-| `--repos repo1,repo2` | Comma-separated repo paths or names |
+| `--new` | Create a new workspace (use with `--name`, `--repos`, etc.) |
+| `--list` | List active SDD workspaces and their status |
+| `--remove <name>` | Remove a workspace and clean up git worktrees |
+| `--name <name>` | Workspace name (used with `--new`) |
+| `--repos repo1,repo2` | Comma-separated repo paths or names (used with `--new`) |
 | `--path /target` | Target directory (default: `~/sdd-workspaces/<name>`) |
 | `--strategy worktree\|clone` | Copy strategy (default: `worktree`) |
 | `--branch <name>` | Branch to checkout (default: `workspace/<name>`) |
@@ -52,45 +74,17 @@ Create an isolated workspace with repo copies and independent `.planning/` direc
 **Produces:** `WORKSPACE.md`, `.planning/`, repo copies (worktrees or clones)
 
 ```bash
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI
-/sdd-new-workspace --name feature-b --repos . --strategy worktree  # Same-repo isolation
-/sdd-new-workspace --name spike --repos api,web --strategy clone   # Full clones
-```
-
----
-
-### `/sdd-list-workspaces`
-
-List active SDD workspaces and their status.
-
-**Scans:** `~/sdd-workspaces/` for `WORKSPACE.md` manifests
-**Shows:** Name, repo count, strategy, SDD project status
-
-```bash
-/sdd-list-workspaces
-```
-
----
-
-### `/sdd-remove-workspace`
-
-Remove a workspace and clean up git worktrees.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `<name>` | Yes | Workspace name to remove |
-
-**Safety:** Refuses removal if any repo has uncommitted changes. Requires name confirmation.
-
-```bash
-/sdd-remove-workspace feature-b
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI
+/sdd-workspace --new --name feature-b --repos . --strategy worktree  # Same-repo isolation
+/sdd-workspace --list
+/sdd-workspace --remove feature-b
 ```
 
 ---
 
 ### `/sdd-discuss-phase`
 
-Capture implementation decisions before planning.
+Gather phase context through adaptive questioning before planning.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
@@ -103,6 +97,7 @@ Capture implementation decisions before planning.
 | `--batch` | Group questions for batch intake instead of one-by-one |
 | `--analyze` | Add trade-off analysis during discussion |
 | `--power` | File-based bulk question answering from a prepared answers file |
+| `--assumptions` | Surface Claude's implementation assumptions about the phase without an interactive session |
 
 **Prerequisites:** `.planning/ROADMAP.md` exists
 **Produces:** `{phase}-CONTEXT.md`, `{phase}-DISCUSSION-LOG.md` (audit trail)
@@ -114,6 +109,7 @@ Capture implementation decisions before planning.
 /sdd-discuss-phase --batch          # Batch mode for current phase
 /sdd-discuss-phase 2 --analyze      # Discussion with trade-off analysis
 /sdd-discuss-phase 1 --power        # Bulk answers from file
+/sdd-discuss-phase 3 --assumptions  # Surface Claude's assumptions before planning
 ```
 
 ---
@@ -148,6 +144,8 @@ Research, plan, and verify a phase.
 | `--auto` | Skip interactive confirmations |
 | `--research` | Force re-research even if RESEARCH.md exists |
 | `--skip-research` | Skip domain research step |
+| `--research-phase <N>` | Research-only mode: spawn researcher for phase `<N>`, write RESEARCH.md, exit before planner. Replaces the deleted `sdd-research-phase` standalone command (#3042). |
+| `--view` | Research-only modifier: when used with `--research-phase`, print existing RESEARCH.md to stdout and exit (no spawn). |
 | `--gaps` | Gap closure mode (reads VERIFICATION.md, skips research) |
 | `--skip-verify` | Skip plan checker verification loop |
 | `--prd <file>` | Use a PRD file instead of discuss-phase for context |
@@ -159,12 +157,57 @@ Research, plan, and verify a phase.
 **Prerequisites:** `.planning/ROADMAP.md` exists
 **Produces:** `{phase}-RESEARCH.md`, `{phase}-{N}-PLAN.md`, `{phase}-VALIDATION.md`
 
+**Research-only mode (`--research-phase <N>`):**
+- No modifier: prompts `update / view / skip` if RESEARCH.md already exists.
+- With `--research`: force-refresh — re-spawn researcher unconditionally, no prompt.
+- With `--view`: print existing RESEARCH.md to stdout, no spawn. Errors if RESEARCH.md missing.
+
 ```bash
-/sdd-plan-phase 1                   # Research + plan + verify phase 1
-/sdd-plan-phase 3 --skip-research   # Plan without research (familiar domain)
-/sdd-plan-phase --auto              # Non-interactive planning
-/sdd-plan-phase 2 --validate        # Validate state before planning
-/sdd-plan-phase 1 --bounce          # Plan + external bounce validation
+/sdd-plan-phase 1                              # Research + plan + verify phase 1
+/sdd-plan-phase 3 --skip-research              # Plan without research (familiar domain)
+/sdd-plan-phase --auto                         # Non-interactive planning
+/sdd-plan-phase 2 --validate                   # Validate state before planning
+/sdd-plan-phase 1 --bounce                     # Plan + external bounce validation
+/sdd-plan-phase --research-phase 4             # Research only on phase 4 (prompts if RESEARCH.md exists)
+/sdd-plan-phase --research-phase 4 --view      # Print existing RESEARCH.md, no spawn
+/sdd-plan-phase --research-phase 4 --research  # Force-refresh research, no prompt
+```
+
+---
+
+### `/sdd-plan-review-convergence`
+
+Cross-AI plan convergence loop — replan with review feedback until no HIGH concerns remain. Runs `plan-phase → review → replan → re-review` cycles (max 3 cycles by default). Spawns isolated agents for planning and review; orchestrator handles loop control, HIGH-concern counting, stall detection, and escalation.
+
+| Argument / Flag | Required | Description |
+|-----------------|----------|-------------|
+| `N` | **Yes** | Phase number to plan and review |
+| `--codex` / `--gemini` / `--claude` / `--opencode` | No | Single-reviewer selection |
+| `--all` | No | Run every configured reviewer in parallel |
+| `--max-cycles N` | No | Override cycle cap (default 3) |
+
+**Exit behavior:** Loop exits when HIGH count hits zero. Stall detection warns when HIGH count is not decreasing across cycles. Escalation gate asks the user to proceed or review manually when `--max-cycles` is hit with HIGH concerns still open.
+
+```bash
+/sdd-plan-review-convergence 3                    # Default reviewers, 3 cycles
+/sdd-plan-review-convergence 3 --codex            # Codex-only review
+/sdd-plan-review-convergence 3 --all --max-cycles 5
+```
+
+---
+
+### `/sdd-ultraplan-phase`
+
+**[BETA]** Offload plan phase to Claude Code's ultraplan cloud; review in browser and import back. The plan drafts remotely so the terminal stays free; review inline comments in a browser, then import the finalized plan back into `.planning/` via `/sdd-import`.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `N` | **Yes** | Phase number to plan remotely |
+
+**Isolation:** Intentionally separate from `/sdd-plan-phase` so upstream ultraplan changes cannot affect the core planning pipeline.
+
+```bash
+/sdd-ultraplan-phase 4                  # Offload planning for phase 4
 ```
 
 ---
@@ -209,43 +252,6 @@ User acceptance testing with auto-diagnosis.
 ```
 
 ---
-
-### `/sdd-next`
-
-Automatically advance to the next logical workflow step. Reads project state and runs the appropriate command.
-
-**Prerequisites:** `.planning/` directory exists
-**Behavior:**
-- No project → suggests `/sdd-new-project`
-- Phase needs discussion → runs `/sdd-discuss-phase`
-- Phase needs planning → runs `/sdd-plan-phase`
-- Phase needs execution → runs `/sdd-execute-phase`
-- Phase needs verification → runs `/sdd-verify-work`
-- All phases complete → suggests `/sdd-complete-milestone`
-
-```bash
-/sdd-next                           # Auto-detect and run next step
-```
-
----
-
-### `/sdd-session-report`
-
-Generate a session report with work summary, outcomes, and estimated resource usage.
-
-**Prerequisites:** Active project with recent work
-**Produces:** `.planning/reports/SESSION_REPORT.md`
-
-```bash
-/sdd-session-report                 # Generate post-session summary
-```
-
-**Report includes:**
-- Work performed (commits, plans executed, phases progressed)
-- Outcomes and deliverables
-- Blockers and decisions made
-- Estimated token/cost usage
-- Next steps recommendation
 
 ---
 
@@ -380,89 +386,30 @@ Start next version cycle.
 
 ## Phase Management Commands
 
-### `/sdd-add-phase`
+### `/sdd-phase`
 
-Append new phase to roadmap.
+CRUD for phases in ROADMAP.md — add, insert, remove, or edit phases with a single consolidated command.
 
-```bash
-/sdd-add-phase                      # Interactive — describe the phase
-```
-
-### `/sdd-insert-phase`
-
-Insert urgent work between phases using decimal numbering.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `N` | No | Insert after this phase number |
-
-```bash
-/sdd-insert-phase 3                 # Insert between phase 3 and 4 → creates 3.1
-```
-
-### `/sdd-remove-phase`
-
-Remove future phase and renumber subsequent phases.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `N` | No | Phase number to remove |
-
-```bash
-/sdd-remove-phase 7                 # Remove phase 7, renumber 8→7, 9→8, etc.
-```
-
-### `/sdd-list-phase-assumptions`
-
-Preview Claude's intended approach before planning.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `N` | No | Phase number |
-
-```bash
-/sdd-list-phase-assumptions 2       # See assumptions for phase 2
-```
-
-### `/sdd-analyze-dependencies`
-
-Analyze phase dependencies and suggest `Depends on` entries for ROADMAP.md before running `/sdd-manager`.
+| Flag | Description |
+|------|-------------|
+| (none) | Append a new integer phase to the end of the current milestone |
+| `--insert <N>` | Insert urgent work as a decimal phase (e.g., 3.1) after phase N |
+| `--remove <N>` | Remove a future phase and renumber subsequent phases |
+| `--edit <N>` | Edit any field of an existing phase in place |
+| `--force` | Allow editing in-progress or completed phases (used with `--edit`) |
 
 **Prerequisites:** `.planning/ROADMAP.md` exists
-**Produces:** Dependency suggestion table; optionally updates `Depends on` fields in ROADMAP.md with confirmation
-
-**Run this before `/sdd-manager`** when phases have empty `Depends on` fields and you want to avoid merge conflicts from unordered parallel execution.
+**Produces:** Updated ROADMAP.md
 
 ```bash
-/sdd-analyze-dependencies           # Analyze all phases and suggest dependencies
+/sdd-phase "Add authentication system"          # Append new phase with description
+/sdd-phase --insert 3 "Fix auth race condition" # Insert between phase 3 and 4 → creates 3.1
+/sdd-phase --remove 7               # Remove phase 7, renumber 8→7, 9→8, etc.
+/sdd-phase --edit 5                 # Edit any field of phase 5
+/sdd-phase --edit 5 --force         # Edit phase 5 even if in-progress or completed
 ```
-
-**Detection methods:**
-- File overlap — phases touching the same files/domains must be ordered
-- Semantic dependencies — a phase that consumes an API or schema built by another phase
-- Data flow — a phase that reads output produced by another phase
 
 ---
-
-### `/sdd-plan-milestone-gaps`
-
-Create phases to close gaps from milestone audit.
-
-```bash
-/sdd-plan-milestone-gaps             # Creates phases for each audit gap
-```
-
-### `/sdd-research-phase`
-
-Deep ecosystem research only (standalone — usually use `/sdd-plan-phase` instead).
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `N` | No | Phase number |
-
-```bash
-/sdd-research-phase 4               # Research phase 4 domain
-```
 
 ### `/sdd-validate-phase`
 
@@ -482,14 +429,26 @@ Retroactively audit and fill Nyquist validation gaps.
 
 ### `/sdd-progress`
 
-Show status and next steps.
+Show status, next steps, and automatically advance to the next logical workflow step. Reads project state and determines the appropriate action.
 
 | Flag | Description |
 |------|-------------|
+| `--next` | Automatically advance to the next logical workflow step without manual route selection |
+| `--do "task description"` | Analyze freeform intent and dispatch to the most appropriate SDD command |
 | `--forensic` | Append a 6-check integrity audit after the standard report (STATE consistency, orphaned handoffs, deferred scope drift, memory-flagged pending work, blocking todos, uncommitted code) |
 
+**Auto-routing behavior (`--next`):**
+- No project → suggests `/sdd-new-project`
+- Phase needs discussion → runs `/sdd-discuss-phase`
+- Phase needs planning → runs `/sdd-plan-phase`
+- Phase needs execution → runs `/sdd-execute-phase`
+- Phase needs verification → runs `/sdd-verify-work`
+- All phases complete → suggests `/sdd-complete-milestone`
+
 ```bash
-/sdd-progress                       # "Where am I? What's next?"
+/sdd-progress                       # "Where am I? What's next?" with auto-routing
+/sdd-progress --next                # Advance to next step automatically
+/sdd-progress --do "fix the auth bug"  # Dispatch freeform intent to best SDD command
 /sdd-progress --forensic            # Standard report + integrity audit
 ```
 
@@ -505,8 +464,13 @@ Restore full context from last session.
 
 Save context handoff when stopping mid-phase.
 
+| Flag | Description |
+|------|-------------|
+| `--report` | Generate a post-session summary in `.planning/reports/` capturing commits, file changes, and phase progress |
+
 ```bash
 /sdd-pause-work                     # Creates continue-here.md
+/sdd-pause-work --report            # Creates continue-here.md + session report
 ```
 
 ### `/sdd-manager`
@@ -523,7 +487,26 @@ Interactive command center for managing multiple phases from one terminal.
 
 ```bash
 /sdd-manager                        # Open command center dashboard
+/sdd-manager --analyze-deps         # Scan ROADMAP phases for dependency relationships before parallel execution
 ```
+
+**Checkpoint Heartbeats (#2410):**
+
+Background `execute-phase` runs emit `[checkpoint]` markers at every wave and plan
+boundary so the Claude API SSE stream never idles long enough to trigger
+`Stream idle timeout - partial response received` on multi-plan phases. The
+format is:
+
+```
+[checkpoint] phase {N} wave {W}/{M} starting, {count} plan(s), {P}/{Q} plans done
+[checkpoint] phase {N} wave {W}/{M} plan {plan_id} starting ({P}/{Q} plans done)
+[checkpoint] phase {N} wave {W}/{M} plan {plan_id} complete ({P}/{Q} plans done)
+[checkpoint] phase {N} wave {W}/{M} complete, {P}/{Q} plans done ({ok}/{count} ok)
+```
+
+If a background phase fails partway through, grep the transcript for `[checkpoint]`
+to see the last confirmed boundary. The manager's background-completion handler
+uses these markers to report partial progress when an agent errors out.
 
 **Manager Passthrough Flags:**
 
@@ -595,38 +578,38 @@ Safe git revert — roll back SDD phase or plan commits using the phase manifest
 Ingest an external plan file into the SDD planning system with conflict detection against `PROJECT.md` decisions before writing anything.
 
 | Flag | Required | Description |
-|------|----------|-------------|
-| `--from <filepath>` | **Yes** | Path to the external plan file to import |
+|------|----------|--------------|
+| `--from <filepath>` | Yes (or `--from-gsd2`) | Path to the external plan file to import |
+| `--from-gsd2` | Yes (or `--from`) | Reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format |
+| `--path <dir>` | No | With `--from-gsd2`: path to the SDD-2 project directory (defaults to current directory) |
 
 **Process:** Detects conflicts → prompts for resolution → writes as SDD PLAN.md → validates via `sdd-plan-checker`
 
 ```bash
-/sdd-import --from /tmp/team-plan.md  # Import and validate an external plan
+/sdd-import --from /tmp/team-plan.md    # Import and validate an external plan
+/sdd-import --from-gsd2                # Migrate from SDD-2 back to v1 (current dir)
+/sdd-import --from-gsd2 --path ~/old-project  # Migrate from a different path
 ```
 
 ---
 
-### `/sdd-from-gsd2`
+### `/sdd-ingest-docs`
 
-Reverse migration from SDD-2 format (`.sdd/` with Milestone→Slice→Task hierarchy) back to v1 `.planning/` format.
+Bootstrap or merge a .planning/ setup from existing ADRs, PRDs, SPECs, and docs in a repo. Runs parallel classification (`sdd-doc-classifier`) plus synthesis with precedence rules and cycle detection (`sdd-doc-synthesizer`). Produces a three-bucket conflicts report (`INGEST-CONFLICTS.md`: auto-resolved, competing-variants, unresolved-blockers) and hard-blocks on LOCKED-vs-LOCKED ADR contradictions.
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--dry-run` | No | Preview what would be migrated without writing anything |
-| `--force` | No | Overwrite existing `.planning/` directory |
-| `--path <dir>` | No | Specify SDD-2 root directory (defaults to current directory) |
+| Argument / Flag | Required | Description |
+|-----------------|----------|-------------|
+| `path` | No | Target directory to scan (defaults to repo root) |
+| `--mode new\|merge` | No | Override auto-detect (defaults: `new` if `.planning/` absent, `merge` if present) |
+| `--manifest <file>` | No | YAML file listing `{path, type, precedence?}` per doc; overrides heuristic classification |
+| `--resolve auto` | No | Conflict resolution mode (v1: only `auto`; `interactive` is reserved) |
 
-**Flattening:** Milestone→Slice hierarchy is flattened to sequential phase numbers (M001/S01→phase 01, M001/S02→phase 02, M002/S01→phase 03, etc.).
-
-**Produces:** `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, and sequential phase directories in `.planning/`.
-
-**Safety:** Guards against overwriting an existing `.planning/` directory without `--force`.
+**Limits:** v1 caps at 50 docs per invocation. Extracts the shared conflict-detection contract into `references/doc-conflict-engine.md`, which `/sdd-import` also consumes.
 
 ```bash
-/sdd-from-gsd2                          # Migrate .sdd/ in current directory
-/sdd-from-gsd2 --dry-run                # Preview migration without writing
-/sdd-from-gsd2 --force                  # Overwrite existing .planning/
-/sdd-from-gsd2 --path /path/to/gsd2-project  # Specify SDD-2 root
+/sdd-ingest-docs                            # Scan repo root, auto-detect mode
+/sdd-ingest-docs docs/                      # Only ingest under docs/
+/sdd-ingest-docs --manifest ingest.yaml     # Explicit precedence manifest
 ```
 
 ---
@@ -637,17 +620,27 @@ Execute ad-hoc task with SDD guarantees.
 
 | Flag | Description |
 |------|-------------|
-| `--full` | Enable plan checking (2 iterations) + post-execution verification |
+| `--full` | Enable the complete quality pipeline — discussion + research + plan-checking + verification |
+| `--validate` | Plan-checking (max 2 iterations) + post-execution verification only; no discussion or research |
 | `--discuss` | Lightweight pre-planning discussion |
 | `--research` | Spawn focused researcher before planning |
 
-Flags are composable.
+Granular flags are composable: `--discuss --research --validate` is equivalent to `--full`.
+
+| Subcommand | Description |
+|------------|-------------|
+| `list` | List all quick tasks with status |
+| `status <slug>` | Show status of a specific quick task |
+| `resume <slug>` | Resume a specific quick task by slug |
 
 ```bash
 /sdd-quick                          # Basic quick task
 /sdd-quick --discuss --research     # Discussion + research + planning
-/sdd-quick --full                   # With plan checking and verification
-/sdd-quick --discuss --research --full  # All optional stages
+/sdd-quick --validate               # Plan-checking + verification only
+/sdd-quick --full                   # Complete quality pipeline
+/sdd-quick list                     # List all quick tasks
+/sdd-quick status my-task-slug      # Show status of a quick task
+/sdd-quick resume my-task-slug      # Resume a quick task
 ```
 
 ### `/sdd-autonomous`
@@ -665,34 +658,6 @@ Run all remaining phases autonomously.
 /sdd-autonomous --from 3            # Start from phase 3
 /sdd-autonomous --to 5              # Run up to and including phase 5
 /sdd-autonomous --from 3 --to 5     # Run phases 3 through 5
-```
-
-### `/sdd-do`
-
-Route freeform text to the right SDD command.
-
-```bash
-/sdd-do                             # Then describe what you want
-```
-
-### `/sdd-note`
-
-Zero-friction idea capture — append, list, or promote notes to todos.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `text` | No | Note text to capture (default: append mode) |
-| `list` | No | List all notes from project and global scopes |
-| `promote N` | No | Convert note N into a structured todo |
-
-| Flag | Description |
-|------|-------------|
-| `--global` | Use global scope for note operations |
-
-```bash
-/sdd-note "Consider caching strategy for API responses"
-/sdd-note list
-/sdd-note promote 3
 ```
 
 ### `/sdd-debug`
@@ -721,26 +686,6 @@ Systematic debugging with persistent state.
 /sdd-debug list
 /sdd-debug status auth-token-null
 /sdd-debug continue form-submit-500
-```
-
-### `/sdd-add-todo`
-
-Capture idea or task for later.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `description` | No | Todo description |
-
-```bash
-/sdd-add-todo "Consider adding dark mode support"
-```
-
-### `/sdd-check-todos`
-
-List pending todos and select one to work on.
-
-```bash
-/sdd-check-todos
 ```
 
 ### `/sdd-add-tests`
@@ -785,15 +730,19 @@ Generate a developer behavioral profile from Claude Code session analysis across
 
 ### `/sdd-health`
 
-Validate `.planning/` directory integrity.
+Validate `.planning/` directory integrity. With `--context`, probes the
+context-window utilization guard against the 60 % / 70 % thresholds (added
+v1.40.0, [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792)).
 
 | Flag | Description |
 |------|-------------|
 | `--repair` | Auto-fix recoverable issues |
+| `--context` | Probe context-window utilization; warns at 60 %, critical at 70 % |
 
 ```bash
 /sdd-health                         # Check integrity
 /sdd-health --repair                # Check and fix
+/sdd-health --context               # Context-utilization triage
 ```
 
 ### `/sdd-cleanup`
@@ -816,26 +765,16 @@ Run 2–5 focused feasibility experiments before committing to an implementation
 |----------|----------|-------------|
 | `idea` | No | The technical question or approach to investigate |
 | `--quick` | No | Skip intake conversation; use `idea` text directly |
+| `--wrap-up` | No | Package completed spike findings into a reusable project-local skill |
 
 **Produces:** `.planning/spikes/NNN-experiment-name/` with code, results, and README; `.planning/spikes/MANIFEST.md`
+**`--wrap-up` produces:** `.claude/skills/spike-findings-[project]/` skill file
 
 ```bash
 /sdd-spike                              # Interactive intake
 /sdd-spike "can we stream LLM tokens through SSE"
 /sdd-spike --quick websocket-vs-polling
-```
-
----
-
-### `/sdd-spike-wrap-up`
-
-Package completed spike findings into a reusable project-local skill so future sessions can reference the conclusions.
-
-**Prerequisites:** `.planning/spikes/` exists with at least one completed spike
-**Produces:** `.claude/skills/spike-findings-[project]/` skill file
-
-```bash
-/sdd-spike-wrap-up
+/sdd-spike --wrap-up                    # Package findings into a reusable skill
 ```
 
 ---
@@ -849,27 +788,17 @@ Explore design directions through throwaway HTML mockups before committing to im
 | `idea` | No | The UI design question or direction to explore |
 | `--quick` | No | Skip mood intake; use `idea` text directly |
 | `--text` | No | Text-mode fallback — replace interactive prompts with numbered lists (for non-Claude runtimes) |
+| `--wrap-up` | No | Package winning sketch decisions into a reusable project-local skill |
 
 **Produces:** `.planning/sketches/NNN-descriptive-name/index.html` (2–3 interactive variants), `README.md`, shared `themes/default.css`; `.planning/sketches/MANIFEST.md`
+**`--wrap-up` produces:** `.claude/skills/sketch-findings-[project]/` skill file
 
 ```bash
 /sdd-sketch                             # Interactive mood intake
 /sdd-sketch "dashboard layout"
 /sdd-sketch --quick "sidebar navigation"
 /sdd-sketch --text "onboarding flow"    # Non-Claude runtime
-```
-
----
-
-### `/sdd-sketch-wrap-up`
-
-Package winning sketch decisions into a reusable project-local skill so future sessions inherit the visual direction.
-
-**Prerequisites:** `.planning/sketches/` exists with at least one completed sketch (winner marked)
-**Produces:** `.claude/skills/sketch-findings-[project]/` skill file
-
-```bash
-/sdd-sketch-wrap-up
+/sdd-sketch --wrap-up                   # Package winning sketch into a skill
 ```
 
 ---
@@ -878,7 +807,7 @@ Package winning sketch decisions into a reusable project-local skill so future s
 
 ### `/sdd-forensics`
 
-Post-mortem investigation of failed or stuck SDD workflows.
+Post-mortem investigation for failed SDD workflows — diagnoses what went wrong.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
@@ -969,24 +898,54 @@ Manage parallel workstreams for concurrent work on different milestone areas.
 
 ### `/sdd-settings`
 
-Interactive configuration of workflow toggles and model profile.
+Interactive configuration of workflow toggles and model profile. Questions are grouped into six visual sections:
+
+- **Planning** — Research, Plan Checker, Pattern Mapper, Nyquist, UI Phase, UI Gate, AI Phase
+- **Execution** — Verifier, TDD Mode, Code Review, Code Review Depth _(conditional — only when Code Review is on)_, UI Review
+- **Docs & Output** — Commit Docs, Skip Discuss, Worktrees
+- **Features** — Intel, Graphify
+- **Model & Pipeline** — Model Profile, Auto-Advance, Branching
+- **Misc** — Context Warnings, Research Qs
+
+All answers are merged via `sdd-sdk query config-set` into the resolved project config path (`.planning/config.json` for a standard install, or `.planning/workstreams/<active>/config.json` when a workstream is active), preserving unrelated keys. After confirmation, the user may save the full settings object to `~/.sdd/defaults.json` so future `/sdd-new-project` runs start from the same baseline.
 
 ```bash
 /sdd-settings                       # Interactive config
 ```
 
-### `/sdd-set-profile`
+### `/sdd-config`
 
-Quick profile switch.
+Configure SDD settings interactively — workflow toggles, advanced knobs, integrations, and model profile — with a single consolidated command.
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `profile` | **Yes** | `quality`, `balanced`, `budget`, or `inherit` |
+| Flag | Description |
+|------|-------------|
+| (none) | Common-case toggles: model, research, plan_check, verifier, branching |
+| `--advanced` | Power-user knobs: planning tuning, timeouts, branch templates, cross-AI execution, runtime/output |
+| `--integrations` | Third-party API keys, code-review CLI routing, agent-skill injection |
+| `--profile <name>` | Quick profile switch: `quality`, `balanced`, `budget`, or `inherit` |
+
+**`--advanced` sections:**
+
+| Section | Keys |
+|---------|------|
+| Planning Tuning | `workflow.plan_bounce`, `workflow.plan_bounce_passes`, `workflow.plan_bounce_script`, `workflow.subagent_timeout`, `workflow.inline_plan_threshold` |
+| Execution Tuning | `workflow.node_repair`, `workflow.node_repair_budget`, `workflow.auto_prune_state` |
+| Discussion Tuning | `workflow.max_discuss_passes` |
+| Cross-AI Execution | `workflow.cross_ai_execution`, `workflow.cross_ai_command`, `workflow.cross_ai_timeout` |
+| Git Customization | `git.base_branch`, `git.phase_branch_template`, `git.milestone_branch_template` |
+| Runtime / Output | `response_language`, `context_window`, `search_gitignored`, `graphify.build_timeout` |
+
+All answers merge via `sdd-sdk query config-set`, preserving unrelated keys. API keys are masked (`****<last-4>`) in all output.
 
 ```bash
-/sdd-set-profile budget             # Switch to budget profile
-/sdd-set-profile quality            # Switch to quality profile
+/sdd-config                         # Common-case interactive config
+/sdd-config --advanced              # Power-user knobs (six-section prompt)
+/sdd-config --integrations          # API keys, review CLI routing, agent skills
+/sdd-config --profile budget        # Switch to budget profile
+/sdd-config --profile quality       # Switch to quality profile
 ```
+
+See [CONFIGURATION.md](CONFIGURATION.md) for the full schema and defaults.
 
 ---
 
@@ -994,56 +953,49 @@ Quick profile switch.
 
 ### `/sdd-map-codebase`
 
-Analyze existing codebase with parallel mapper agents.
+Analyze existing codebase with parallel mapper agents. Use `--fast` for a quick single-agent scan, or `--query` to search existing intel.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `area` | No | Scope mapping to a specific area |
-
-```bash
-/sdd-map-codebase                   # Full codebase analysis
-/sdd-map-codebase auth              # Focus on auth area
-```
-
----
-
-### `/sdd-scan`
-
-Rapid single-focus codebase assessment — lightweight alternative to `/sdd-map-codebase` that spawns one mapper agent instead of four parallel ones.
+| `--fast` | No | Rapid single-focus assessment — spawns one mapper agent instead of four parallel ones (lightweight alternative) |
+| `--query <term>` | No | Search queryable codebase intel files in `.planning/intel/` (requires `intel.enabled: true`) |
 
 | Flag | Description |
 |------|-------------|
-| `--focus tech\|arch\|quality\|concerns\|tech+arch` | Focus area (default: `tech+arch`) |
+| `--focus tech\|arch\|quality\|concerns\|tech+arch` | Focus area for `--fast` mode (default: `tech+arch`) |
 
-**Produces:** Targeted document(s) in `.planning/codebase/`
-
-```bash
-/sdd-scan                           # Quick tech + arch overview
-/sdd-scan --focus quality           # Quality and code health only
-/sdd-scan --focus concerns          # Surface concerns and risk areas
-```
-
----
-
-### `/sdd-intel`
-
-Query, inspect, or refresh queryable codebase intelligence files stored in `.planning/intel/`. Requires `intel.enabled: true` in `config.json`.
-
-| Argument | Description |
-|----------|-------------|
-| `query <term>` | Search intel files for a term |
-| `status` | Show intel file freshness (FRESH/STALE) |
-| `diff` | Show changes since last snapshot |
-| `refresh` | Rebuild all intel files from codebase analysis |
-
-**Produces:** `.planning/intel/` JSON files (stack, api-map, dependency-graph, file-roles, arch-decisions)
+**Produces:** `.planning/codebase/` analysis documents (full mode); targeted document(s) in `.planning/codebase/` (`--fast`); intel query results (`--query`)
 
 ```bash
-/sdd-intel status                   # Check freshness of intel files
-/sdd-intel query authentication     # Search intel for a term
-/sdd-intel diff                     # What changed since last snapshot
-/sdd-intel refresh                  # Rebuild intel index
+/sdd-map-codebase                   # Full codebase analysis (4 parallel agents)
+/sdd-map-codebase auth              # Focus on auth area
+/sdd-map-codebase --fast            # Quick tech + arch overview (1 agent)
+/sdd-map-codebase --fast --focus quality  # Quality and code health only
+/sdd-map-codebase --query authentication  # Search intel for a term
 ```
+
+### `/sdd-graphify`
+
+Build, query, and inspect the project knowledge graph stored in `.planning/graphs/`. Opt-in via `graphify.enabled: true` in `config.json` (see [Configuration Reference](CONFIGURATION.md#graphify-settings)); when disabled, the command prints an activation hint and stops.
+
+| Subcommand | Description |
+|------------|-------------|
+| `build` | Build or rebuild the knowledge graph (runs `graphify update .` inline and refreshes `.planning/graphs/`) |
+| `query <term>` | Search the graph for a term |
+| `status` | Show graph freshness and statistics |
+| `diff` | Show changes since the last build |
+
+**Produces:** `.planning/graphs/` graph artifacts (nodes, edges, snapshots)
+
+```bash
+/sdd-graphify build                 # Build or rebuild the knowledge graph
+/sdd-graphify query authentication  # Search the graph for a term
+/sdd-graphify status                # Show freshness and statistics
+/sdd-graphify diff                  # Show changes since last build
+```
+
+**Programmatic access:** `node sdd-tools.cjs graphify <build|query|status|diff|snapshot>` — see [CLI Tools Reference](CLI-TOOLS.md).
 
 ---
 
@@ -1051,7 +1003,7 @@ Query, inspect, or refresh queryable codebase intelligence files stored in `.pla
 
 ### `/sdd-ai-integration-phase`
 
-AI framework selection wizard for integrating AI/LLM capabilities into a project phase. Presents an interactive decision matrix, surfaces domain-specific failure modes and eval criteria, and produces `AI-SPEC.md` with a framework recommendation, implementation guidance, and evaluation strategy.
+Generate an AI-SPEC.md design contract for phases that involve building AI systems. Presents an interactive decision matrix, surfaces domain-specific failure modes and eval criteria, and produces `AI-SPEC.md` with a framework recommendation, implementation guidance, and evaluation strategy.
 
 **Produces:** `{phase}-AI-SPEC.md` in the phase directory
 
@@ -1066,7 +1018,7 @@ AI framework selection wizard for integrating AI/LLM capabilities into a project
 
 ### `/sdd-eval-review`
 
-Retroactive audit of an implemented AI phase's evaluation coverage. Checks implementation against the `AI-SPEC.md` evaluation plan produced by `/sdd-ai-integration-phase`. Scores each eval dimension as COVERED/PARTIAL/MISSING.
+Audit an executed AI phase's evaluation coverage and produce an EVAL-REVIEW.md remediation plan. Checks implementation against the `AI-SPEC.md` evaluation plan produced by `/sdd-ai-integration-phase`. Scores each eval dimension as COVERED/PARTIAL/MISSING.
 
 **Prerequisites:** Phase has been executed and has an `AI-SPEC.md`
 **Produces:** `{phase}-EVAL-REVIEW.md` with findings, gaps, and remediation guidance
@@ -1082,18 +1034,17 @@ Retroactive audit of an implemented AI phase's evaluation coverage. Checks imple
 
 ### `/sdd-update`
 
-Update SDD with changelog preview.
+Update SDD with changelog preview, and optionally sync skills or reapply local patches.
+
+| Flag | Description |
+|------|-------------|
+| `--sync` | Sync skills from the SDD registry after updating |
+| `--reapply` | Restore local modifications (patches) after updating |
 
 ```bash
 /sdd-update                         # Check for updates and install
-```
-
-### `/sdd-reapply-patches`
-
-Restore local modifications after a SDD update.
-
-```bash
-/sdd-reapply-patches                # Merge back local changes
+/sdd-update --sync                  # Update and sync skills
+/sdd-update --reapply               # Update and reapply local patches
 ```
 
 ---
@@ -1102,44 +1053,28 @@ Restore local modifications after a SDD update.
 
 ### `/sdd-code-review`
 
-Review source files changed during a phase for bugs, security vulnerabilities, and code quality problems.
+Review source files changed during a phase for bugs, security vulnerabilities, and code quality problems. Use `--fix` to auto-fix findings after review.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `N` | **Yes** | Phase number whose changes to review (e.g., `2` or `02`) |
 | `--depth=quick\|standard\|deep` | No | Review depth level (overrides `workflow.code_review_depth` config). `quick`: pattern-matching only (~2 min). `standard`: per-file analysis with language-specific checks (~5–15 min, default). `deep`: cross-file analysis including import graphs and call chains (~15–30 min) |
 | `--files file1,file2,...` | No | Explicit comma-separated file list; skips SUMMARY/git scoping entirely |
+| `--fix` | No | Auto-fix issues after review — reads REVIEW.md, spawns fixer agent, commits each fix atomically |
+| `--fix --all` | No | Include Info findings in fix scope (default: Critical + Warning only) |
+| `--fix --auto` | No | Fix + re-review iteration loop, capped at 3 iterations |
 
 **Prerequisites:** Phase has been executed and has SUMMARY.md or git history
-**Produces:** `{phase}-REVIEW.md` in phase directory with severity-classified findings
-**Spawns:** `sdd-code-reviewer` agent
+**Produces:** `{phase}-REVIEW.md` with severity-classified findings; `{phase}-REVIEW-FIX.md` when `--fix` is used
+**Spawns:** `sdd-code-reviewer` agent; `sdd-code-fixer` agent (with `--fix`)
 
 ```bash
 /sdd-code-review 3                          # Standard review for phase 3
 /sdd-code-review 2 --depth=deep             # Deep cross-file review
 /sdd-code-review 4 --files src/auth.ts,src/token.ts  # Explicit file list
-```
-
----
-
-### `/sdd-code-review-fix`
-
-Auto-fix issues found by `/sdd-code-review`. Reads `REVIEW.md`, spawns a fixer agent, commits each fix atomically, and produces a `REVIEW-FIX.md` summary.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `N` | **Yes** | Phase number whose REVIEW.md to fix |
-| `--all` | No | Include Info findings in fix scope (default: Critical + Warning only) |
-| `--auto` | No | Enable fix + re-review iteration loop, capped at 3 iterations |
-
-**Prerequisites:** Phase has a `{phase}-REVIEW.md` file (run `/sdd-code-review` first)
-**Produces:** `{phase}-REVIEW-FIX.md` with applied fixes summary
-**Spawns:** `sdd-code-fixer` agent
-
-```bash
-/sdd-code-review-fix 3                      # Fix Critical + Warning findings for phase 3
-/sdd-code-review-fix 3 --all               # Include Info findings
-/sdd-code-review-fix 3 --auto              # Fix and re-review until clean (max 3 iterations)
+/sdd-code-review 3 --fix                    # Review then fix Critical + Warning findings
+/sdd-code-review 3 --fix --all             # Review then fix all findings including Info
+/sdd-code-review 3 --fix --auto            # Review, fix, and re-review until clean (max 3 iterations)
 ```
 
 ---
@@ -1231,19 +1166,6 @@ Create a clean PR branch by filtering out `.planning/` commits.
 
 ---
 
-### `/sdd-audit-uat`
-
-Cross-phase audit of all outstanding UAT and verification items.
-
-**Prerequisites:** At least one phase has been executed with UAT or verification
-**Produces:** Categorized audit report with human test plan
-
-```bash
-/sdd-audit-uat
-```
-
----
-
 ### `/sdd-secure-phase`
 
 Retroactively verify threat mitigations for a completed phase.
@@ -1290,21 +1212,34 @@ Each doc writer explores the codebase directly — no hallucinated paths or stal
 
 ---
 
-## Backlog & Thread Commands
+## Task Capture & Backlog Commands
 
-### `/sdd-add-backlog`
+### `/sdd-capture`
 
-Add an idea to the backlog parking lot using 999.x numbering.
+Capture ideas, tasks, notes, and seeds to their appropriate destination. Default mode adds a structured todo; flags route to specialized capture workflows.
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `description` | **Yes** | Backlog item description |
+| Flag | Description |
+|------|-------------|
+| (none) | Capture as a structured todo for later work |
+| `--note [text]` | Zero-friction note — append, list (`--note list`), or promote (`--note promote N`) |
+| `--backlog <description>` | Add to the backlog parking lot using 999.x numbering |
+| `--seed [idea summary]` | Capture a forward-looking idea with trigger conditions |
+| `--list` | List pending todos and select one to work on |
+| `--global` | Use global scope (for note operations) |
 
-**999.x numbering** keeps backlog items outside the active phase sequence. Phase directories are created immediately so `/sdd-discuss-phase` and `/sdd-plan-phase` work on them.
+**Backlog:** 999.x numbering keeps items outside the active phase sequence; phase directories are created immediately so `/sdd-discuss-phase` and `/sdd-plan-phase` work on them.
+**Seeds:** Preserve full WHY, WHEN to surface, and breadcrumbs — consumed by `/sdd-new-milestone`.
+
+**Produces:** `.planning/todos/` (default), note files (--note), ROADMAP.md backlog section (--backlog), `.planning/seeds/SEED-NNN-slug.md` (--seed)
 
 ```bash
-/sdd-add-backlog "GraphQL API layer"
-/sdd-add-backlog "Mobile responsive redesign"
+/sdd-capture "Consider adding dark mode support"   # Add todo
+/sdd-capture --note "Caching strategy idea"        # Quick note
+/sdd-capture --note list                           # List all notes
+/sdd-capture --note promote 3                      # Promote note 3 to todo
+/sdd-capture --backlog "GraphQL API layer"         # Add to backlog
+/sdd-capture --seed "Add real-time collaboration when WebSocket infra is in place"
+/sdd-capture --list                                # Browse and act on todos
 ```
 
 ---
@@ -1321,32 +1256,17 @@ Review and promote backlog items to active milestone.
 
 ---
 
-### `/sdd-plant-seed`
-
-Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone.
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `idea summary` | No | Seed description (prompted if omitted) |
-
-Seeds solve context rot: instead of a one-liner in Deferred that nobody reads, a seed preserves the full WHY, WHEN to surface, and breadcrumbs to details.
-
-**Produces:** `.planning/seeds/SEED-NNN-slug.md`
-**Consumed by:** `/sdd-new-milestone` (scans seeds and presents matches)
-
-```bash
-/sdd-plant-seed "Add real-time collaboration when WebSocket infra is in place"
-```
-
----
-
 ### `/sdd-thread`
 
 Manage persistent context threads for cross-session work.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| (none) | — | List all threads |
+| (none) / `list` | — | List all threads |
+| `list --open` | — | List threads with status `open` or `in_progress` only |
+| `list --resolved` | — | List threads with status `resolved` only |
+| `status <slug>` | — | Show status of a specific thread |
+| `close <slug>` | — | Mark a thread as resolved |
 | `name` | — | Resume existing thread by name |
 | `description` | — | Create new thread |
 
@@ -1354,6 +1274,10 @@ Threads are lightweight cross-session knowledge stores for work that spans multi
 
 ```bash
 /sdd-thread                         # List all threads
+/sdd-thread list --open             # List only open/in-progress threads
+/sdd-thread list --resolved         # List only resolved threads
+/sdd-thread status fix-deploy-key   # Show thread status
+/sdd-thread close fix-deploy-key    # Mark thread as resolved
 /sdd-thread fix-deploy-key-auth     # Resume thread
 /sdd-thread "Investigate TCP timeout in pasta service"  # Create new
 ```
@@ -1430,10 +1354,22 @@ Enable with:
 
 ---
 
-### `/sdd-join-discord`
+### Community Invite
 
-Open Discord community invite.
+To join the SDD Discord community, visit the link in the SDD README or run `/sdd-help` and follow the Discord link shown there.
+
+---
+
+## Contributing: Skill Description Standards
+
+Skill descriptions (the `description:` field in each `commands/sdd/*.md` frontmatter) are
+injected into every session's system prompt. To keep per-session overhead low, descriptions
+must be ≤ 100 chars and must not duplicate flag documentation already in `argument-hint:`.
+
+A lint gate enforces the budget:
 
 ```bash
-/sdd-join-discord
+npm run lint:descriptions
 ```
+
+The check is also run as part of `npm test` via `tests/enh-2789-description-budget.test.cjs`.

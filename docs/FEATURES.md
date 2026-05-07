@@ -86,6 +86,27 @@
   - [Worktree Toggle](#66-worktree-toggle)
   - [Project Code Prefixing](#67-project-code-prefixing)
   - [Claude Code Skills Migration](#68-claude-code-skills-migration)
+- [v1.32 Features](#v132-features)
+  - [STATE.md Consistency Gates](#69-statemd-consistency-gates)
+  - [Autonomous `--to N` Flag](#70-autonomous---to-n-flag)
+  - [Research Gate](#71-research-gate)
+  - [Verifier Milestone Scope Filtering](#72-verifier-milestone-scope-filtering)
+  - [Read-Before-Edit Guard Hook](#73-read-before-edit-guard-hook)
+  - [Context Reduction](#74-context-reduction)
+  - [Discuss-Phase `--power` Flag](#75-discuss-phase---power-flag)
+  - [Debug `--diagnose` Flag](#76-debug---diagnose-flag)
+  - [Phase Dependency Analysis](#77-phase-dependency-analysis)
+  - [Anti-Pattern Severity Levels](#78-anti-pattern-severity-levels)
+  - [Methodology Artifact Type](#79-methodology-artifact-type)
+  - [Planner Reachability Check](#80-planner-reachability-check)
+  - [Playwright-MCP UI Verification](#81-playwright-mcp-ui-verification)
+  - [Pause-Work Expansion](#82-pause-work-expansion)
+  - [Response Language Config](#83-response-language-config)
+  - [Manual Update Procedure](#84-manual-update-procedure)
+  - [New Runtime Support (Trae, Cline, Augment Code)](#85-new-runtime-support-trae-cline-augment-code)
+  - [Autonomous `--interactive` Flag](#86-autonomous---interactive-flag)
+  - [Commit-Docs Guard Hook](#87-commit-docs-guard-hook)
+  - [Community Hooks Opt-In](#88-community-hooks-opt-in)
 - [v1.34.0 Features](#v1340-features)
   - [Global Learnings Store](#89-global-learnings-store)
   - [Queryable Codebase Intelligence](#90-queryable-codebase-intelligence)
@@ -99,7 +120,7 @@
   - [Autonomous Audit-to-Fix](#98-autonomous-audit-to-fix)
   - [Improved Prompt Injection Scanner](#99-improved-prompt-injection-scanner)
   - [Stall Detection in Plan-Phase](#100-stall-detection-in-plan-phase)
-  - [Hard Stop Safety Gates in /sdd-next](#101-hard-stop-safety-gates-in-sdd-next)
+  - [Hard Stop Safety Gates in /sdd-progress --next](#101-hard-stop-safety-gates-in-sdd-progress---next)
   - [Adaptive Model Preset](#102-adaptive-model-preset)
   - [Post-Merge Hunk Verification](#103-post-merge-hunk-verification)
 - [v1.35.0 Features](#v1350-features)
@@ -116,11 +137,18 @@
   - [SDK Workstream Support](#113-sdk-workstream-support)
   - [Context-Window-Aware Prompt Thinning](#114-context-window-aware-prompt-thinning)
   - [Configurable CLAUDE.md Path](#115-configurable-claudemd-path)
+  - [TDD Pipeline Mode](#116-tdd-pipeline-mode)
 - [v1.37.0 Features](#v1370-features)
   - [Spike Command](#117-spike-command)
   - [Sketch Command](#118-sketch-command)
   - [Agent Size-Budget Enforcement](#119-agent-size-budget-enforcement)
   - [Shared Boilerplate Extraction](#120-shared-boilerplate-extraction)
+  - [Knowledge Graph Integration](#121-knowledge-graph-integration)
+- [v1.40.0 Features](#v1400-features)
+  - [Skill Surface Consolidation](#122-skill-surface-consolidation)
+  - [Namespace Meta-Skills (Two-Stage Routing)](#123-namespace-meta-skills-two-stage-routing)
+  - [Context-Window Utilization Guard](#124-context-window-utilization-guard)
+  - [Phase-Lifecycle Status-Line Read-Side](#125-phase-lifecycle-status-line-read-side)
 - [v1.32 Features](#v132-features)
   - [STATE.md Consistency Gates](#69-statemd-consistency-gates)
   - [Autonomous `--to N` Flag](#70-autonomous---to-n-flag)
@@ -426,7 +454,6 @@
 - REQ-MILE-08: New milestone MUST follow same flow as new-project (questions → research → requirements → roadmap)
 - REQ-MILE-09: New milestone MUST NOT reset existing workflow configuration
 
-**Gap Closure:** `/sdd-plan-milestone-gaps` creates phases to close gaps identified by audit.
 
 ---
 
@@ -434,7 +461,7 @@
 
 ### 9. Phase Management
 
-**Commands:** `/sdd-add-phase`, `/sdd-insert-phase [N]`, `/sdd-remove-phase [N]`
+**Commands:** `/sdd-phase`, `/sdd-phase --insert [N]`, `/sdd-phase --remove [N]`
 
 **Purpose:** Dynamic roadmap modification during development.
 
@@ -512,7 +539,7 @@
 
 ### 14. Auto-Advance (Next)
 
-**Command:** `/sdd-next`
+**Command:** `/sdd-progress --next`
 
 **Purpose:** Automatically detect current project state and advance to the next logical workflow step, eliminating the need to remember which phase/step you're on.
 
@@ -682,7 +709,7 @@
 
 ### 24. Session Reporting
 
-**Command:** `/sdd-session-report`
+**Command:** `/sdd-pause-work --report`
 
 **Purpose:** Generate a structured post-session summary document capturing work performed, outcomes achieved, and estimated resource usage.
 
@@ -721,7 +748,7 @@
 
 ### 26. Model Profiles
 
-**Command:** `/sdd-set-profile <quality|balanced|budget|inherit>`
+**Command:** `/sdd-config --profile <quality|balanced|budget|adaptive|inherit>`
 
 **Purpose:** Control which AI model each agent uses, balancing quality vs cost.
 
@@ -779,6 +806,45 @@
 | `TESTING.md` | Test infrastructure, coverage, patterns |
 | `INTEGRATIONS.md` | External services, APIs, third-party dependencies |
 
+**Incremental remap — `--paths` (#2003):** The mapper accepts an optional
+`--paths <p1,p2,...>` scope hint. When provided, it restricts exploration
+to the listed repo-relative prefixes instead of scanning the whole tree.
+This is the pathway used by the post-execute codebase-drift gate to refresh
+only the subtrees the phase actually changed. Each produced document carries
+`last_mapped_commit` in its YAML frontmatter so drift can be measured
+against the mapping point, not HEAD.
+
+### 27a. Post-Execute Codebase Drift Detection
+
+**Introduced by:** #2003
+**Trigger:** Runs automatically at the end of every `/sdd-execute-phase`
+**Configuration:**
+- `workflow.drift_threshold` (integer, default `3`) — minimum new
+  structural elements before the gate acts.
+- `workflow.drift_action` (`warn` | `auto-remap`, default `warn`) —
+  warn-only or spawn `sdd-codebase-mapper` with `--paths` scoped to
+  affected subtrees.
+
+**What counts as drift:**
+- New directory outside mapped paths
+- New barrel export at `(packages|apps)/*/src/index.*`
+- New migration file (supabase/prisma/drizzle/src/migrations/…)
+- New route module under `routes/` or `api/`
+
+**Non-blocking guarantee:** any internal failure (missing STRUCTURE.md,
+git errors, mapper spawn failure) logs a single line and the phase
+continues. Drift detection cannot fail verification.
+
+**Requirements:**
+- REQ-DRIFT-01: System MUST detect the four drift categories from `git diff
+  --name-status last_mapped_commit..HEAD`
+- REQ-DRIFT-02: Action fires only when element count ≥ `workflow.drift_threshold`
+- REQ-DRIFT-03: `warn` action MUST NOT spawn any agent
+- REQ-DRIFT-04: `auto-remap` action MUST pass sanitized `--paths` to the mapper
+- REQ-DRIFT-05: Detection/remap failure MUST be non-blocking for `/sdd-execute-phase`
+- REQ-DRIFT-06: `last_mapped_commit` round-trip through YAML frontmatter
+  on each `.planning/codebase/*.md` file
+
 ---
 
 ## Utility Features
@@ -803,7 +869,7 @@
 
 ### 29. Todo Management
 
-**Commands:** `/sdd-add-todo [desc]`, `/sdd-check-todos`
+**Commands:** `/sdd-capture [desc]`, `/sdd-capture --list`
 
 **Purpose:** Capture ideas and tasks during sessions for later work.
 
@@ -840,7 +906,7 @@
 - REQ-UPDATE-02: System MUST display changelog for new version before updating
 - REQ-UPDATE-03: System MUST be runtime-aware and target the correct directory
 - REQ-UPDATE-04: System MUST back up locally modified files to `sdd-local-patches/`
-- REQ-UPDATE-05: `/sdd-reapply-patches` MUST restore local modifications after update
+- REQ-UPDATE-05: `/sdd-update --reapply` MUST restore local modifications after update
 
 ---
 
@@ -861,6 +927,8 @@
 | `mode` | enum | `interactive` | `interactive` or `yolo` (auto-approve) |
 | `granularity` | enum | `standard` | `coarse`, `standard`, or `fine` |
 | `model_profile` | enum | `balanced` | `quality`, `balanced`, `budget`, or `inherit` |
+| `models.<phase_type>` | enum | (none) | Per-phase-type tier override (`planning`, `discuss`, `research`, `execution`, `verification`, `completion`). Values: `opus`, `sonnet`, `haiku`, `inherit`. Coarse phase-level tuning that wins over `model_profile` but loses to per-agent `model_overrides`. See [CONFIGURATION.md](CONFIGURATION.md#per-phase-type-models-models--added-in-v140). Added in v1.40 |
+| `dynamic_routing.enabled` | boolean | `false` | Master switch for failure-tier escalation. When `true`, agents resolve to `tier_models[default_tier]` and escalate one tier on orchestrator-detected soft failure. Capped by `max_escalations`. See [CONFIGURATION.md](CONFIGURATION.md#dynamic-routing-with-failure-tier-escalation-dynamic_routing--added-in-v140). Added in v1.40 |
 | `workflow.research` | boolean | `true` | Domain research before planning |
 | `workflow.plan_check` | boolean | `true` | Plan verification loop |
 | `workflow.verifier` | boolean | `true` | Post-execution verification |
@@ -968,13 +1036,24 @@ fix(03-01): correct auth token expiry
 - REQ-HOOK-05: All hooks MUST include 3-second stdin timeout guard
 - REQ-HOOK-06: All hooks MUST fail silently on any error
 - REQ-HOOK-07: Context usage MUST normalize for autocompact buffer (16.5% reserved)
+- REQ-HOOK-08: Update banner MUST be opt-in and silent unless an update is available (PR #2795)
 
 **Statusline Display:**
-```
+```text
 [⬆ /sdd-update │] model │ [current task │] directory [█████░░░░░ 50%]
 ```
 
 Color coding: <50% green, <65% yellow, <80% orange, ≥80% red with skull emoji
+
+**Update Banner (opt-in, when SDD statusline isn't used):**
+
+When the user declines (or keeps a non-SDD) statusline, the installer offers a SessionStart banner that surfaces update availability without occupying statusline real estate. The banner reads `~/.cache/sdd/sdd-update-check.json` (written by `sdd-check-update-worker.js`) and emits one line only when an update is available:
+
+```text
+SDD update available: 1.39.0 → 1.40.0. Run /sdd-update.
+```
+
+The banner is silent when up-to-date and rate-limits "check failed" diagnostics to once per 24 hours. Removed cleanly by `npx @bhargavvc/sdd-cc --uninstall` or by deleting the SessionStart entry that references `sdd-update-banner.js`.
 
 ### 38. Developer Profiling
 
@@ -1106,7 +1185,7 @@ When verification returns `human_needed`, items are persisted as a trackable HUM
 
 ### 43. Backlog Parking Lot
 
-**Commands:** `/sdd-add-backlog <description>`, `/sdd-review-backlog`, `/sdd-plant-seed <idea>`
+**Commands:** `/sdd-capture --backlog <description>`, `/sdd-review-backlog`, `/sdd-capture --seed <idea>`
 
 **Purpose:** Capture ideas that aren't ready for active planning. Backlog items use 999.x numbering to stay outside the active phase sequence. Seeds are forward-looking ideas with trigger conditions that surface automatically at the right milestone.
 
@@ -1555,7 +1634,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 ### 65. Claim Provenance Tagging
 
-**Part of:** `/sdd-research-phase`
+**Part of:** `/sdd-plan-phase --research-phase <N>`
 
 **Purpose:** Ensure research claims are tagged with source evidence and assumptions are logged separately.
 
@@ -1729,6 +1808,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-CTXRED-01: System MUST truncate oversized markdown artifacts to fit within context budgets
 - REQ-CTXRED-02: System MUST order prompts for cache-friendly assembly (stable prefixes first)
 - REQ-CTXRED-03: Reduction MUST preserve essential information (headings, requirements, task structure)
+- REQ-CTXRED-04: Skill `description:` fields MUST be ≤ 100 chars; enforced by `npm run lint:descriptions` (see `scripts/lint-descriptions.cjs` and `tests/enh-2789-description-budget.test.cjs`)
 
 **Process:**
 1. **Measure** — Calculate total prompt size for the workflow
@@ -1765,7 +1845,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 ### 77. Phase Dependency Analysis
 
-**Command:** `/sdd-analyze-dependencies`
+**Command:** `/sdd-manager --analyze-deps`
 
 **Purpose:** Detect phase dependencies and suggest `Depends on` entries for ROADMAP.md before running `/sdd-manager`.
 
@@ -1948,7 +2028,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
   - [Autonomous Audit-to-Fix](#98-autonomous-audit-to-fix)
   - [Improved Prompt Injection Scanner](#99-improved-prompt-injection-scanner)
   - [Stall Detection in Plan-Phase](#100-stall-detection-in-plan-phase)
-  - [Hard Stop Safety Gates in /sdd-next](#101-hard-stop-safety-gates-in-sdd-next)
+  - [Hard Stop Safety Gates in /sdd-progress --next](#101-hard-stop-safety-gates-in-sdd-progress---next)
   - [Adaptive Model Preset](#102-adaptive-model-preset)
   - [Post-Merge Hunk Verification](#103-post-merge-hunk-verification)
 
@@ -2045,7 +2125,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 ### 93. Code Review Pipeline
 
-**Commands:** `/sdd-code-review`, `/sdd-code-review-fix`
+**Commands:** `/sdd-code-review`, `/sdd-code-review --fix`
 
 **Purpose:** Structured review of source files changed during a phase, with a separate auto-fix pass that commits each fix atomically.
 
@@ -2053,7 +2133,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-REVIEW-01: `sdd-code-review` MUST scope files to the phase using SUMMARY.md and git diff fallback
 - REQ-REVIEW-02: Review MUST support three depth levels: `quick`, `standard`, `deep`
 - REQ-REVIEW-03: Findings MUST be severity-classified: Critical, Warning, Info
-- REQ-REVIEW-04: `sdd-code-review-fix` MUST read REVIEW.md and fix Critical + Warning findings by default
+- REQ-REVIEW-04: `sdd-code-review --fix` MUST read REVIEW.md and fix Critical + Warning findings by default
 - REQ-REVIEW-05: Each fix MUST be committed atomically with a descriptive message
 - REQ-REVIEW-06: `--auto` flag MUST enable fix + re-review iteration loop, capped at 3 iterations
 - REQ-REVIEW-07: Feature MUST be gated by `workflow.code_review` config flag
@@ -2165,14 +2245,14 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 ---
 
-### 101. Hard Stop Safety Gates in /sdd-next
+### 101. Hard Stop Safety Gates in /sdd-progress --next
 
-**Command:** `/sdd-next`
+**Command:** `/sdd-progress --next`
 
-**Purpose:** Prevent `/sdd-next` from entering runaway loops by adding hard stop safety gates and a consecutive-call guard that interrupts autonomous chaining when repeated identical steps are detected.
+**Purpose:** Prevent `/sdd-progress --next` from entering runaway loops by adding hard stop safety gates and a consecutive-call guard that interrupts autonomous chaining when repeated identical steps are detected.
 
 **Requirements:**
-- REQ-NEXT-GATE-01: `/sdd-next` MUST track consecutive same-step calls
+- REQ-NEXT-GATE-01: `/sdd-progress --next` MUST track consecutive same-step calls
 - REQ-NEXT-GATE-02: On repeated same-step, system MUST present a hard stop gate to the user
 - REQ-NEXT-GATE-03: User MUST explicitly confirm to continue past a hard stop gate
 
@@ -2186,13 +2266,13 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 **Requirements:**
 - REQ-ADAPTIVE-01: `adaptive` preset MUST assign model tiers based on agent role (planner → quality tier, executor → balanced tier, etc.)
-- REQ-ADAPTIVE-02: `adaptive` MUST be selectable via `/sdd-set-profile adaptive`
+- REQ-ADAPTIVE-02: `adaptive` MUST be selectable via `/sdd-config --profile adaptive`
 
 ---
 
 ### 103. Post-Merge Hunk Verification
 
-**Command:** `/sdd-reapply-patches`
+**Command:** `/sdd-update --reapply`
 
 **Purpose:** After applying local patches post-update, verify that all hunks were actually applied by comparing the expected patch content against the live filesystem. Surface any dropped or partial hunks immediately rather than silently accepting incomplete merges.
 
@@ -2371,6 +2451,20 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 **Produces:** `{phase}-LEARNINGS.md` with YAML frontmatter (phase, project, counts per category, missing_artifacts)
 
+**Optional integration — `capture_thought`:** `capture_thought` is a **convention, not a bundled tool**. SDD does not ship one and does not require one. The workflow checks whether any MCP server in the current session exposes a tool named `capture_thought` and, if so, calls it once per extracted learning with the signature below. If no such tool is present, the step is skipped silently and `LEARNINGS.md` remains the primary output.
+
+Expected tool signature:
+```javascript
+capture_thought({
+  category: "decision" | "lesson" | "pattern" | "surprise",
+  phase: <phase_number>,
+  content: <learning_text>,
+  source: <artifact_name>
+})
+```
+
+Users who run a memory / knowledge-base MCP server (for example, ExoCortex-style servers, `claude-mem`, or `mem0`-style servers) can implement this tool name to have learnings routed into their knowledge base automatically with `project`, `phase`, and `source` metadata. Everyone else can use `/sdd-extract-learnings` without any extra setup — the `LEARNINGS.md` artifact is the feature.
+
 ---
 
 ### 113. SDK Workstream Support
@@ -2437,7 +2531,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 **Command:** `/sdd-spike [idea] [--quick]`
 
-**Purpose:** Run 2–5 focused feasibility experiments before committing to an implementation approach. Each experiment uses Given/When/Then framing, produces executable code, and returns a VALIDATED / INVALIDATED / PARTIAL verdict. Companion `/sdd-spike-wrap-up` packages findings into a project-local skill.
+**Purpose:** Run 2–5 focused feasibility experiments before committing to an implementation approach. Each experiment uses Given/When/Then framing, produces executable code, and returns a VALIDATED / INVALIDATED / PARTIAL verdict. Companion `/sdd-spike --wrap-up` packages findings into a project-local skill.
 
 **Requirements:**
 - REQ-SPIKE-01: Each experiment MUST produce a Given/When/Then hypothesis before any code is written
@@ -2445,14 +2539,15 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-SPIKE-03: Each experiment MUST return one of: VALIDATED, INVALIDATED, or PARTIAL verdict with evidence
 - REQ-SPIKE-04: Results MUST be stored in `.planning/spikes/NNN-experiment-name/` with a README and MANIFEST.md
 - REQ-SPIKE-05: `--quick` flag skips intake conversation and uses the argument text as the experiment direction
-- REQ-SPIKE-06: `/sdd-spike-wrap-up` MUST package findings into `.claude/skills/spike-findings-[project]/`
+- REQ-SPIKE-06: `/sdd-spike --wrap-up` MUST package findings into `.claude/skills/spike-findings-[project]/`
 
 **Produces:**
+
 | Artifact | Description |
 |----------|-------------|
 | `.planning/spikes/NNN-name/README.md` | Hypothesis, experiment code, verdict, and evidence |
 | `.planning/spikes/MANIFEST.md` | Index of all spikes with verdicts |
-| `.claude/skills/spike-findings-[project]/` | Packaged findings (via `/sdd-spike-wrap-up`) |
+| `.claude/skills/spike-findings-[project]/` | Packaged findings (via `/sdd-spike --wrap-up`) |
 
 ---
 
@@ -2460,7 +2555,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 
 **Command:** `/sdd-sketch [idea] [--quick] [--text]`
 
-**Purpose:** Explore design directions through throwaway HTML mockups before committing to implementation. Produces 2–3 interactive variants per design question, all viewable directly in a browser with no build step. Companion `/sdd-sketch-wrap-up` packages winning decisions into a project-local skill.
+**Purpose:** Explore design directions through throwaway HTML mockups before committing to implementation. Produces 2–3 interactive variants per design question, all viewable directly in a browser with no build step. Companion `/sdd-sketch --wrap-up` packages winning decisions into a project-local skill.
 
 **Requirements:**
 - REQ-SKETCH-01: Each sketch MUST answer one specific visual design question
@@ -2470,7 +2565,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-SKETCH-05: A shared `themes/default.css` MUST provide CSS variables adapted to the agreed aesthetic
 - REQ-SKETCH-06: `--quick` flag skips mood intake; `--text` flag replaces `AskUserQuestion` with numbered lists for non-Claude runtimes
 - REQ-SKETCH-07: The winning variant MUST be marked in the README frontmatter and with a ★ in the HTML tab
-- REQ-SKETCH-08: `/sdd-sketch-wrap-up` MUST package winning decisions into `.claude/skills/sketch-findings-[project]/`
+- REQ-SKETCH-08: `/sdd-sketch --wrap-up` MUST package winning decisions into `.claude/skills/sketch-findings-[project]/`
 
 **Produces:**
 | Artifact | Description |
@@ -2479,7 +2574,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 | `.planning/sketches/NNN-name/README.md` | Design question, variants, winner, what to look for |
 | `.planning/sketches/themes/default.css` | Shared CSS theme variables |
 | `.planning/sketches/MANIFEST.md` | Index of all sketches with winners |
-| `.claude/skills/sketch-findings-[project]/` | Packaged decisions (via `/sdd-sketch-wrap-up`) |
+| `.claude/skills/sketch-findings-[project]/` | Packaged decisions (via `/sdd-sketch --wrap-up`) |
 
 ---
 
@@ -2507,3 +2602,99 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-BOILER-03: Agents that previously inlined these blocks MUST now reference them via `@` required_reading
 
 **Reference files:** `references/mandatory-initial-read.md`, `references/project-skills-discovery.md`
+
+---
+
+### 121. Knowledge Graph Integration
+
+**Purpose:** Build, query, and inspect a lightweight knowledge graph of the project in `.planning/graphs/`. Opt-in per project. Exposed as the `/sdd-graphify` user-facing command and the `sdd-tools.cjs graphify …` programmatic verb family. Complements `/sdd-intel` (snapshot-oriented) with a graph-oriented view of nodes and edges across commands, agents, workflows, and phases.
+
+**Requirements:**
+- REQ-GRAPH-01: Opt-in via `graphify.enabled: true` in `.planning/config.json`. When disabled, `/sdd-graphify` prints an activation hint and stops without writing.
+- REQ-GRAPH-02: Slash-command `/sdd-graphify` exposes subcommands `build`, `query <term>`, `status`, `diff`. The programmatic CLI `node sdd-tools.cjs graphify …` additionally exposes `snapshot`, which is also invoked automatically as the final step of `graphify build`.
+- REQ-GRAPH-03: Build runs within the configurable `graphify.build_timeout` (seconds); exceeding the timeout aborts cleanly without leaving a partial graph.
+- REQ-GRAPH-04: `graphify.cjs` falls back to `graph.links` when `graph.edges` is absent so older graph artifacts keep rendering.
+- REQ-GRAPH-05: CJS-only surface; `sdd-sdk query` does not yet register graphify handlers.
+
+**Configuration:** `graphify.enabled`, `graphify.build_timeout`
+**Reference files:** `commands/sdd/graphify.md`, `bin/lib/graphify.cjs`
+
+---
+
+## v1.40.0 Features
+
+### 122. Skill Surface Consolidation
+
+**Purpose:** Cut the eager skill-listing overhead by folding 31 micro-skills into 4 new grouped parents and 6 existing parents that absorb sub-operations as flags. Zero functional loss — every removed micro-skill's behavior survives via a flag on a consolidated parent. After consolidation, `commands/sdd/*.md` ships 59 sub-skills (plus 6 namespace meta-skills, see #123).
+
+**Requirements:**
+- REQ-CONSOLIDATE-01: Four new grouped skills replace clusters of micro-skills:
+  - `/sdd-capture` — folds add-todo (default), note (`--note`), add-backlog (`--backlog`), plant-seed (`--seed`), check-todos (`--list`)
+  - `/sdd-phase` — folds add-phase (default), insert-phase (`--insert`), remove-phase (`--remove`), edit-phase (`--edit`)
+  - `/sdd-config` — folds settings-advanced (`--advanced`), settings-integrations (`--integrations`), set-profile (`--profile`)
+  - `/sdd-workspace` — folds new-workspace (`--new`), list-workspaces (`--list`), remove-workspace (`--remove`)
+- REQ-CONSOLIDATE-02: Six existing parents absorb wrap-up / sub-operations as flags: `/sdd-update --sync`, `/sdd-update --reapply`, `/sdd-sketch --wrap-up`, `/sdd-spike --wrap-up`, `/sdd-map-codebase --fast`, `/sdd-map-codebase --query`, `/sdd-code-review --fix`, `/sdd-progress --do`, `/sdd-progress --next`.
+- REQ-CONSOLIDATE-03: Deleted micro-skill slash forms (the bare `sdd-add-todo`, `sdd-add-backlog`, `sdd-plant-seed`, `sdd-check-todos`, `sdd-add-phase`, `sdd-insert-phase`, `sdd-remove-phase`, `sdd-edit-phase`, `sdd-new-workspace`, `sdd-list-workspaces`, `sdd-remove-workspace`, `sdd-settings-advanced`, `sdd-settings-integrations`, `sdd-set-profile`, `sdd-sketch-wrap-up`, `sdd-spike-wrap-up`, `sdd-reapply-patches`, `sdd-code-review-fix`, …) MUST resolve to "Unknown command" — no shadow stubs.
+- REQ-CONSOLIDATE-04: `autonomous.md` invokes `/sdd-code-review --fix` (was previously calling the deleted `sdd-code-review-fix`).
+
+**Reference issue:** [#2790](https://github.com/bhargavvc/sdd-cc/issues/2790)
+
+---
+
+### 123. Namespace Meta-Skills (Two-Stage Routing)
+
+**Purpose:** Replace the flat eager skill listing with a two-stage hierarchical routing layer. The model sees 6 namespace routers instead of 86 entries, selects a namespace, then routes to the sub-skill. Descriptions use pipe-separated keyword tags (≤ 60 chars) for routing density.
+
+**Commands:**
+- `/sdd-ns-workflow` — phase pipeline router (discuss / plan / execute / verify / phase / progress)
+- `/sdd-ns-project` — project lifecycle (milestones, audits, summary)
+- `/sdd-ns-review` — quality gates (code review, debug, audit, security, eval, ui)
+- `/sdd-ns-context` — codebase intelligence (map, graphify, docs, learnings)
+- `/sdd-ns-manage` — config / workspace / workstreams / thread / update / ship / inbox
+- `/sdd-ns-ideate` — exploration & capture (explore, sketch, spike, spec, capture)
+
+**Token cost:**
+
+| | Entries | Approx tokens |
+|---|---|---|
+| Pre-1.40 full install | 86 | ~2,150 |
+| Namespace meta-skills | 6 | ~120 |
+
+**Requirements:**
+- REQ-NS-01: Six `commands/sdd/ns-*.md` namespace routers ship with pipe-separated keyword-tag descriptions (≤ 60 chars).
+- REQ-NS-02: Existing sub-skills are unchanged and still invocable directly — namespace skills are additive, not a replacement for direct slash forms.
+- REQ-NS-03: The body of each namespace router contains a routing table that maps user intent to the correct concrete sub-skill on the post-#2790 consolidated surface.
+
+**Reference issue:** [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792)
+
+---
+
+### 124. Context-Window Utilization Guard
+
+**Command:** `/sdd-health --context`
+
+**Purpose:** Quality guard against context-window saturation. Two thresholds: 60 % utilization warns ("consider `/sdd-thread`"), 70 % is critical ("reasoning quality may degrade"; matches the fracture-point per recent context-attention research).
+
+**Requirements:**
+- REQ-CTX-GUARD-01: `/sdd-health --context` prints a structured status line with current utilization, threshold tier (`ok` / `warn` / `critical`), and a remediation suggestion.
+- REQ-CTX-GUARD-02: The same triage is exposed as `sdd-sdk query validate.context --tokens-used <int> --context-window <int>` — a structured envelope for status-line and hook callers (#125). Both flags are required; the handler returns the same `{ percent, state }` envelope as the pure classifier in REQ-CTX-GUARD-03.
+- REQ-CTX-GUARD-03: The classifier (`bin/lib/context-utilization.cjs`) is pure: input `(tokensUsed, contextWindow)`, output `{ percent, state }`. Easy to unit-test, easy to reuse from any caller.
+
+**Reference issue:** [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792)
+
+---
+
+### 125. Phase-Lifecycle Status-Line Read-Side
+
+**Purpose:** Surface phase orchestration state on the status-line. `parseStateMd()` reads four new STATE.md frontmatter fields and `formatSddState()` renders in-flight, idle, and progress scenes. Write-side wiring follows in a later RC.
+
+**Requirements:**
+- REQ-LIFECYCLE-01: `parseStateMd()` reads four optional fields:
+  - `active_phase` — phase number when an orchestrator is in flight
+  - `next_action` — recommended next command when idle
+  - `next_phases` — YAML flow array of next phase numbers
+  - `progress` — nested `total_phases` / `completed_phases` / `percent` block
+- REQ-LIFECYCLE-02: `formatSddState()` checks the lifecycle fields in priority order and emits the first matching scene (Phase active → Idle next-recommended → Milestone complete → Default fallback).
+- REQ-LIFECYCLE-03: All four fields default to undefined; existing STATE.md files render byte-for-byte identically.
+
+**Reference issue:** [#2833](https://github.com/bhargavvc/sdd-cc/issues/2833) — see [`docs/STATE-MD-LIFECYCLE.md`](STATE-MD-LIFECYCLE.md) for the full field reference and rendering rules.

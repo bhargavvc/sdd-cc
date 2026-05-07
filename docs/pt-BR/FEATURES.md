@@ -37,7 +37,7 @@ Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em ingl�
 - **Perfis de modelo** (`quality`, `balanced`, `budget`, `inherit`)
 - **Ajuste por toggles** para custo/qualidade/velocidade
 - **Diagnóstico forense** com `/sdd-forensics`
-- **Relatório de sessão** com `/sdd-session-report`
+- **Relatório de sessão** com `/sdd-pause-work --report`
 
 ## Novidades v1.31--v1.32
 
@@ -55,7 +55,7 @@ Para catálogo completo e detalhamento exaustivo, consulte [FEATURES.md em ingl�
 - **Context reduction** — truncamento de markdown e ordenação cache-friendly (v1.32)
 - **`--power` flag** — respostas em batch via arquivo para discuss-phase (v1.32)
 - **`--diagnose` flag** — modo diagnóstico sem modificações no `/sdd-debug` (v1.32)
-- **`/sdd-analyze-dependencies`** — detecta dependências entre fases (v1.32)
+- **`/sdd-manager --analyze-deps`** — detecta dependências entre fases (v1.32)
 - **Response language config** — `response_language` para saída consistente em idioma (v1.32)
 - **Novos runtimes** — Trae IDE, Cline, Augment Code (v1.32)
 - **Manual update** — procedimento de atualização sem npm (v1.32)

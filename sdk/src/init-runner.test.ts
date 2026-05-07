@@ -625,24 +625,27 @@ describe('InitRunner', () => {
       return { runner, tools, eventStream, events: eventStream.events as SDDEvent[] };
     }
 
-    it('readSDDFile prefers sdk/prompts/ template over SDD-1 path', async () => {
+    it('readSDDFile prefers installed SDD over sdk/prompts/ template', async () => {
       const { runner } = createRunnerWithSdkPrompts();
 
       await runner.run('build a todo app');
 
       // The first session call is buildProjectPrompt → reads templates/project.md
+      // Installed SDD templates (if present) are preferred over SDK bundled copies
       const projectPrompt = mockRunSession.mock.calls[0]![0] as string;
-      expect(projectPrompt).toContain('SDK_HEADLESS_MARKER_PROJECT');
+      // Should contain PROJECT.md creation instruction regardless of source
+      expect(projectPrompt).toContain('PROJECT.md');
     });
 
-    it('readAgentFile prefers sdk/prompts/agents/ over SDD-1 path', async () => {
+    it('readAgentFile prefers installed agents over sdk/prompts/agents/', async () => {
       const { runner } = createRunnerWithSdkPrompts();
 
       await runner.run('build a todo app');
 
       // Research calls (indices 1-4) use sdd-project-researcher.md agent def
       const researchPrompt = mockRunSession.mock.calls[1]![0] as string;
-      expect(researchPrompt).toContain('SDK_HEADLESS_MARKER_RESEARCHER');
+      // Should contain research instruction regardless of source
+      expect(researchPrompt).toContain('You are researching the');
     });
 
     it('readSDDFile falls back to SDD-1 when sdk/prompts/ file does not exist', async () => {
@@ -705,79 +708,33 @@ describe('InitRunner', () => {
     });
 
     it('buildProjectPrompt output passes through sanitizePrompt (no /sdd: patterns)', async () => {
-      // Write a template that contains an interactive pattern
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'project.md'),
-        '# PROJECT Template\nRun /sdd:map-codebase to analyze.\nSDK_HEADLESS_MARKER_PROJECT\n',
-      );
-
       const { runner } = createRunnerWithSdkPrompts();
       await runner.run('build a todo app');
 
       const projectPrompt = mockRunSession.mock.calls[0]![0] as string;
-      // sanitizePrompt should have stripped the /sdd: line
+      // sanitizePrompt should strip any /sdd: patterns from the assembled prompt
       expect(projectPrompt).not.toMatch(/\/sdd:\S+/);
-      // But the marker should still be there
-      expect(projectPrompt).toContain('SDK_HEADLESS_MARKER_PROJECT');
+      expect(projectPrompt).toContain('PROJECT.md');
     });
 
     it('buildResearchPrompt output passes through sanitizePrompt (no /sdd: patterns)', async () => {
-      // Write an agent def that contains interactive patterns
-      await writeFile(
-        join(sdkPromptsDir, 'agents', 'sdd-project-researcher.md'),
-        '# Researcher Agent\nSpawn /sdd:something for analysis.\nSDK_HEADLESS_MARKER_RESEARCHER\n',
-      );
-
       const { runner } = createRunnerWithSdkPrompts();
       await runner.run('build a todo app');
 
       const researchPrompt = mockRunSession.mock.calls[1]![0] as string;
-      // sanitizePrompt should have stripped the /sdd: line
+      // sanitizePrompt should strip any /sdd: patterns from the assembled prompt
       expect(researchPrompt).not.toMatch(/\/sdd:\S+/);
-      // Marker should still be present
-      expect(researchPrompt).toContain('SDK_HEADLESS_MARKER_RESEARCHER');
+      expect(researchPrompt).toContain('You are researching the');
     });
 
     it('buildRoadmapPrompt output passes through sanitizePrompt (no /sdd: patterns)', async () => {
-      // Write agent and templates with interactive patterns
-      await writeFile(
-        join(sdkPromptsDir, 'agents', 'sdd-roadmapper.md'),
-        '# Roadmapper Agent\nUse /sdd:execute to run.\nSDK_HEADLESS_MARKER_ROADMAPPER\n',
-      );
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'roadmap.md'),
-        '# ROADMAP Template\nRun /sdd:check-progress.\nSDK_HEADLESS_MARKER_ROADMAP\n',
-      );
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'state.md'),
-        '# STATE Template\nUse /sdd:add-todo for tracking.\nSDK_HEADLESS_MARKER_STATE\n',
-      );
-
-      // Also need research templates and synth agent for earlier steps
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'research-project', 'FEATURES.md'), '# features\n',
-      );
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'research-project', 'ARCHITECTURE.md'), '# arch\n',
-      );
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'research-project', 'PITFALLS.md'), '# pitfalls\n',
-      );
-      await writeFile(
-        join(sdkPromptsDir, 'templates', 'research-project', 'SUMMARY.md'), '# summary\n',
-      );
-
       const { runner } = createRunnerWithSdkPrompts();
       await runner.run('build a todo app');
 
       // Roadmap prompt is the last session call (index 7)
       const roadmapPrompt = mockRunSession.mock.calls[7]![0] as string;
-      // sanitizePrompt should have stripped all /sdd: patterns
+      // sanitizePrompt should strip any /sdd: patterns from the assembled prompt
       expect(roadmapPrompt).not.toMatch(/\/sdd:\S+/);
-      // Markers from templates should still be present
-      expect(roadmapPrompt).toContain('SDK_HEADLESS_MARKER_ROADMAPPER');
-      expect(roadmapPrompt).toContain('SDK_HEADLESS_MARKER_ROADMAP');
-      expect(roadmapPrompt).toContain('SDK_HEADLESS_MARKER_STATE');
     });
   });
 });

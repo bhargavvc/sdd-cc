@@ -8,7 +8,7 @@
 
 import { parseArgs } from 'node:util';
 import { readFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { resolve, join, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { SDD } from './index.js';
@@ -16,6 +16,9 @@ import { CLITransport } from './cli-transport.js';
 import { WSTransport } from './ws-transport.js';
 import { InitRunner } from './init-runner.js';
 import { validateWorkstreamName } from './workstream-utils.js';
+import { loadConfig } from './config.js';
+import { assertRuntimeSupportsAutoMode } from './runtime-gate.js';
+import { runQueryCliCommand } from './query/query-cli-adapter.js';
 
 // ─── Parsed CLI args ─────────────────────────────────────────────────────────
 
@@ -82,8 +85,17 @@ function parseCliArgsQueryPermissive(argv: string[]): ParsedCliArgs {
       i += 2;
       continue;
     }
+    // #3019: do NOT consume -h / --help here unconditionally. Pushing the
+    // flag onto queryArgv lets the registered handler (or the sdd-tools.cjs
+    // fallback) render contextual subcommand help. We still set the global
+    // `help` flag when the flag appears, but only short-circuit dispatch in
+    // main() when there is no real subcommand to dispatch to (i.e. the only
+    // tokens in queryArgv are the help flags themselves). That preserves
+    // `sdd-sdk query --help` → top-level USAGE while letting
+    // `sdd-sdk query phase add --help` reach the handler.
     if (a === '-h' || a === '--help') {
       help = true;
+      queryArgv.push(a);
       i += 1;
       continue;
     }
@@ -94,6 +106,14 @@ function parseCliArgsQueryPermissive(argv: string[]): ParsedCliArgs {
     }
     queryArgv.push(a);
     i += 1;
+  }
+
+  // If the user typed a real subcommand (anything other than help flags
+  // alone in queryArgv), do NOT short-circuit to top-level USAGE on help.
+  // The handler/fallback will render contextual help.
+  const nonHelpTokens = queryArgv.filter((t) => t !== '-h' && t !== '--help');
+  if (help && nonHelpTokens.length > 0) {
+    help = false;
   }
 
   return {
@@ -257,6 +277,7 @@ async function readStdin(): Promise<string> {
   });
 }
 
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
@@ -291,65 +312,31 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Query command ──────────────────────────────────────────────────────
   if (args.command === 'query') {
-    const { createRegistry } = await import('./query/index.js');
-    const { extractField, resolveQueryArgv } = await import('./query/registry.js');
-    const { SDDToolsError } = await import('./sdd-tools.js');
-    const { SDDError, exitCodeFor, ErrorClassification } = await import('./errors.js');
-
-    const queryArgs = args.queryArgv ?? [];
-
-    if (queryArgs.length === 0 || !queryArgs[0]) {
-      console.error('Error: "sdd-sdk query" requires a command');
-      process.exitCode = 10;
-      return;
-    }
-
-    // Extract --pick before dispatch
-    const pickIdx = queryArgs.indexOf('--pick');
-    let pickField: string | undefined;
-    if (pickIdx !== -1) {
-      if (pickIdx + 1 >= queryArgs.length) {
-        console.error('Error: --pick requires a field name');
-        process.exitCode = 10;
-        return;
-      }
-      pickField = queryArgs[pickIdx + 1];
-      queryArgs.splice(pickIdx, 2);
-    }
-
-    try {
-      const registry = createRegistry();
-      const tokens = [...queryArgs];
-      const matched = resolveQueryArgv(tokens, registry);
-      if (!matched) {
-        throw new SDDError(
-          `Unknown command: "${tokens.join(' ')}". Use a registered \`sdd-sdk query\` subcommand (see sdk/src/query/QUERY-HANDLERS.md) or invoke \`node …/sdd-tools.cjs\` for CJS-only operations.`,
-          ErrorClassification.Validation,
-        );
-      }
-
-      const result = await registry.dispatch(matched.cmd, matched.args, args.projectDir);
-
-      let output: unknown = result.data;
-
-      if (pickField) {
-        output = extractField(output, pickField);
-      }
-
-      console.log(JSON.stringify(output, null, 2));
-    } catch (err) {
-      if (err instanceof SDDError) {
-        console.error(`Error: ${err.message}`);
-        process.exitCode = exitCodeFor(err.classification);
-      } else if (err instanceof SDDToolsError) {
-        console.error(`Error: ${err.message}`);
-        process.exitCode = err.exitCode ?? 1;
-      } else {
-        console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-        process.exitCode = 1;
-      }
-    }
+    const result = await runQueryCliCommand({
+      projectDir: args.projectDir,
+      ws: args.ws,
+      queryArgv: args.queryArgv,
+    });
+    for (const line of result.stderrLines) console.error(line);
+    for (const chunk of result.stdoutChunks) process.stdout.write(chunk);
+    process.exitCode = result.exitCode;
     return;
+  }
+
+  // Fall back to SDD_WORKSTREAM env var when --ws is not supplied (#2791).
+  // sdd-tools.cjs resolves the active workstream via this env var; parity
+  // means sdd-sdk command paths see the same .planning/ path as sdd-tools.
+  if (args.ws === undefined && process.env.SDD_WORKSTREAM) {
+    const envWs = process.env.SDD_WORKSTREAM;
+    if (validateWorkstreamName(envWs)) {
+      args = { ...args, ws: envWs };
+    }
+  }
+
+  // Multi-repo project-root resolution (issue #2623).
+  {
+    const { findProjectRoot } = await import('./query/helpers.js');
+    args = { ...args, projectDir: findProjectRoot(args.projectDir) };
   }
 
   if (args.command !== 'run' && args.command !== 'init' && args.command !== 'auto') {
@@ -450,6 +437,18 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Auto command ─────────────────────────────────────────────────────────
   if (args.command === 'auto') {
+    // #2832: refuse to silently route non-Claude runtime projects through the
+    // Claude Agent SDK. Load project config (best effort — falls back to
+    // defaults when missing) and gate before constructing SDD/InitRunner.
+    try {
+      const cfg = await loadConfig(args.projectDir, args.ws);
+      assertRuntimeSupportsAutoMode(cfg);
+    } catch (err) {
+      console.error(`Fatal error: ${(err as Error).message}`);
+      process.exitCode = 1;
+      return;
+    }
+
     const sdd = new SDD({
       projectDir: args.projectDir,
       model: args.model,

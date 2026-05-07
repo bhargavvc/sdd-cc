@@ -1,7 +1,7 @@
 # Referência de Ferramentas CLI
 
 Resumo em Português das ferramentas CLI do SDD.  
-Para API completa (assinaturas, argumentos e comportamento detalhado), consulte [CLI-TOOLS.md em inglês](../CLI-TOOLS.md).
+Para API completa (assinaturas, argumentos e comportamento detalhado), consulte [CLI-TOOLS.md em inglês](../CLI-TOOLS.md) — inclui a secção **SDK and programmatic access** (`sdd-sdk query`, `@bhargavvc/sdk`).
 
 ---
 

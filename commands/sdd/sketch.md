@@ -1,7 +1,7 @@
 ---
 name: sdd:sketch
 description: Sketch UI/design ideas with throwaway HTML mockups, or propose what to sketch next (frontier mode)
-argument-hint: "[design idea to explore] [--quick] [--text] or [frontier]"
+argument-hint: "[design idea to explore] [--quick] [--text] [--wrap-up] or [frontier]"
 allowed-tools:
   - Read
   - Write
@@ -30,6 +30,7 @@ Does not require `/sdd-new-project` — auto-creates `.planning/sketches/` if ne
 
 <execution_context>
 @~/.claude/sdd/workflows/sketch.md
+@~/.claude/sdd/workflows/sketch-wrap-up.md
 @~/.claude/sdd/references/ui-brand.md
 @~/.claude/sdd/references/sketch-theme-system.md
 @~/.claude/sdd/references/sketch-interactivity.md
@@ -46,9 +47,13 @@ Design idea: $ARGUMENTS
 
 **Available flags:**
 - `--quick` — Skip mood/direction intake, jump straight to decomposition and building. Use when the design direction is already clear.
+- `--wrap-up` — Package sketch design findings into a persistent project skill for future build conversations. Runs the sketch-wrap-up workflow.
 </context>
 
 <process>
-Execute the sketch workflow from @~/.claude/sdd/workflows/sketch.md end-to-end.
+Parse the first token of $ARGUMENTS:
+- If it is `--wrap-up`: strip the flag, execute the sketch-wrap-up workflow end-to-end.
+- Otherwise: execute the sketch workflow end-to-end.
+
 Preserve all workflow gates (intake, decomposition, target stack research, variant evaluation, MANIFEST updates, commit patterns).
 </process>

@@ -39,7 +39,7 @@ Para iniciar projeto novo:
 Para seguir automaticamente o próximo passo:
 
 ```bash
-/sdd-next
+/sdd-progress --next
 ```
 
 ### Nyquist Validation
@@ -92,8 +92,8 @@ Com `workflow.discuss_mode: "assumptions"`, o SDD analisa o código antes de per
 Ideias fora da sequência ativa vão para backlog:
 
 ```bash
-/sdd-add-backlog "Camada GraphQL"
-/sdd-add-backlog "Responsividade mobile"
+/sdd-capture --backlog "Camada GraphQL"
+/sdd-capture --backlog "Responsividade mobile"
 ```
 
 Promover/revisar:
@@ -107,7 +107,7 @@ Promover/revisar:
 Seeds guardam ideias futuras com condição de gatilho:
 
 ```bash
-/sdd-plant-seed "Adicionar colaboração real-time quando infra de WebSocket estiver pronta"
+/sdd-capture --seed "Adicionar colaboração real-time quando infra de WebSocket estiver pronta"
 ```
 
 ### Threads persistentes
@@ -162,7 +162,7 @@ Para arquivos sensíveis, use deny list no Claude Code.
 | `/sdd-execute-phase [N]` | Executar planos em ondas |
 | `/sdd-verify-work [N]` | UAT manual |
 | `/sdd-ship [N]` | Gerar PR da fase |
-| `/sdd-next` | Próximo passo automático |
+| `/sdd-progress --next` | Próximo passo automático |
 
 ### Gestão e utilidades
 
@@ -171,12 +171,12 @@ Para arquivos sensíveis, use deny list no Claude Code.
 | `/sdd-progress` | Ver status atual |
 | `/sdd-resume-work` | Retomar sessão |
 | `/sdd-pause-work` | Pausar com handoff |
-| `/sdd-session-report` | Resumo da sessão |
+| `/sdd-pause-work --report` | Resumo da sessão |
 | `/sdd-quick` | Tarefa ad-hoc com garantias SDD |
 | `/sdd-debug [desc]` | Debug sistemático |
 | `/sdd-forensics` | Diagnóstico de workflow quebrado |
 | `/sdd-settings` | Ajustar workflow/modelos |
-| `/sdd-set-profile <profile>` | Troca rápida de perfil |
+| `/sdd-config --profile <profile>` | Troca rápida de perfil |
 
 Para lista completa e flags avançadas, consulte [Command Reference](../COMMANDS.md).
 
@@ -251,7 +251,6 @@ claude --dangerously-skip-permissions
 
 ```bash
 /sdd-audit-milestone
-/sdd-plan-milestone-gaps
 /sdd-complete-milestone
 ```
 
@@ -269,7 +268,7 @@ Use `/clear` entre etapas grandes e retome com `/sdd-resume-work` ou `/sdd-progr
 
 ### Plano desalinhado
 
-Rode `/sdd-discuss-phase [N]` antes do plano e valide suposições com `/sdd-list-phase-assumptions [N]`.
+Rode `/sdd-discuss-phase [N]` antes do plano e valide suposições com `/sdd-discuss-phase --assumptions [N]`.
 
 ### Execução falhou ou saiu com stubs
 
@@ -280,7 +279,7 @@ Replaneje com escopo menor (tarefas menores por plano).
 Use perfil budget:
 
 ```bash
-/sdd-set-profile budget
+/sdd-config --profile budget
 ```
 
 ### Runtime não-Claude (Codex/OpenCode/Gemini/Kilo)
@@ -295,11 +294,11 @@ Use `resolve_model_ids: "omit"` para deixar o runtime resolver modelos padrão.
 |---------|---------|
 | Perdeu contexto | `/sdd-resume-work` ou `/sdd-progress` |
 | Fase deu errado | `git revert` + replanejar |
-| Precisa alterar escopo | `/sdd-add-phase`, `/sdd-insert-phase`, `/sdd-remove-phase` |
+| Precisa alterar escopo | `/sdd-phase`, `/sdd-phase --insert`, `/sdd-phase --remove` |
 | Bug em workflow | `/sdd-forensics` |
 | Correção pontual | `/sdd-quick` |
-| Custo alto | `/sdd-set-profile budget` |
-| Não sabe próximo passo | `/sdd-next` |
+| Custo alto | `/sdd-config --profile budget` |
+| Não sabe próximo passo | `/sdd-progress --next` |
 
 ---
 

@@ -53,7 +53,7 @@ npx @bhargavvc/sdd-cc@latest
 
 市面上已经有其他规格驱动开发工具，比如 BMAD、Speckit……但它们要么把事情搞得比必要的复杂得多了些（冲刺仪式、故事点、利益相关方同步、复盘、Jira 流程），要么根本缺少对你到底在构建什么的整体理解。我不是一家 50 人的软件公司。我不想演企业流程。我只是个想把好东西真正做出来的创作者。
 
-所以我做了 GSD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
+所以我做了 SDD。复杂性在系统内部，不在你的工作流里。幕后是上下文工程、XML 提示格式、子代理编排、状态管理；你看到的是几个真能工作的命令。
 
 这套系统会把 Claude 完成工作 *以及* 验证结果所需的一切上下文都准备好。我信任这个工作流，因为它确实能把事情做好。
 
@@ -73,15 +73,17 @@ SDD 解决的就是这个问题。它是让 Claude Code 变得可靠的上下文
 
 适合那些想把自己的需求说明白，然后让系统正确构建出来的人，而不是假装自己在运营一个 50 人工程组织的人。
 
-### v1.32.0 亮点
+### v1.39.0 亮点
 
-- **STATE.md 一致性检查** — `state validate` 检测 STATE.md 与文件系统之间的偏差；`state sync` 从实际项目状态重建
-- **`--to N` 标志** — 在完成特定阶段后停止自主执行
-- **研究门控** — 当 RESEARCH.md 有未解决的开放问题时阻止规划
-- **验证里程碑范围过滤** — 后续阶段将处理的差距标记为"延迟"而非差距
-- **读取后编辑保护** — 咨询性 hook 防止非 Claude 运行时的无限重试循环
-- **上下文缩减** — Markdown 截断和缓存友好的 prompt 排序，降低 token 使用量
-- **4 个新运行时** — Trae、Kilo、Augment 和 Cline（共 12 个运行时）
+完整列表请参阅 [v1.39.0 发行说明](https://github.com/bhargavvc/sdd-cc/releases/tag/v1.39.0)。
+
+- **`--minimal` 安装档** — 别名 `--core-only`。仅安装主循环的 6 个核心技能（`new-project`、`discuss-phase`、`plan-phase`、`execute-phase`、`help`、`update`），不安装任何 `sdd-*` 子代理。将冷启动系统提示开销从 ~12k token 降至 ~700 token（≥94% 减少）。适合 32K–128K 上下文的本地 LLM 和按 token 计费的 API。
+- **`/sdd-phase --edit`** — 就地修改 `ROADMAP.md` 中已有阶段的任意字段，不改变其编号或位置。`--force` 跳过确认 diff，验证 `depends_on` 引用，并在写入时更新 `STATE.md`。
+- **合并后构建与测试门** — `execute-phase` 步骤 5.6 优先自动检测 `workflow.build_command` 配置，否则按 Xcode（`.xcodeproj`）、Makefile、Justfile、Cargo、Go、Python、npm 顺序回退。Xcode/iOS 项目自动运行 `xcodebuild build` 和 `xcodebuild test`。在并行与串行模式下均生效。
+- **每运行时评审模型选择** — `review.models.<cli>` 让每个外部评审 CLI（codex、gemini 等）独立于规划/执行档选择自己的模型。
+- **工作流设置继承** — 设置 `SDD_WORKSTREAM` 后，先加载根 `.planning/config.json`，再与该工作流的配置进行深合并（冲突时工作流优先）。工作流配置中显式 `null` 会覆盖根值。
+- **手动 canary 发布工作流** — `.github/workflows/canary.yml` 通过 `workflow_dispatch` 从 `dev` 分支按需将 `{base}-canary.{N}` 构建（`@bhargavvc/sdd-cc` 与 `@bhargavvc/sdk`）发布到 `@canary` dist-tag。
+- **技能整合：86 → 59** — 4 个新分组技能（`capture`、`phase`、`config`、`workspace`）吸收了 31 个微技能。6 个已有父技能将收尾与子操作合并为标志：`update --sync/--reapply`、`sketch --wrap-up`、`spike --wrap-up`、`map-codebase --fast/--query`、`code-review --fix`、`progress --do/--next`。功能无损失。
 
 ---
 
@@ -394,7 +396,7 @@ claude --dangerously-skip-permissions
 或者让 SDD 自动判断下一步：
 
 ```
-/sdd-next                    # 自动检测并执行下一步
+/sdd-progress --next                    # 自动检测并执行下一步
 ```
 
 循环执行 **讨论 → 规划 → 执行 → 验证 → 发布**，直到整个里程碑完成。
@@ -536,7 +538,7 @@ lmn012o feat(08-02): create registration endpoint
 | `/sdd-verify-work [N]` | 人工用户验收测试 ¹ |
 | `/sdd-ship [N] [--draft]` | 从已验证的阶段工作创建 PR，自动生成 PR 描述 |
 | `/sdd-fast <text>` | 内联处理琐碎任务——完全跳过规划，立即执行 |
-| `/sdd-next` | 自动推进到下一个逻辑工作流步骤 |
+| `/sdd-progress --next` | 自动推进到下一个逻辑工作流步骤 |
 | `/sdd-audit-milestone` | 验证里程碑是否达到完成定义 |
 | `/sdd-complete-milestone` | 归档里程碑并打 release tag |
 | `/sdd-new-milestone [name]` | 开始下一个版本：提问 → 研究 → 需求 → 路线图 |
@@ -556,9 +558,9 @@ lmn012o feat(08-02): create registration endpoint
 
 | 命令 | 作用 |
 |------|------|
-| `/sdd-new-workspace` | 创建隔离工作区，包含仓库副本（worktree 或 clone） |
-| `/sdd-list-workspaces` | 显示所有 SDD 工作区及其状态 |
-| `/sdd-remove-workspace` | 移除工作区并清理 worktree |
+| `/sdd-workspace --new` | 创建隔离工作区，包含仓库副本（worktree 或 clone） |
+| `/sdd-workspace --list` | 显示所有 SDD 工作区及其状态 |
+| `/sdd-workspace --remove` | 移除工作区并清理 worktree |
 
 ### UI 设计
 
@@ -572,10 +574,9 @@ lmn012o feat(08-02): create registration endpoint
 | 命令 | 作用 |
 |------|------|
 | `/sdd-progress` | 我现在在哪？下一步是什么？ |
-| `/sdd-next` | 自动检测状态并执行下一步 |
+| `/sdd-progress --next` | 自动检测状态并执行下一步 |
 | `/sdd-help` | 显示全部命令和使用指南 |
-| `/sdd-update` | 更新 GSD，并预览变更日志 |
-| `/sdd-join-discord` | 加入 SDD Discord 社区 |
+| `/sdd-update` | 更新 SDD，并预览变更日志 |
 
 ### Brownfield
 
@@ -587,11 +588,12 @@ lmn012o feat(08-02): create registration endpoint
 
 | 命令 | 作用 |
 |------|------|
-| `/sdd-add-phase` | 在路线图末尾追加 phase |
-| `/sdd-insert-phase [N]` | 在 phase 之间插入紧急工作 |
-| `/sdd-remove-phase [N]` | 删除未来 phase，并重编号 |
-| `/sdd-list-phase-assumptions [N]` | 在规划前查看 Claude 打算采用的方案 |
-| `/sdd-plan-milestone-gaps` | 为 audit 发现的缺口创建 phase |
+| `/sdd-phase` | 在路线图末尾追加 phase |
+| `/sdd-phase --insert [N]` | 在 phase 之间插入紧急工作 |
+| `/sdd-phase --edit [N] [--force]` | 就地修改已有 phase 的任意字段 — 编号与位置保持不变 |
+| `/sdd-phase --remove [N]` | 删除未来 phase，并重编号 |
+| `/sdd-discuss-phase --assumptions [N]` | 在规划前查看 Claude 打算采用的方案 |
+| `/sdd-audit-milestone --fix` | 为 audit 发现的缺口创建 phase |
 
 ### 代码质量
 
@@ -605,7 +607,7 @@ lmn012o feat(08-02): create registration endpoint
 
 | 命令 | 作用 |
 |------|------|
-| `/sdd-plant-seed <idea>` | 将想法存入积压停车场，留待未来里程碑 |
+| `/sdd-capture --seed <idea>` | 将想法存入积压停车场，留待未来里程碑 |
 
 ### 会话
 
@@ -613,16 +615,16 @@ lmn012o feat(08-02): create registration endpoint
 |------|------|
 | `/sdd-pause-work` | 在中途暂停时创建交接上下文（写入 HANDOFF.json） |
 | `/sdd-resume-work` | 从上一次会话恢复 |
-| `/sdd-session-report` | 生成会话摘要，包含已完成工作和结果 |
+| `/sdd-pause-work --report` | 生成会话摘要，包含已完成工作和结果 |
 
 ### 工具
 
 | 命令 | 作用 |
 |------|------|
 | `/sdd-settings` | 配置模型 profile 和工作流代理 |
-| `/sdd-set-profile <profile>` | 切换模型 profile（quality / balanced / budget / inherit） |
-| `/sdd-add-todo [desc]` | 记录一个待办想法 |
-| `/sdd-check-todos` | 查看待办列表 |
+| `/sdd-config --profile <profile>` | 切换模型 profile（quality / balanced / budget / inherit） |
+| `/sdd-capture [desc]` | 记录一个待办想法 |
+| `/sdd-capture --list` | 查看待办列表 |
 | `/sdd-debug [desc]` | 使用持久状态进行系统化调试 |
 | `/sdd-do <text>` | 将自由文本自动路由到正确的 SDD 命令 |
 | `/sdd-note <text>` | 零摩擦想法捕捉——追加、列出或提升为待办 |
@@ -659,7 +661,7 @@ SDD 将项目设置保存在 `.planning/config.json`。你可以在 `/sdd-new-pr
 
 切换方式：
 ```
-/sdd-set-profile budget
+/sdd-config --profile budget
 ```
 
 使用非 Anthropic 提供商（OpenRouter、本地模型）时，或想跟随当前运行时的模型选择时（如 OpenCode 的 `/model`），可用 `inherit`。
@@ -768,7 +770,7 @@ CLAUDE_CONFIG_DIR=/home/youruser/.claude npx @bhargavvc/sdd-cc --global
 
 ### 卸载
 
-如果你想彻底移除 GSD：
+如果你想彻底移除 SDD：
 
 ```bash
 # 全局安装

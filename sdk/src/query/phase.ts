@@ -28,6 +28,7 @@ import {
   toPosixPath,
   planningPaths,
 } from './helpers.js';
+import { relPlanningPath } from '../workstream-utils.js';
 import type { QueryHandler } from './utils.js';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -79,6 +80,17 @@ async function getPhaseFileStats(phaseDir: string): Promise<{
  *
  * Port of searchPhaseInDir from core.cjs lines 956-1000.
  */
+function extractCanonicalPlanId(filename: string): string {
+  const base = filename.replace(/-PLAN\.md$/i, '').replace(/-SUMMARY\.md$/i, '').replace(/\.md$/i, '');
+  const parts = base.split('-').filter(Boolean);
+  const tokenRe = /^\d+[A-Z]?(?:\.\d+)*$/i;
+  const phaseIdx = parts.findIndex((p) => tokenRe.test(p));
+  if (phaseIdx >= 0 && phaseIdx + 1 < parts.length && tokenRe.test(parts[phaseIdx + 1])) {
+    return `${parts[phaseIdx]}-${parts[phaseIdx + 1]}`;
+  }
+  return base;
+}
+
 async function searchPhaseInDir(baseDir: string, relBase: string, normalized: string): Promise<PhaseInfo | null> {
   try {
     const entries = await readdir(baseDir, { withFileTypes: true });
@@ -104,11 +116,16 @@ async function searchPhaseInDir(baseDir: string, relBase: string, normalized: st
     const summaries = unsortedSummaries.sort();
 
     const completedPlanIds = new Set(
-      summaries.map(s => s.replace('-SUMMARY.md', '').replace('SUMMARY.md', ''))
+      summaries.flatMap((s) => {
+        const exact = s.replace('-SUMMARY.md', '').replace('SUMMARY.md', '');
+        const canonical = extractCanonicalPlanId(s);
+        return canonical === exact ? [exact] : [exact, canonical];
+      })
     );
-    const incompletePlans = plans.filter(p => {
+    const incompletePlans = plans.filter((p) => {
       const planId = p.replace('-PLAN.md', '').replace('PLAN.md', '');
-      return !completedPlanIds.has(planId);
+      const canonical = extractCanonicalPlanId(p);
+      return !completedPlanIds.has(planId) && !completedPlanIds.has(canonical);
     });
 
     return {
@@ -154,13 +171,13 @@ function extractObjective(content: string): string | null {
  * @returns QueryResult with PhaseInfo
  * @throws SDDError with Validation classification if phase identifier missing
  */
-export const findPhase: QueryHandler = async (args, projectDir) => {
+export const findPhase: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
     throw new SDDError('phase identifier required', ErrorClassification.Validation);
   }
 
-  const phasesDir = planningPaths(projectDir).phases;
+  const phasesDir = planningPaths(projectDir, workstream).phases;
   const normalized = normalizePhaseName(phase);
 
   const notFound: PhaseInfo = {
@@ -179,7 +196,7 @@ export const findPhase: QueryHandler = async (args, projectDir) => {
   };
 
   // Search current phases first
-  const relPhasesDir = '.planning/phases';
+  const relPhasesDir = relPlanningPath(workstream) + '/phases';
   const current = await searchPhaseInDir(phasesDir, relPhasesDir, normalized);
   if (current) return { data: current };
 
@@ -221,13 +238,13 @@ export const findPhase: QueryHandler = async (args, projectDir) => {
  * @returns QueryResult with { phase, plans[], waves{}, incomplete[], has_checkpoints }
  * @throws SDDError with Validation classification if phase identifier missing
  */
-export const phasePlanIndex: QueryHandler = async (args, projectDir) => {
+export const phasePlanIndex: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
     throw new SDDError('phase required for phase-plan-index', ErrorClassification.Validation);
   }
 
-  const phasesDir = planningPaths(projectDir).phases;
+  const phasesDir = planningPaths(projectDir, workstream).phases;
   const normalized = normalizePhaseName(phase);
 
   // Find phase directory
@@ -262,9 +279,13 @@ export const phasePlanIndex: QueryHandler = async (args, projectDir) => {
   const planFiles = phaseFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').sort();
   const summaryFiles = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md');
 
-  // Build set of plan IDs with summaries
+  // Build set of plan IDs with summaries — match the planId derivation logic
   const completedPlanIds = new Set(
-    summaryFiles.map(s => s.replace('-SUMMARY.md', '').replace('SUMMARY.md', ''))
+    summaryFiles.flatMap((s) => {
+      const exact = s === 'SUMMARY.md' ? 'PLAN' : s.replace('-SUMMARY.md', '');
+      const canonical = extractCanonicalPlanId(s);
+      return canonical === exact ? [exact] : [exact, canonical];
+    })
   );
 
   const plans: Array<Record<string, unknown>> = [];
@@ -273,7 +294,9 @@ export const phasePlanIndex: QueryHandler = async (args, projectDir) => {
   let hasCheckpoints = false;
 
   for (const planFile of planFiles) {
-    const planId = planFile.replace('-PLAN.md', '').replace('PLAN.md', '');
+    // For named plans (01-01-PLAN.md): strip suffix to get '01-01'
+    // For bare PLAN.md: use the filename itself as the ID
+    const planId = planFile === 'PLAN.md' ? 'PLAN' : planFile.replace('-PLAN.md', '');
     const planPath = join(phaseDir, planFile);
     const content = await readFile(planPath, 'utf-8');
     const fm = extractFrontmatter(content);
@@ -303,7 +326,7 @@ export const phasePlanIndex: QueryHandler = async (args, projectDir) => {
       filesModified = Array.isArray(fmFiles) ? fmFiles : [fmFiles];
     }
 
-    const hasSummary = completedPlanIds.has(planId);
+    const hasSummary = completedPlanIds.has(planId) || completedPlanIds.has(extractCanonicalPlanId(planFile));
     if (!hasSummary) {
       incomplete.push(planId);
     }

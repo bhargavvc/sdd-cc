@@ -1,10 +1,14 @@
+// allow-test-rule: source-text-is-the-product
+// Reads .md/.json/.yml product files whose deployed text IS what the
+// runtime loads — testing text content tests the deployed contract.
+
 /**
  * SDD Agent Required Reading Consistency Tests
  *
  * Validates that all agent .md files use the standardized <required_reading>
  * pattern and that no legacy <files_to_read> blocks remain.
  *
- * See: https://github.com/gsd-build/sdd/issues/2168
+ * See: https://github.com/bhargavvc/sdd-cc/issues/2168
  */
 
 const { test, describe } = require('node:test');

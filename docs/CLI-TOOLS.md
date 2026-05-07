@@ -1,29 +1,74 @@
 # SDD CLI Tools Reference
 
-> Programmatic API reference for `sdd-tools.cjs`. Used by workflows and agents internally. For user-facing commands, see [Command Reference](COMMANDS.md).
+> Surface-area reference for `sdd/bin/sdd-tools.cjs` (legacy Node CLI). Workflows and agents should prefer `sdd-sdk query` or `@bhargavvc/sdk` where a handler exists — see [SDK and programmatic access](#sdk-and-programmatic-access). For slash commands and user flows, see [Command Reference](COMMANDS.md).
 
 ---
 
 ## Overview
 
-`sdd-tools.cjs` is a Node.js CLI utility that replaces repetitive inline bash patterns across SDD's ~50 command, workflow, and agent files. It centralizes: config parsing, model resolution, phase lookup, git commits, summary verification, state management, and template operations.
+`sdd-tools.cjs` centralizes config parsing, model resolution, phase lookup, git commits, summary verification, state management, and template operations across SDD commands, workflows, and agents.
 
-**Preferred for new orchestration:** Many of the same operations are available as `sdd-sdk query <command>` (see `sdk/src/query/index.ts` and `docs/QUERY-HANDLERS.md`). Use that in workflows and examples where the handler exists; keep `node … sdd-tools.cjs` for commands not yet in the registry (for example graphify) or when you need CJS-only flags.
 
-**Location:** `sdd/bin/sdd-tools.cjs`
-**Modules:** 15 domain modules in `sdd/bin/lib/`
+|                    |                                                                                                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Shipped path**   | `sdd/bin/sdd-tools.cjs`                                                                                                                                                                      |
+| **Implementation** | 20 domain modules under `sdd/bin/lib/` (the directory is authoritative)                                                                                                                        |
+| **Status**         | Maintained for parity tests and CJS-only entrypoints; `sdd-sdk query` / SDK registry are the supported path for new orchestration (see [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md)). |
 
-**Usage:**
+
+**Usage (CJS):**
+
 ```bash
 node sdd-tools.cjs <command> [args] [--raw] [--cwd <path>]
 ```
 
-**Global Flags:**
-| Flag | Description |
-|------|-------------|
-| `--raw` | Machine-readable output (JSON or plain text, no formatting) |
-| `--cwd <path>` | Override working directory (for sandboxed subagents) |
-| `--ws <name>` | Target a specific workstream context (SDK only) |
+**Global flags (CJS):**
+
+
+| Flag           | Description                                                                  |
+| -------------- | ---------------------------------------------------------------------------- |
+| `--raw`        | Machine-readable output (JSON or plain text, no formatting)                  |
+| `--cwd <path>` | Override working directory (for sandboxed subagents)                         |
+| `--ws <name>`  | Workstream context (also honored when the SDK spawns this binary; see below) |
+
+
+---
+
+## SDK and programmatic access
+
+Use this when authoring workflows, not when you only need the command list below.
+
+**1. CLI — `sdd-sdk query <argv…>`**
+
+- Resolves argv with the same **longest-prefix** rules as the typed registry (`resolveQueryArgv` in `sdk/src/query/registry.ts`). Unregistered commands **fail fast** — use `node …/sdd-tools.cjs` only for handlers not in the registry.
+- Full matrix (CJS command → registry key, CLI-only tools, aliases, golden tiers): [sdk/src/query/QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md).
+
+**2. TypeScript — `@bhargavvc/sdk` (`SDDTools`, `createRegistry`)**
+
+- `SDDTools` now routes through the **SDK Runtime Bridge Module** (`sdk/src/query-runtime-bridge.ts`). Native registry dispatch is preferred; subprocess fallback is explicit policy (`allowFallbackToSubprocess`) and can be disabled for strict SDK-only execution.
+- `strictSdk` mode fails fast when a command has no native adapter, making SDK publish/readiness checks deterministic.
+- Structured bridge observability is available via `onDispatchEvent` (dispatch mode, fallback reason, duration, outcome, error kind).
+- For direct typed dispatch without `SDDTools`, use `createRegistry()` from `sdk/src/query/index.ts`, or invoke `sdd-sdk query` (see [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md)).
+- Conventions: mutation event wiring, `SDDError` vs `{ data: { error } }`, locks, and stubs — [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md).
+
+**CJS → SDK examples (same project directory):**
+
+
+| Legacy CJS                               | Preferred `sdd-sdk query` (examples) |
+| ---------------------------------------- | ------------------------------------ |
+| `node sdd-tools.cjs init phase-op 12`    | `sdd-sdk query init phase-op 12`     |
+| `node sdd-tools.cjs phase-plan-index 12` | `sdd-sdk query phase-plan-index 12`  |
+| `node sdd-tools.cjs state json`          | `sdd-sdk query state json`           |
+| `node sdd-tools.cjs roadmap analyze`     | `sdd-sdk query roadmap analyze`      |
+
+
+**SDK state reads:** `state.json` and `state.load` are both registered query handlers with parity coverage. You can invoke them through `sdd-sdk query …` and through the SDK Runtime Bridge (`SDDTools` → `sdk/src/query-runtime-bridge.ts`), honoring `allowFallbackToSubprocess` / `strictSdk` and emitting `onDispatchEvent` observability. For direct typed dispatch, use `createRegistry()` from `sdk/src/query/index.ts`. Full routing and golden rules: [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md).
+
+**CLI-only (not in registry):** e.g. **graphify**, **from-gsd2** / **gsd2-import** — call `sdd-tools.cjs` until registered.
+
+**Mutation events (SDK):** `QUERY_MUTATION_COMMANDS` in `sdk/src/query/index.ts` lists commands that may emit structured events after a successful dispatch. Exceptions called out in QUERY-HANDLERS: `state validate` (read-only), `skill-manifest` (writes only with `--write`), `intel update` (stub).
+
+**Golden parity:** Policy and CJS↔SDK test categories are documented under **Golden parity** in [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md).
 
 ---
 
@@ -67,6 +112,13 @@ node sdd-tools.cjs state resolve-blocker --text "..."
 
 # Record session continuity
 node sdd-tools.cjs state record-session --stopped-at "..." [--resume-file path]
+
+# Phase start — update STATE.md Status/Last activity for a new phase
+node sdd-tools.cjs state begin-phase --phase N --name SLUG --plans COUNT
+
+# Agent-discoverable blocker signalling (used by discuss-phase / UI flows)
+node sdd-tools.cjs state signal-waiting --type TYPE --question "..." --options "A|B" --phase P
+node sdd-tools.cjs state signal-resume
 ```
 
 ### State Snapshot
@@ -201,7 +253,14 @@ node sdd-tools.cjs validate consistency
 
 # Check .planning/ integrity, optionally repair
 node sdd-tools.cjs validate health [--repair]
+
+# Probe context-window utilization for status-line / hook callers (v1.40.0)
+node sdd-tools.cjs validate context
 ```
+
+`validate context` emits a structured envelope with `utilization`, `status`
+(`ok` / `warn` / `critical` at the 60 % / 70 % thresholds), and a
+`suggestion` string. The same data backs `/sdd-health --context`.
 
 ---
 
@@ -356,11 +415,17 @@ node sdd-tools.cjs todo complete <filename>
 # UAT audit — scan all phases for unresolved items
 node sdd-tools.cjs audit-uat
 
+# Cross-artifact audit queue — scan `.planning/` for unresolved audit items
+node sdd-tools.cjs audit-open [--json]
+
+# Reverse-migrate a SDD-2 project into the current structure (backs `/sdd-from-gsd2`)
+node sdd-tools.cjs from-gsd2 [--path <dir>] [--force] [--dry-run]
+
 # Git commit with config checks
 node sdd-tools.cjs commit <message> [--files f1 f2] [--amend] [--no-verify]
 ```
 
-> **`--no-verify`**: Skips pre-commit hooks. Used by parallel executor agents during wave-based execution to avoid build lock contention (e.g., cargo lock fights in Rust projects). The orchestrator runs hooks once after each wave completes. Do not use `--no-verify` during sequential execution — let hooks run normally.
+> `--no-verify`: Skips pre-commit hooks. Used by parallel executor agents during wave-based execution to avoid build lock contention (e.g., cargo lock fights in Rust projects). The orchestrator runs hooks once after each wave completes. Do not use `--no-verify` during sequential execution — let hooks run normally.
 
 # Web search (requires Brave API key)
 node sdd-tools.cjs websearch <query> [--limit N] [--freshness day|week|month]
@@ -368,13 +433,39 @@ node sdd-tools.cjs websearch <query> [--limit N] [--freshness day|week|month]
 
 ---
 
+## Graphify
+
+Build, query, and inspect the project knowledge graph in `.planning/graphs/`. Requires `graphify.enabled: true` in `config.json` (see [Configuration Reference](CONFIGURATION.md#graphify-settings)). Graphify is **CJS-only**: `sdd-sdk query` does not yet register graphify handlers — always use `node sdd-tools.cjs graphify …`.
+
+```bash
+# Build or rebuild the knowledge graph
+node sdd-tools.cjs graphify build
+
+# Search the graph for a term
+node sdd-tools.cjs graphify query <term>
+
+# Show graph freshness and statistics
+node sdd-tools.cjs graphify status
+
+# Show changes since the last build
+node sdd-tools.cjs graphify diff
+
+# Write a named snapshot of the current graph
+node sdd-tools.cjs graphify snapshot [name]
+```
+
+User-facing entry point: `/sdd-graphify` (see [Command Reference](COMMANDS.md#sdd-graphify)).
+
+---
+
 ## Module Architecture
 
 | Module | File | Exports |
 |--------|------|---------|
-| Core | `lib/core.cjs` | `error()`, `output()`, `parseArgs()`, shared utilities |
+| Core | `lib/core.cjs` | `error()`, `output()`, `parseArgs()`, shared utilities, compatibility re-exports |
 | State | `lib/state.cjs` | All `state` subcommands, `state-snapshot` |
 | Phase | `lib/phase.cjs` | Phase CRUD, `find-phase`, `phase-plan-index`, `phases list` |
+| Planning Workspace | `lib/planning-workspace.cjs` | Planning seam: `planningDir`, `planningPaths`, active workstream routing, `.planning/.lock` |
 | Roadmap | `lib/roadmap.cjs` | Roadmap parsing, phase extraction, progress updates |
 | Config | `lib/config.cjs` | Config read/write, section initialization |
 | Verify | `lib/verify.cjs` | All verification and validation commands |
@@ -387,3 +478,35 @@ node sdd-tools.cjs websearch <query> [--limit N] [--freshness day|week|month]
 | UAT | `lib/uat.cjs` | Cross-phase UAT/verification audit |
 | Profile Output | `lib/profile-output.cjs` | Developer profile formatting |
 | Profile Pipeline | `lib/profile-pipeline.cjs` | Session analysis pipeline |
+| Graphify | `lib/graphify.cjs` | Knowledge graph build/query/status/diff/snapshot (backs `/sdd-graphify`) |
+| Learnings | `lib/learnings.cjs` | Extract learnings from phases/SUMMARY artifacts (backs `/sdd-extract-learnings`) |
+| Audit | `lib/audit.cjs` | Phase/milestone audit queue handlers; `audit-open` helper |
+| GSD2 Import | `lib/gsd2-import.cjs` | Reverse-migration importer from SDD-2 projects (backs `/sdd-from-gsd2`) |
+| Intel | `lib/intel.cjs` | Queryable codebase intelligence index (backs `/sdd-map-codebase --query`) |
+
+---
+
+## Reviewer CLI Routing
+
+`review.models.<cli>` maps a reviewer flavor to a shell command invoked by the code-review workflow. Set via [`/sdd-settings-integrations`](COMMANDS.md#sdd-settings-integrations) or directly:
+
+```bash
+sdd-sdk query config-set review.models.codex    "codex exec --model gpt-5"
+sdd-sdk query config-set review.models.gemini   "gemini -m gemini-2.5-pro"
+sdd-sdk query config-set review.models.opencode "opencode run --model claude-sonnet-4"
+sdd-sdk query config-set review.models.claude   ""   # clear — fall back to session model
+```
+
+Slugs are validated against `[a-zA-Z0-9_-]+`; empty or path-containing slugs are rejected. See [`docs/CONFIGURATION.md`](CONFIGURATION.md#code-review-cli-routing) for the full field reference.
+
+## Secret Handling
+
+API keys configured via `/sdd-settings-integrations` (`brave_search`, `firecrawl`, `exa_search`) are written plaintext to `.planning/config.json` but are masked (`****<last-4>`) in every `config-set` / `config-get` output, confirmation table, and interactive prompt. See `sdd/bin/lib/secrets.cjs` for the masking implementation. The `config.json` file itself is the security boundary — protect it with filesystem permissions and keep it out of git (`.planning/` is gitignored by default).
+
+---
+
+## See also
+
+- [sdk/src/query/QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md) — registry matrix, routing, golden parity, intentional CJS differences
+- [Architecture](ARCHITECTURE.md) — where `sdd-sdk query` fits in orchestration
+- [Command Reference](COMMANDS.md) — user-facing `/sdd-` commands

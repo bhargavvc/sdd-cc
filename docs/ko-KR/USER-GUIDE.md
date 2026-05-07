@@ -111,7 +111,7 @@
 
 ### 검증 아키텍처 (Nyquist 레이어)
 
-plan-phase 조사 단계에서 GSD는 코드 작성 전에 각 페이즈 요구사항에 대한 자동화된 테스트 커버리지를 매핑합니다. 이를 통해 Claude의 실행자가 작업을 커밋할 때 몇 초 안에 검증할 수 있는 피드백 메커니즘이 이미 갖춰져 있습니다.
+plan-phase 조사 단계에서 SDD는 코드 작성 전에 각 페이즈 요구사항에 대한 자동화된 테스트 커버리지를 매핑합니다. 이를 통해 Claude의 실행자가 작업을 커밋할 때 몇 초 안에 검증할 수 있는 피드백 메커니즘이 이미 갖춰져 있습니다.
 
 조사자는 기존 테스트 인프라를 감지하고 각 요구사항을 특정 테스트 명령어에 매핑하며 구현 시작 전에 생성해야 할 테스트 스캐폴딩을 식별합니다 (Wave 0 작업).
 
@@ -150,7 +150,7 @@ Nyquist 검증 도입 전에 실행된 페이즈나 전통적인 테스트 스�
 
 ### 가정 토론 모드
 
-기본적으로 `/sdd-discuss-phase`는 구현 선호도에 대한 개방형 질문을 합니다. 가정 모드는 이를 역전시킵니다. GSD가 먼저 코드베이스를 읽고 페이즈를 어떻게 구축할지에 대한 구조화된 가정을 제시한 후 수정사항만 요청합니다.
+기본적으로 `/sdd-discuss-phase`는 구현 선호도에 대한 개방형 질문을 합니다. 가정 모드는 이를 역전시킵니다. SDD가 먼저 코드베이스를 읽고 페이즈를 어떻게 구축할지에 대한 구조화된 가정을 제시한 후 수정사항만 요청합니다.
 
 **활성화:** `/sdd-settings`에서 `workflow.discuss_mode`를 `'assumptions'`로 설정합니다.
 
@@ -233,7 +233,7 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 3. `npx shadcn init --preset {paste}`를 실행합니다.
 4. 프리셋은 전체 디자인 시스템(색상, 테두리 반경, 폰트)을 인코딩합니다.
 
-프리셋 문자열은 GSD의 1급 계획 아티팩트가 되어 페이즈와 마일스톤에 걸쳐 재현 가능합니다.
+프리셋 문자열은 SDD의 1급 계획 아티팩트가 되어 페이즈와 마일스톤에 걸쳐 재현 가능합니다.
 
 ### 레지스트리 안전 게이트
 
@@ -256,8 +256,8 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 활성 계획에 아직 준비되지 않은 아이디어는 999.x 번호 체계를 사용하여 백로그에 보관하며 활성 페이즈 순서 밖에 유지됩니다.
 
 ```
-/sdd-add-backlog "GraphQL API layer"     # Creates 999.1-graphql-api-layer/
-/sdd-add-backlog "Mobile responsive"     # Creates 999.2-mobile-responsive/
+/sdd-capture --backlog "GraphQL API layer"     # Creates 999.1-graphql-api-layer/
+/sdd-capture --backlog "Mobile responsive"     # Creates 999.2-mobile-responsive/
 ```
 
 백로그 항목은 전체 페이즈 디렉터리를 얻으므로 `/sdd-discuss-phase 999.1`로 아이디어를 더 탐구하거나 준비가 되면 `/sdd-plan-phase 999.1`을 사용할 수 있습니다.
@@ -269,7 +269,7 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 시드는 트리거 조건이 있는 미래 지향적인 아이디어입니다. 백로그 항목과 달리 시드는 적절한 마일스톤 시점에 자동으로 표면화됩니다.
 
 ```
-/sdd-plant-seed "Add real-time collab when WebSocket infra is in place"
+/sdd-capture --seed "Add real-time collab when WebSocket infra is in place"
 ```
 
 시드는 전체 WHY와 언제 표면화할지를 보존합니다. `/sdd-new-milestone`은 모든 시드를 스캔하여 일치 항목을 제시합니다.
@@ -288,7 +288,7 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 
 스레드는 `/sdd-pause-work`보다 가볍습니다. 페이즈 상태나 계획 컨텍스트가 없습니다. 각 스레드 파일에는 목표, 컨텍스트, 참조, 다음 단계 섹션이 포함됩니다.
 
-스레드가 성숙해지면 페이즈(`/sdd-add-phase`)나 백로그 항목(`/sdd-add-backlog`)으로 승격할 수 있습니다.
+스레드가 성숙해지면 페이즈(`/sdd-phase`)나 백로그 항목(`/sdd-capture --backlog`)으로 승격할 수 있습니다.
 
 **저장 위치:** `.planning/threads/{slug}.md`
 
@@ -311,9 +311,9 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 
 ### 작동 방식
 
-각 워크스트림은 자체 `.planning/` 디렉터리 하위 트리를 유지합니다. 워크스트림을 전환하면 GSD가 활성 계획 컨텍스트를 교체하여 `/sdd-progress`, `/sdd-discuss-phase`, `/sdd-plan-phase` 및 기타 명령어가 해당 워크스트림의 상태로 동작합니다.
+각 워크스트림은 자체 `.planning/` 디렉터리 하위 트리를 유지합니다. 워크스트림을 전환하면 SDD가 활성 계획 컨텍스트를 교체하여 `/sdd-progress`, `/sdd-discuss-phase`, `/sdd-plan-phase` 및 기타 명령어가 해당 워크스트림의 상태로 동작합니다.
 
-이는 `/sdd-new-workspace`(별도 저장소 worktree를 생성)보다 가볍습니다. 워크스트림은 동일한 코드베이스와 git 히스토리를 공유하지만 계획 아티팩트를 격리합니다.
+이는 `/sdd-workspace --new`(별도 저장소 worktree를 생성)보다 가볍습니다. 워크스트림은 동일한 코드베이스와 git 히스토리를 공유하지만 계획 아티팩트를 격리합니다.
 
 ---
 
@@ -321,7 +321,7 @@ React/Next.js/Vite 프로젝트에서 `components.json`이 없으면 UI 조사�
 
 ### 심층 방어 (v1.27)
 
-GSD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니다. 즉 계획 아티팩트로 유입되는 사용자 제어 텍스트는 잠재적인 간접 프롬프트 인젝션 벡터입니다. v1.27에서 중앙화된 보안 강화가 도입되었습니다.
+SDD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니다. 즉 계획 아티팩트로 유입되는 사용자 제어 텍스트는 잠재적인 간접 프롬프트 인젝션 벡터입니다. v1.27에서 중앙화된 보안 강화가 도입되었습니다.
 
 **경로 순회 방지.**
 모든 사용자 제공 파일 경로(`--text-file`, `--prd`)는 프로젝트 디렉터리 내에서 해석되는지 검증합니다. macOS `/var` → `/private/var` 심볼릭 링크 해석을 처리합니다.
@@ -391,7 +391,7 @@ GSD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니�
 | `/sdd-verify-work [N]` | 자동 진단을 포함한 수동 UAT | 실행 완료 후 |
 | `/sdd-ship [N]` | 검증된 작업으로 PR 생성 | 검증 통과 후 |
 | `/sdd-fast <text>` | 계획을 완전히 건너뛰는 인라인 간단 작업 | 오타 수정, 설정 변경, 소규모 리팩터링 |
-| `/sdd-next` | 상태 자동 감지 및 다음 단계 실행 | 언제든 — "다음에 무엇을 해야 하나?" |
+| `/sdd-progress --next` | 상태 자동 감지 및 다음 단계 실행 | 언제든 — "다음에 무엇을 해야 하나?" |
 | `/sdd-ui-review [N]` | 6개 기둥 기반 시각적 감사 소급 수행 | 실행 또는 verify-work 이후 (프론트엔드 프로젝트) |
 | `/sdd-audit-milestone` | 마일스톤이 완료 정의를 충족했는지 검증 | 마일스톤 완료 전 |
 | `/sdd-complete-milestone` | 마일스톤 아카이브 및 릴리스 태그 생성 | 모든 페이즈 검증 완료 시 |
@@ -404,21 +404,19 @@ GSD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니�
 | `/sdd-progress` | 상태 및 다음 단계 표시 | 언제든 -- "지금 어디 있나?" |
 | `/sdd-resume-work` | 마지막 세션의 전체 컨텍스트 복원 | 새 세션 시작 시 |
 | `/sdd-pause-work` | 구조화된 핸드오프 저장 (HANDOFF.json + continue-here.md) | 페이즈 중간에 중단할 때 |
-| `/sdd-session-report` | 작업 및 결과가 포함된 세션 요약 생성 | 세션 종료 시, 이해관계자 공유 시 |
+| `/sdd-pause-work --report` | 작업 및 결과가 포함된 세션 요약 생성 | 세션 종료 시, 이해관계자 공유 시 |
 | `/sdd-help` | 모든 명령어 표시 | 빠른 레퍼런스 |
 | `/sdd-update` | 변경 로그 미리보기와 함께 SDD 업데이트 | 새 버전 확인 시 |
-| `/sdd-join-discord` | Discord 커뮤니티 초대 링크 열기 | 질문이나 커뮤니티 참여 시 |
 
 ### 페이즈 관리
 
 | 명령어 | 목적 | 사용 시점 |
 |--------|------|----------|
-| `/sdd-add-phase` | 로드맵에 새 페이즈 추가 | 초기 계획 후 범위가 늘어날 때 |
-| `/sdd-insert-phase [N]` | 긴급 작업 삽입 (소수점 번호 체계) | 마일스톤 중간의 긴급 수정 시 |
-| `/sdd-remove-phase [N]` | 미래 페이즈 제거 및 재번호 | 기능 범위 축소 시 |
-| `/sdd-list-phase-assumptions [N]` | Claude의 예상 접근 방식 미리 확인 | 계획 전 방향 검증 시 |
-| `/sdd-plan-milestone-gaps` | 감사 갭을 위한 페이즈 생성 | 감사에서 누락 항목이 발견된 후 |
-| `/sdd-research-phase [N]` | 심층 에코시스템 조사만 수행 | 복잡하거나 익숙하지 않은 도메인 |
+| `/sdd-phase` | 로드맵에 새 페이즈 추가 | 초기 계획 후 범위가 늘어날 때 |
+| `/sdd-phase --insert [N]` | 긴급 작업 삽입 (소수점 번호 체계) | 마일스톤 중간의 긴급 수정 시 |
+| `/sdd-phase --remove [N]` | 미래 페이즈 제거 및 재번호 | 기능 범위 축소 시 |
+| `/sdd-discuss-phase --assumptions [N]` | Claude의 예상 접근 방식 미리 확인 | 계획 전 방향 검증 시 |
+| `/sdd-plan-phase --research-phase [N]` | 심층 에코시스템 조사만 수행 | 복잡하거나 익숙하지 않은 도메인 |
 
 ### 브라운필드 및 유틸리티
 
@@ -428,11 +426,11 @@ GSD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니�
 | `/sdd-quick` | SDD 보증을 갖춘 임시 작업 | 버그 수정, 소규모 기능, 설정 변경 |
 | `/sdd-debug [desc]` | 지속적인 상태를 유지하는 체계적인 디버깅 | 문제가 발생했을 때 |
 | `/sdd-forensics` | 워크플로우 실패에 대한 진단 보고서 | 상태, 아티팩트, git 히스토리가 손상된 것 같을 때 |
-| `/sdd-add-todo [desc]` | 나중을 위한 아이디어 캡처 | 세션 중에 생각이 날 때 |
-| `/sdd-check-todos` | 보류 중인 할 일 목록 | 캡처된 아이디어 검토 시 |
+| `/sdd-capture [desc]` | 나중을 위한 아이디어 캡처 | 세션 중에 생각이 날 때 |
+| `/sdd-capture --list` | 보류 중인 할 일 목록 | 캡처된 아이디어 검토 시 |
 | `/sdd-settings` | 워크플로우 토글 및 모델 프로필 설정 | 모델 변경, 에이전트 토글 시 |
-| `/sdd-set-profile <profile>` | 빠른 프로필 전환 | 비용/품질 트레이드오프 변경 시 |
-| `/sdd-reapply-patches` | 업데이트 후 로컬 수정사항 복원 | 로컬 편집이 있는 상태에서 `/sdd-update` 이후 |
+| `/sdd-config --profile <profile>` | 빠른 프로필 전환 | 비용/품질 트레이드오프 변경 시 |
+| `/sdd-update --reapply` | 업데이트 후 로컬 수정사항 복원 | 로컬 편집이 있는 상태에서 `/sdd-update` 이후 |
 
 ### 코드 품질 및 리뷰
 
@@ -446,16 +444,16 @@ GSD는 LLM 시스템 프롬프트가 되는 마크다운 파일을 생성합니�
 
 | 명령어 | 목적 | 사용 시점 |
 |--------|------|----------|
-| `/sdd-add-backlog <desc>` | 백로그 파킹 롯에 아이디어 추가 (999.x) | 활성 계획에 준비되지 않은 아이디어 |
+| `/sdd-capture --backlog <desc>` | 백로그 파킹 롯에 아이디어 추가 (999.x) | 활성 계획에 준비되지 않은 아이디어 |
 | `/sdd-review-backlog` | 백로그 항목 승격/유지/제거 | 새 마일스톤 전 우선순위 결정 시 |
-| `/sdd-plant-seed <idea>` | 트리거 조건이 있는 미래 지향적인 아이디어 | 미래 마일스톤에서 표면화되어야 할 아이디어 |
+| `/sdd-capture --seed <idea>` | 트리거 조건이 있는 미래 지향적인 아이디어 | 미래 마일스톤에서 표면화되어야 할 아이디어 |
 | `/sdd-thread [name]` | 지속적인 컨텍스트 스레드 | 페이즈 구조 밖의 교차 세션 작업 |
 
 ---
 
 ## 설정 레퍼런스
 
-GSD는 프로젝트 설정을 `.planning/config.json`에 저장합니다. `/sdd-new-project` 중에 설정하거나 나중에 `/sdd-settings`로 업데이트할 수 있습니다.
+SDD는 프로젝트 설정을 `.planning/config.json`에 저장합니다. `/sdd-new-project` 중에 설정하거나 나중에 `/sdd-settings`로 업데이트할 수 있습니다.
 
 ### 전체 config.json 스키마
 
@@ -600,11 +598,11 @@ claude --dangerously-skip-permissions
 /sdd-ship 1                 # Create PR from verified work
 /sdd-ui-review 1            # Visual audit (frontend phases)
 /clear
-/sdd-next                   # Auto-detect and run next step
+/sdd-progress --next                   # Auto-detect and run next step
 ...
 /sdd-audit-milestone        # Check everything shipped
 /sdd-complete-milestone     # Archive, tag, done
-/sdd-session-report         # Generate session summary
+/sdd-pause-work --report         # Generate session summary
 ```
 
 ### 기존 문서로 새 프로젝트 시작
@@ -642,7 +640,6 @@ claude --dangerously-skip-permissions
 
 ```bash
 /sdd-audit-milestone        # Check requirements coverage, detect stubs
-/sdd-plan-milestone-gaps    # If audit found gaps, create phases to close them
 /sdd-complete-milestone     # Archive, tag, done
 ```
 
@@ -659,11 +656,11 @@ claude --dangerously-skip-permissions
 ### 마일스톤 중간 범위 변경
 
 ```bash
-/sdd-add-phase              # Append a new phase to the roadmap
+/sdd-phase              # Append a new phase to the roadmap
 # or
-/sdd-insert-phase 3         # Insert urgent work between phases 3 and 4
+/sdd-phase --insert 3         # Insert urgent work between phases 3 and 4
 # or
-/sdd-remove-phase 7         # Descope phase 7 and renumber
+/sdd-phase --remove 7         # Descope phase 7 and renumber
 ```
 
 ### 멀티 프로젝트 워크스페이스
@@ -672,18 +669,18 @@ claude --dangerously-skip-permissions
 
 ```bash
 # Create a workspace with repos from your monorepo
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI
 
 # Feature branch isolation — worktree of current repo with its own .planning/
-/sdd-new-workspace --name feature-b --repos .
+/sdd-workspace --new --name feature-b --repos .
 
 # Then cd into the workspace and initialize SDD
 cd ~/sdd-workspaces/feature-b
 /sdd-new-project
 
 # List and manage workspaces
-/sdd-list-workspaces
-/sdd-remove-workspace feature-b
+/sdd-workspace --list
+/sdd-workspace --remove feature-b
 ```
 
 각 워크스페이스는 다음을 포함합니다.
@@ -701,11 +698,11 @@ cd ~/sdd-workspaces/feature-b
 
 ### 긴 세션 중 컨텍스트 저하
 
-주요 명령어 사이에 컨텍스트 윈도우를 지우세요: Claude Code에서 `/clear`를 사용합니다. GSD는 새로운 컨텍스트를 기반으로 설계되었습니다 — 모든 서브에이전트는 깨끗한 200K 윈도우를 받습니다. 메인 세션의 품질이 저하되면 지우고 `/sdd-resume-work` 또는 `/sdd-progress`를 사용하여 상태를 복원하세요.
+주요 명령어 사이에 컨텍스트 윈도우를 지우세요: Claude Code에서 `/clear`를 사용합니다. SDD는 새로운 컨텍스트를 기반으로 설계되었습니다 — 모든 서브에이전트는 깨끗한 200K 윈도우를 받습니다. 메인 세션의 품질이 저하되면 지우고 `/sdd-resume-work` 또는 `/sdd-progress`를 사용하여 상태를 복원하세요.
 
 ### 계획이 잘못되거나 맞지 않는 경우
 
-계획 전에 `/sdd-discuss-phase [N]`을 실행하세요. 대부분의 계획 품질 문제는 `CONTEXT.md`가 있었다면 방지할 수 있었던 가정을 Claude가 세우기 때문에 발생합니다. `/sdd-list-phase-assumptions [N]`을 실행하여 계획에 동의하기 전에 Claude가 무엇을 하려는지 확인할 수도 있습니다.
+계획 전에 `/sdd-discuss-phase [N]`을 실행하세요. 대부분의 계획 품질 문제는 `CONTEXT.md`가 있었다면 방지할 수 있었던 가정을 Claude가 세우기 때문에 발생합니다. `/sdd-discuss-phase --assumptions [N]`을 실행하여 계획에 동의하기 전에 Claude가 무엇을 하려는지 확인할 수도 있습니다.
 
 ### 실행이 실패하거나 스텁을 생성하는 경우
 
@@ -721,11 +718,11 @@ cd ~/sdd-workspaces/feature-b
 
 ### 모델 비용이 너무 높은 경우
 
-예산 프로필로 전환하세요: `/sdd-set-profile budget`. 도메인이 익숙하다면 (또는 Claude에게 익숙하다면) `/sdd-settings`에서 조사 및 plan-check 에이전트를 비활성화하세요.
+예산 프로필로 전환하세요: `/sdd-config --profile budget`. 도메인이 익숙하다면 (또는 Claude에게 익숙하다면) `/sdd-settings`에서 조사 및 plan-check 에이전트를 비활성화하세요.
 
 ### 비Claude 런타임 사용 (Codex, OpenCode, Gemini CLI, Kilo)
 
-비Claude 런타임용으로 GSD를 설치했다면 설치 프로그램이 이미 모든 에이전트가 런타임의 기본 모델을 사용하도록 모델 해석을 구성했습니다. 수동 설정이 필요하지 않습니다. 구체적으로 설치 프로그램은 config에 `resolve_model_ids: "omit"`을 설정하여 GSD가 Anthropic 모델 ID 해석을 건너뛰고 런타임이 자체 기본 모델을 선택하도록 합니다.
+비Claude 런타임용으로 SDD를 설치했다면 설치 프로그램이 이미 모든 에이전트가 런타임의 기본 모델을 사용하도록 모델 해석을 구성했습니다. 수동 설정이 필요하지 않습니다. 구체적으로 설치 프로그램은 config에 `resolve_model_ids: "omit"`을 설정하여 SDD가 Anthropic 모델 ID 해석을 건너뛰고 런타임이 자체 기본 모델을 선택하도록 합니다.
 
 비Claude 런타임에서 에이전트별로 다른 모델을 할당하려면 런타임이 인식하는 완전한 자격을 갖춘 모델 ID와 함께 `.planning/config.json`에 `model_overrides`를 추가하세요.
 
@@ -746,7 +743,7 @@ cd ~/sdd-workspaces/feature-b
 
 ### 비Anthropic 공급자와 함께 Claude Code 사용 (OpenRouter, 로컬)
 
-SDD 서브에이전트가 Anthropic 모델을 호출하는데 OpenRouter나 로컬 공급자를 통해 비용을 지불하고 있다면 `inherit` 프로필로 전환하세요: `/sdd-set-profile inherit`. 이렇게 하면 모든 에이전트가 특정 Anthropic 모델 대신 현재 세션 모델을 사용합니다. `/sdd-settings` → Model Profile → Inherit도 참고하세요.
+SDD 서브에이전트가 Anthropic 모델을 호출하는데 OpenRouter나 로컬 공급자를 통해 비용을 지불하고 있다면 `inherit` 프로필로 전환하세요: `/sdd-config --profile inherit`. 이렇게 하면 모든 에이전트가 특정 Anthropic 모델 대신 현재 세션 모델을 사용합니다. `/sdd-settings` → Model Profile → Inherit도 참고하세요.
 
 ### 민감하거나 비공개 프로젝트에서 작업하는 경우
 
@@ -754,7 +751,7 @@ SDD 서브에이전트가 Anthropic 모델을 호출하는데 OpenRouter나 로�
 
 ### SDD 업데이트가 로컬 변경사항을 덮어쓴 경우
 
-v1.17부터 설치 프로그램이 로컬로 수정된 파일을 `sdd-local-patches/`에 백업합니다. 변경사항을 다시 병합하려면 `/sdd-reapply-patches`를 실행하세요.
+v1.17부터 설치 프로그램이 로컬로 수정된 파일을 `sdd-local-patches/`에 백업합니다. 변경사항을 다시 병합하려면 `/sdd-update --reapply`를 실행하세요.
 
 ### 워크플로우 진단 (`/sdd-forensics`)
 
@@ -769,11 +766,11 @@ v1.17부터 설치 프로그램이 로컬로 수정된 파일을 `sdd-local-patc
 
 ### 서브에이전트가 실패한 것 같지만 작업이 완료된 경우
 
-Claude Code 분류 버그에 대한 알려진 해결 방법이 있습니다. GSD의 오케스트레이터 (execute-phase, quick)는 실패를 보고하기 전에 실제 출력을 현장 확인합니다. 실패 메시지가 표시되었지만 커밋이 이루어진 경우 `git log`를 확인하세요 — 작업이 성공했을 수 있습니다.
+Claude Code 분류 버그에 대한 알려진 해결 방법이 있습니다. SDD의 오케스트레이터 (execute-phase, quick)는 실패를 보고하기 전에 실제 출력을 현장 확인합니다. 실패 메시지가 표시되었지만 커밋이 이루어진 경우 `git log`를 확인하세요 — 작업이 성공했을 수 있습니다.
 
 ### 병렬 실행으로 인한 빌드 잠금 오류
 
-병렬 웨이브 실행 중에 pre-commit 훅 실패, cargo lock 경합, 또는 30분 이상의 실행 시간이 발생한다면 여러 에이전트가 동시에 빌드 도구를 실행하기 때문입니다. GSD는 v1.26부터 이를 자동으로 처리합니다 — 병렬 에이전트는 커밋에 `--no-verify`를 사용하고 오케스트레이터가 각 웨이브 후 한 번 훅을 실행합니다. 이전 버전을 사용하는 경우 프로젝트의 `CLAUDE.md`에 다음을 추가하세요.
+병렬 웨이브 실행 중에 pre-commit 훅 실패, cargo lock 경합, 또는 30분 이상의 실행 시간이 발생한다면 여러 에이전트가 동시에 빌드 도구를 실행하기 때문입니다. SDD는 v1.26부터 이를 자동으로 처리합니다 — 병렬 에이전트는 커밋에 `--no-verify`를 사용하고 오케스트레이터가 각 웨이브 후 한 번 훅을 실행합니다. 이전 버전을 사용하는 경우 프로젝트의 `CLAUDE.md`에 다음을 추가하세요.
 
 ```markdown
 ## Git Commit Rules for Agents
@@ -794,23 +791,22 @@ Windows에서 설치 프로그램이 `EPERM: operation not permitted, scandir`�
 |------|----------|
 | 컨텍스트 손실 / 새 세션 | `/sdd-resume-work` 또는 `/sdd-progress` |
 | 페이즈가 잘못됨 | 페이즈 커밋에 `git revert` 후 재계획 |
-| 범위 변경 필요 | `/sdd-add-phase`, `/sdd-insert-phase`, 또는 `/sdd-remove-phase` |
-| 마일스톤 감사에서 갭 발견 | `/sdd-plan-milestone-gaps` |
+| 범위 변경 필요 | `/sdd-phase`, `/sdd-phase --insert`, 또는 `/sdd-phase --remove` |
 | 무언가 고장남 | `/sdd-debug "description"` |
 | 워크플로우 상태 손상 의심 | `/sdd-forensics` |
 | 빠른 목표 수정 | `/sdd-quick` |
 | 계획이 비전과 맞지 않음 | `/sdd-discuss-phase [N]` 후 재계획 |
-| 비용이 높아짐 | `/sdd-set-profile budget` 및 `/sdd-settings`에서 에이전트 비활성화 |
-| 업데이트가 로컬 변경사항 파괴 | `/sdd-reapply-patches` |
-| 이해관계자를 위한 세션 요약 필요 | `/sdd-session-report` |
-| 다음 단계를 모르겠음 | `/sdd-next` |
+| 비용이 높아짐 | `/sdd-config --profile budget` 및 `/sdd-settings`에서 에이전트 비활성화 |
+| 업데이트가 로컬 변경사항 파괴 | `/sdd-update --reapply` |
+| 이해관계자를 위한 세션 요약 필요 | `/sdd-pause-work --report` |
+| 다음 단계를 모르겠음 | `/sdd-progress --next` |
 | 병렬 실행 빌드 오류 | SDD 업데이트 또는 `parallelization.enabled: false` 설정 |
 
 ---
 
 ## 프로젝트 파일 구조
 
-참고로 GSD가 프로젝트에 생성하는 파일 구조입니다.
+참고로 SDD가 프로젝트에 생성하는 파일 구조입니다.
 
 ```
 .planning/
@@ -822,7 +818,7 @@ Windows에서 설치 프로그램이 `EPERM: operation not permitted, scandir`�
   MILESTONES.md           # Completed milestone archive
   HANDOFF.json            # Structured session handoff (from /sdd-pause-work)
   research/               # Domain research from /sdd-new-project
-  reports/                # Session reports (from /sdd-session-report)
+  reports/                # Session reports (from /sdd-pause-work --report)
   todos/
     pending/              # Captured ideas awaiting work
     done/                 # Completed todos

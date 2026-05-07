@@ -59,4 +59,4 @@ The installer performs a clean wipe-and-replace of SDD-managed directories only:
 - Your `CLAUDE.md` files
 - Custom hooks
 
-Locally modified SDD files are automatically backed up to `sdd-local-patches/` before the install. Run `/sdd-reapply-patches` after updating to merge your modifications back in.
+Locally modified SDD files are automatically backed up to `sdd-local-patches/` before the install. Run `/sdd-update --reapply` after updating to merge your modifications back in.

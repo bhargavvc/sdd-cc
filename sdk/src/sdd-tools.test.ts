@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SDDTools, SDDToolsError, resolveSddToolsPath } from './sdd-tools.js';
+import { setTransportPolicy, clearTransportPolicy } from './sdd-transport-policy.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -22,6 +23,7 @@ describe('SDDTools', () => {
   });
 
   afterEach(async () => {
+    clearTransportPolicy();
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -43,7 +45,7 @@ describe('SDDTools', () => {
         `process.stdout.write(JSON.stringify({ status: "ok", count: 42 }));`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.exec('state', ['load']);
 
       expect(result).toEqual({ status: 'ok', count: 42 });
@@ -61,7 +63,7 @@ describe('SDDTools', () => {
         `process.stdout.write('@file:${resultFile.replace(/\\/g, '\\\\')}');`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.exec('state', ['load']);
 
       expect(result).toEqual(bigData);
@@ -73,7 +75,7 @@ describe('SDDTools', () => {
         `// outputs nothing`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.exec('state', ['load']);
 
       expect(result).toBeNull();
@@ -85,7 +87,7 @@ describe('SDDTools', () => {
         `process.stderr.write('something went wrong\\n'); process.exit(1);`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
 
       try {
         await tools.exec('state', ['load']);
@@ -104,6 +106,7 @@ describe('SDDTools', () => {
       const tools = new SDDTools({
         projectDir: tmpDir,
         sddToolsPath: '/nonexistent/path/sdd-tools.cjs',
+        preferNativeQuery: false,
       });
 
       await expect(tools.exec('state', ['load'])).rejects.toThrow(SDDToolsError);
@@ -115,7 +118,7 @@ describe('SDDTools', () => {
         `process.stdout.write('Not JSON at all');`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
 
       try {
         await tools.exec('state', ['load']);
@@ -134,7 +137,7 @@ describe('SDDTools', () => {
         `process.stdout.write('@file:/tmp/does-not-exist-${Date.now()}.json');`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
 
       await expect(tools.exec('state', ['load'])).rejects.toThrow(SDDToolsError);
     });
@@ -149,6 +152,7 @@ describe('SDDTools', () => {
         projectDir: tmpDir,
         sddToolsPath: scriptPath,
         timeoutMs: 500,
+        preferNativeQuery: false,
       });
 
       try {
@@ -160,6 +164,67 @@ describe('SDDTools', () => {
         expect(sddErr.message).toContain('timed out');
       }
     }, 10_000);
+
+    it('uses subprocess fallback when native handler throws and policy allows fallback', async () => {
+      const scriptPath = await createScript(
+        'fallback-ok.cjs',
+        `process.stdout.write(JSON.stringify({ from: 'subprocess-fallback' }));`,
+      );
+
+      const tools = new SDDTools({
+        projectDir: tmpDir,
+        sddToolsPath: scriptPath,
+        allowFallbackToSubprocess: true,
+      });
+      setTransportPolicy('verify.path-exists', { allowFallbackToSubprocess: true });
+
+      const result = await tools.exec('verify.path-exists', []);
+      expect(result).toEqual({ from: 'subprocess-fallback' });
+    });
+
+    it('fails fast in strictSdk mode when command has no native adapter', async () => {
+      const scriptPath = await createScript(
+        'strict-should-not-run.cjs',
+        `process.stdout.write(JSON.stringify({ should: 'not-run' }));`,
+      );
+
+      const tools = new SDDTools({
+        projectDir: tmpDir,
+        sddToolsPath: scriptPath,
+        strictSdk: true,
+        allowFallbackToSubprocess: true,
+      });
+
+      await expect(tools.exec('graphify', [])).rejects.toThrow(
+        "Strict SDK mode: command 'graphify' has no native adapter",
+      );
+    });
+
+    it('preserves SDDToolsError contract when native handler throws and fallback disabled', async () => {
+      const scriptPath = await createScript(
+        'should-not-run.cjs',
+        `process.stdout.write(JSON.stringify({ should: 'not-run' }));`,
+      );
+
+      const tools = new SDDTools({
+        projectDir: tmpDir,
+        sddToolsPath: scriptPath,
+        allowFallbackToSubprocess: false,
+      });
+      setTransportPolicy('verify.path-exists', { allowFallbackToSubprocess: false });
+
+      try {
+        await tools.exec('verify.path-exists', []);
+        expect.fail('Should have thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(SDDToolsError);
+        const sddErr = err as SDDToolsError;
+        expect(sddErr.command).toBe('verify.path-exists');
+        expect(sddErr.args).toEqual([]);
+        expect(sddErr.stderr).toBe('');
+        expect(typeof sddErr.exitCode === 'number').toBe(true);
+      }
+    });
   });
 
   // ─── Typed method tests ────────────────────────────────────────────────
@@ -170,9 +235,9 @@ describe('SDDTools', () => {
         'state-load.cjs',
         `
         const args = process.argv.slice(2);
-        // Script receives: state load --raw
-        if (args[0] === 'state' && args[1] === 'load' && args.includes('--raw')) {
-          process.stdout.write('phase=3\\nstatus=executing');
+        // Script receives: state load (no --raw when policy is json)
+        if (args[0] === 'state' && args[1] === 'load') {
+          process.stdout.write(JSON.stringify({ phase: '3', status: 'executing' }));
         } else {
           process.stderr.write('unexpected args: ' + args.join(' '));
           process.exit(1);
@@ -180,10 +245,10 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.stateLoad();
 
-      expect(result).toBe('phase=3\nstatus=executing');
+      expect(result).toEqual({ phase: '3', status: 'executing' });
     });
 
     it('commit() passes message and optional files', async () => {
@@ -196,7 +261,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.commit('test message', ['file1.md', 'file2.md']);
 
       expect(result).toBe('f89ae07');
@@ -215,7 +280,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.roadmapAnalyze();
 
       expect(result).toEqual({ phases: [] });
@@ -234,7 +299,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.verifySummary('/path/to/SUMMARY.md');
 
       expect(result).toBe('passed');
@@ -257,7 +322,7 @@ describe('SDDTools', () => {
         `process.stdout.write(${JSON.stringify(largeJson)});`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.exec('state', ['load']);
 
       expect(Array.isArray(result)).toBe(true);
@@ -302,7 +367,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.initNewProject();
 
       expect(result.researcher_model).toBe('claude-sonnet-4-6');
@@ -318,7 +383,7 @@ describe('SDDTools', () => {
         `process.stderr.write('init failed\\n'); process.exit(1);`,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
 
       await expect(tools.initNewProject()).rejects.toThrow(SDDToolsError);
     });
@@ -328,7 +393,7 @@ describe('SDDTools', () => {
 
   describe('resolveSddToolsPath()', () => {
     it('prefers bundled sdd-tools over project .claude when the bundled file exists', async () => {
-      const localBinDir = join(tmpDir, '.claude', 'get-shit-done', 'bin');
+      const localBinDir = join(tmpDir, '.claude', 'sdd', 'bin');
       await mkdir(localBinDir, { recursive: true });
       await writeFile(join(localBinDir, 'sdd-tools.cjs'), '// stub');
 
@@ -344,13 +409,13 @@ describe('SDDTools', () => {
       const result = resolveSddToolsPath(tmpDir);
       const expected = existsSync(BUNDLED_SDD_TOOLS_PATH)
         ? BUNDLED_SDD_TOOLS_PATH
-        : join(homedir(), '.claude', 'get-shit-done', 'bin', 'sdd-tools.cjs');
+        : join(homedir(), '.claude', 'sdd', 'bin', 'sdd-tools.cjs');
 
       expect(result).toBe(expected);
     });
 
     it('uses explicit sddToolsPath when provided (overrides bundled / .claude resolution)', async () => {
-      const localBinDir = join(tmpDir, '.claude', 'get-shit-done', 'bin');
+      const localBinDir = join(tmpDir, '.claude', 'sdd', 'bin');
       await mkdir(localBinDir, { recursive: true });
       const scriptPath = join(localBinDir, 'sdd-tools.cjs');
       await writeFile(
@@ -359,7 +424,7 @@ describe('SDDTools', () => {
         { mode: 0o755 },
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.exec('test', []);
       expect(result).toEqual({ source: 'local' });
     });
@@ -382,7 +447,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.configSet('workflow.auto_advance', 'true');
 
       expect(result).toBe('workflow.auto_advance=true');
@@ -398,7 +463,7 @@ describe('SDDTools', () => {
         `,
       );
 
-      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath });
+      const tools = new SDDTools({ projectDir: tmpDir, sddToolsPath: scriptPath, preferNativeQuery: false });
       const result = await tools.configSet('mode', 'yolo');
 
       expect(result).toBe('mode=yolo');

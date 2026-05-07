@@ -256,8 +256,8 @@ React/Next.js/Vite プロジェクトの場合、UI リサーチャーは `compo
 アクティブなプランニングの準備ができていないアイデアは、999.x 番号を使用してバックログに格納され、アクティブなフェーズシーケンスの外に保持されます。
 
 ```
-/sdd-add-backlog "GraphQL API layer"     # Creates 999.1-graphql-api-layer/
-/sdd-add-backlog "Mobile responsive"     # Creates 999.2-mobile-responsive/
+/sdd-capture --backlog "GraphQL API layer"     # Creates 999.1-graphql-api-layer/
+/sdd-capture --backlog "Mobile responsive"     # Creates 999.2-mobile-responsive/
 ```
 
 バックログアイテムは完全なフェーズディレクトリを取得するため、`/sdd-discuss-phase 999.1` でアイデアをさらに探索したり、準備が整ったら `/sdd-plan-phase 999.1` を使用できます。
@@ -269,7 +269,7 @@ React/Next.js/Vite プロジェクトの場合、UI リサーチャーは `compo
 シードは、トリガー条件を持つ将来を見据えたアイデアです。バックログアイテムとは異なり、適切なマイルストーンが到来すると自動的に表面化されます。
 
 ```
-/sdd-plant-seed "Add real-time collab when WebSocket infra is in place"
+/sdd-capture --seed "Add real-time collab when WebSocket infra is in place"
 ```
 
 シードは完全な WHY と表面化タイミングを保持します。`/sdd-new-milestone` はすべてのシードをスキャンし、一致するものを提示します。
@@ -288,7 +288,7 @@ React/Next.js/Vite プロジェクトの場合、UI リサーチャーは `compo
 
 スレッドは `/sdd-pause-work` より軽量です — フェーズ状態やプランコンテキストはありません。各スレッドファイルには Goal、Context、References、Next Steps セクションが含まれます。
 
-スレッドは成熟した段階でフェーズ (`/sdd-add-phase`) やバックログアイテム (`/sdd-add-backlog`) にプロモーションできます。
+スレッドは成熟した段階でフェーズ (`/sdd-phase`) やバックログアイテム (`/sdd-capture --backlog`) にプロモーションできます。
 
 **保存場所：** `.planning/threads/{slug}.md`
 
@@ -313,7 +313,7 @@ React/Next.js/Vite プロジェクトの場合、UI リサーチャーは `compo
 
 各ワークストリームは独自の `.planning/` ディレクトリサブツリーを維持します。ワークストリームを切り替えると、SDD はアクティブなプランニングコンテキストを入れ替え、`/sdd-progress`、`/sdd-discuss-phase`、`/sdd-plan-phase` などのコマンドがそのワークストリームの状態に対して動作するようにします。
 
-これは `/sdd-new-workspace`（別のリポジトリワークツリーを作成）より軽量です。ワークストリームは同じコードベースと git 履歴を共有しつつ、プランニングアーティファクトを分離します。
+これは `/sdd-workspace --new`（別のリポジトリワークツリーを作成）より軽量です。ワークストリームは同じコードベースと git 履歴を共有しつつ、プランニングアーティファクトを分離します。
 
 ---
 
@@ -391,7 +391,7 @@ SDD はマークダウンファイルを生成し、それが LLM のシステ�
 | `/sdd-verify-work [N]` | 自動診断付き手動 UAT | 実行完了後 |
 | `/sdd-ship [N]` | 検証済みの作業から PR を作成 | 検証合格後 |
 | `/sdd-fast <text>` | インラインの軽微なタスク — プランニングを完全にスキップ | タイプミス修正、設定変更、小規模リファクタリング |
-| `/sdd-next` | 状態を自動検出して次のステップを実行 | いつでも — 「次に何をすべき？」 |
+| `/sdd-progress --next` | 状態を自動検出して次のステップを実行 | いつでも — 「次に何をすべき？」 |
 | `/sdd-ui-review [N]` | 遡及的6ピラービジュアル監査 | 実行後または verify-work 後（フロントエンドプロジェクト） |
 | `/sdd-audit-milestone` | マイルストーンの完了定義を満たしているか検証 | マイルストーン完了前 |
 | `/sdd-complete-milestone` | マイルストーンをアーカイブし、リリースタグを作成 | 全フェーズの検証完了後 |
@@ -404,21 +404,19 @@ SDD はマークダウンファイルを生成し、それが LLM のシステ�
 | `/sdd-progress` | 状態と次のステップを表示 | いつでも -- 「今どこにいる？」 |
 | `/sdd-resume-work` | 前回のセッションからフルコンテキストを復元 | 新しいセッションの開始時 |
 | `/sdd-pause-work` | 構造化されたハンドオフを保存（HANDOFF.json + continue-here.md） | フェーズの途中で作業を中断する時 |
-| `/sdd-session-report` | 作業内容と成果を含むセッションサマリーを生成 | セッション終了時、ステークホルダーへの共有時 |
+| `/sdd-pause-work --report` | 作業内容と成果を含むセッションサマリーを生成 | セッション終了時、ステークホルダーへの共有時 |
 | `/sdd-help` | すべてのコマンドを表示 | クイックリファレンス |
 | `/sdd-update` | 変更履歴プレビュー付きで SDD を更新 | 新バージョンの確認時 |
-| `/sdd-join-discord` | Discord コミュニティの招待リンクを開く | 質問やコミュニティ参加時 |
 
 ### フェーズ管理
 
 | コマンド | 用途 | 使用タイミング |
 |---------|---------|-------------|
-| `/sdd-add-phase` | ロードマップに新しいフェーズを追加 | 初期プランニング後にスコープが拡大した場合 |
-| `/sdd-insert-phase [N]` | 緊急作業を挿入（小数番号） | マイルストーン中の緊急修正 |
-| `/sdd-remove-phase [N]` | 将来のフェーズを削除して番号を振り直す | 機能のスコープ縮小 |
-| `/sdd-list-phase-assumptions [N]` | Claude の意図するアプローチをプレビュー | プランニング前に方向性を確認 |
-| `/sdd-plan-milestone-gaps` | 監査ギャップに対するフェーズを作成 | 監査で不足項目が見つかった後 |
-| `/sdd-research-phase [N]` | エコシステムの深いリサーチのみ | 複雑または不慣れなドメイン |
+| `/sdd-phase` | ロードマップに新しいフェーズを追加 | 初期プランニング後にスコープが拡大した場合 |
+| `/sdd-phase --insert [N]` | 緊急作業を挿入（小数番号） | マイルストーン中の緊急修正 |
+| `/sdd-phase --remove [N]` | 将来のフェーズを削除して番号を振り直す | 機能のスコープ縮小 |
+| `/sdd-discuss-phase --assumptions [N]` | Claude の意図するアプローチをプレビュー | プランニング前に方向性を確認 |
+| `/sdd-plan-phase --research-phase [N]` | エコシステムの深いリサーチのみ | 複雑または不慣れなドメイン |
 
 ### ブラウンフィールドとユーティリティ
 
@@ -428,11 +426,11 @@ SDD はマークダウンファイルを生成し、それが LLM のシステ�
 | `/sdd-quick` | SDD 保証付きのアドホックタスク | バグ修正、小機能、設定変更 |
 | `/sdd-debug [desc]` | 永続状態を持つ体系的デバッグ | 何かが壊れた時 |
 | `/sdd-forensics` | ワークフロー障害の診断レポート | 状態、アーティファクト、git 履歴が破損していると思われる場合 |
-| `/sdd-add-todo [desc]` | 後でやるアイデアを記録 | セッション中にアイデアが浮かんだ時 |
-| `/sdd-check-todos` | 保留中の TODO を一覧表示 | 記録したアイデアのレビュー |
+| `/sdd-capture [desc]` | 後でやるアイデアを記録 | セッション中にアイデアが浮かんだ時 |
+| `/sdd-capture --list` | 保留中の TODO を一覧表示 | 記録したアイデアのレビュー |
 | `/sdd-settings` | ワークフロートグルとモデルプロファイルを設定 | モデル変更、エージェントのトグル |
-| `/sdd-set-profile <profile>` | クイックプロファイル切り替え | コスト/品質トレードオフの変更 |
-| `/sdd-reapply-patches` | アップデート後にローカル変更を復元 | ローカル編集がある場合の `/sdd-update` 後 |
+| `/sdd-config --profile <profile>` | クイックプロファイル切り替え | コスト/品質トレードオフの変更 |
+| `/sdd-update --reapply` | アップデート後にローカル変更を復元 | ローカル編集がある場合の `/sdd-update` 後 |
 
 ### コード品質とレビュー
 
@@ -446,9 +444,9 @@ SDD はマークダウンファイルを生成し、それが LLM のシステ�
 
 | コマンド | 用途 | 使用タイミング |
 |---------|---------|-------------|
-| `/sdd-add-backlog <desc>` | バックログパーキングロットにアイデアを追加（999.x） | アクティブなプランニングの準備ができていないアイデア |
+| `/sdd-capture --backlog <desc>` | バックログパーキングロットにアイデアを追加（999.x） | アクティブなプランニングの準備ができていないアイデア |
 | `/sdd-review-backlog` | バックログアイテムのプロモーション/保持/削除 | 新マイルストーン前の優先順位付け |
-| `/sdd-plant-seed <idea>` | トリガー条件付きの将来を見据えたアイデア | 将来のマイルストーンで表面化すべきアイデア |
+| `/sdd-capture --seed <idea>` | トリガー条件付きの将来を見据えたアイデア | 将来のマイルストーンで表面化すべきアイデア |
 | `/sdd-thread [name]` | 永続コンテキストスレッド | フェーズ構造外のクロスセッション作業 |
 
 ---
@@ -600,11 +598,11 @@ claude --dangerously-skip-permissions
 /sdd-ship 1                 # 検証済み作業から PR を作成
 /sdd-ui-review 1            # ビジュアル監査（フロントエンドフェーズ）
 /clear
-/sdd-next                   # 自動検出して次のステップを実行
+/sdd-progress --next                   # 自動検出して次のステップを実行
 ...
 /sdd-audit-milestone        # すべて出荷されたか確認
 /sdd-complete-milestone     # アーカイブ、タグ付け、完了
-/sdd-session-report         # セッションサマリーを生成
+/sdd-pause-work --report         # セッションサマリーを生成
 ```
 
 ### 既存ドキュメントからの新規プロジェクト
@@ -642,7 +640,6 @@ claude --dangerously-skip-permissions
 
 ```bash
 /sdd-audit-milestone        # 要件カバレッジを確認、スタブを検出
-/sdd-plan-milestone-gaps    # 監査でギャップが見つかった場合、フェーズを作成して埋める
 /sdd-complete-milestone     # アーカイブ、タグ付け、完了
 ```
 
@@ -659,11 +656,11 @@ claude --dangerously-skip-permissions
 ### マイルストーン中のスコープ変更
 
 ```bash
-/sdd-add-phase              # ロードマップに新しいフェーズを追加
+/sdd-phase              # ロードマップに新しいフェーズを追加
 # または
-/sdd-insert-phase 3         # フェーズ 3 と 4 の間に緊急作業を挿入
+/sdd-phase --insert 3         # フェーズ 3 と 4 の間に緊急作業を挿入
 # または
-/sdd-remove-phase 7         # フェーズ 7 をスコープ外にして番号を振り直す
+/sdd-phase --remove 7         # フェーズ 7 をスコープ外にして番号を振り直す
 ```
 
 ### マルチプロジェクトワークスペース
@@ -672,18 +669,18 @@ claude --dangerously-skip-permissions
 
 ```bash
 # モノレポからリポジトリを含むワークスペースを作成
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI
 
 # フィーチャーブランチの分離 — 独自の .planning/ を持つ現在のリポジトリのワークツリー
-/sdd-new-workspace --name feature-b --repos .
+/sdd-workspace --new --name feature-b --repos .
 
 # ワークスペースに移動して SDD を初期化
 cd ~/sdd-workspaces/feature-b
 /sdd-new-project
 
 # ワークスペースの一覧と管理
-/sdd-list-workspaces
-/sdd-remove-workspace feature-b
+/sdd-workspace --list
+/sdd-workspace --remove feature-b
 ```
 
 各ワークスペースには以下が含まれます：
@@ -705,7 +702,7 @@ cd ~/sdd-workspaces/feature-b
 
 ### プランが誤っている、または方向性がずれている
 
-プランニング前に `/sdd-discuss-phase [N]` を実行してください。プランの品質問題のほとんどは、CONTEXT.md があれば防げたはずの前提を Claude が置いてしまうことに起因します。`/sdd-list-phase-assumptions [N]` を使用して、プランにコミットする前に Claude の意図を確認することもできます。
+プランニング前に `/sdd-discuss-phase [N]` を実行してください。プランの品質問題のほとんどは、CONTEXT.md があれば防げたはずの前提を Claude が置いてしまうことに起因します。`/sdd-discuss-phase --assumptions [N]` を使用して、プランにコミットする前に Claude の意図を確認することもできます。
 
 ### 実行が失敗する、またはスタブが生成される
 
@@ -721,7 +718,7 @@ cd ~/sdd-workspaces/feature-b
 
 ### モデルのコストが高すぎる
 
-budget プロファイルに切り替えてください：`/sdd-set-profile budget`。ドメインに慣れている場合（またはClaude が慣れている場合）は、`/sdd-settings` でリサーチエージェントと plan-check エージェントを無効にしてください。
+budget プロファイルに切り替えてください：`/sdd-config --profile budget`。ドメインに慣れている場合（またはClaude が慣れている場合）は、`/sdd-settings` でリサーチエージェントと plan-check エージェントを無効にしてください。
 
 ### 非 Claude ランタイムの使用（Codex、OpenCode、Gemini CLI、Kilo）
 
@@ -746,7 +743,7 @@ budget プロファイルに切り替えてください：`/sdd-set-profile budg
 
 ### 非 Anthropic プロバイダーでの Claude Code の使用（OpenRouter、ローカル）
 
-SDD サブエージェントが Anthropic モデルを呼び出し、OpenRouter やローカルプロバイダーを通じて支払っている場合は、`inherit` プロファイルに切り替えてください：`/sdd-set-profile inherit`。これにより、すべてのエージェントが特定の Anthropic モデルの代わりに現在のセッションモデルを使用します。`/sdd-settings` → モデルプロファイル → Inherit も参照してください。
+SDD サブエージェントが Anthropic モデルを呼び出し、OpenRouter やローカルプロバイダーを通じて支払っている場合は、`inherit` プロファイルに切り替えてください：`/sdd-config --profile inherit`。これにより、すべてのエージェントが特定の Anthropic モデルの代わりに現在のセッションモデルを使用します。`/sdd-settings` → モデルプロファイル → Inherit も参照してください。
 
 ### 機密/プライベートプロジェクトでの作業
 
@@ -754,7 +751,7 @@ SDD サブエージェントが Anthropic モデルを呼び出し、OpenRouter 
 
 ### SDD アップデートがローカル変更を上書きした
 
-v1.17 以降、インストーラーはローカルで変更されたファイルを `sdd-local-patches/` にバックアップします。`/sdd-reapply-patches` を実行して変更をマージし直してください。
+v1.17 以降、インストーラーはローカルで変更されたファイルを `sdd-local-patches/` にバックアップします。`/sdd-update --reapply` を実行して変更をマージし直してください。
 
 ### ワークフロー診断 (`/sdd-forensics`)
 
@@ -794,16 +791,15 @@ Windows でインストーラーが `EPERM: operation not permitted, scandir` �
 |---------|----------|
 | コンテキストの喪失 / 新セッション | `/sdd-resume-work` または `/sdd-progress` |
 | フェーズが失敗した | フェーズのコミットを `git revert` して再プランニング |
-| スコープ変更が必要 | `/sdd-add-phase`、`/sdd-insert-phase`、または `/sdd-remove-phase` |
-| マイルストーン監査でギャップを発見 | `/sdd-plan-milestone-gaps` |
+| スコープ変更が必要 | `/sdd-phase`、`/sdd-phase --insert`、または `/sdd-phase --remove` |
 | 何かが壊れた | `/sdd-debug "description"` |
 | ワークフロー状態が破損している可能性 | `/sdd-forensics` |
 | ターゲットを絞った修正 | `/sdd-quick` |
 | プランがビジョンに合わない | `/sdd-discuss-phase [N]` で再プランニング |
-| コストが高い | `/sdd-set-profile budget` と `/sdd-settings` でエージェントをオフ |
-| アップデートがローカル変更を壊した | `/sdd-reapply-patches` |
-| ステークホルダー向けセッションサマリーが欲しい | `/sdd-session-report` |
-| 次のステップがわからない | `/sdd-next` |
+| コストが高い | `/sdd-config --profile budget` と `/sdd-settings` でエージェントをオフ |
+| アップデートがローカル変更を壊した | `/sdd-update --reapply` |
+| ステークホルダー向けセッションサマリーが欲しい | `/sdd-pause-work --report` |
+| 次のステップがわからない | `/sdd-progress --next` |
 | 並列実行でビルドエラー | SDD を更新するか `parallelization.enabled: false` を設定 |
 
 ---
@@ -822,7 +818,7 @@ Windows でインストーラーが `EPERM: operation not permitted, scandir` �
   MILESTONES.md           # 完了したマイルストーンのアーカイブ
   HANDOFF.json            # 構造化セッション引き継ぎ（/sdd-pause-work から）
   research/               # /sdd-new-project からのドメインリサーチ
-  reports/                # セッションレポート（/sdd-session-report から）
+  reports/                # セッションレポート（/sdd-pause-work --report から）
   todos/
     pending/              # 作業待ちのキャプチャされたアイデア
     done/                 # 完了した TODO

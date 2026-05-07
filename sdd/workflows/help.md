@@ -48,8 +48,12 @@ Creates all `.planning/` artifacts:
 
 Usage: `/sdd-new-project`
 
-**`/sdd-map-codebase`**
+**`/sdd-map-codebase [--fast] [--focus <area>] [--query <term>]`**
 Map an existing codebase for brownfield projects.
+
+- `--fast` — rapid lightweight assessment (replaces the former `sdd-scan`)
+- `--focus <area>` — scope the map to a specific area
+- `--query <term>` — query the codebase intelligence index in `.planning/intel/` (replaces the former `sdd-intel`)
 
 - Analyzes codebase with parallel Explore agents
 - Creates `.planning/codebase/` with 7 focused documents
@@ -60,8 +64,13 @@ Usage: `/sdd-map-codebase`
 
 ### Phase Planning
 
-**`/sdd-discuss-phase <number>`**
+**`/sdd-discuss-phase <number> [--chain | --analyze | --power | --assumptions] [--batch[=N]]`**
 Help articulate your vision for a phase before planning.
+
+- `--chain` — chained-prompt discuss flow
+- `--analyze` — deep assumption analysis pass
+- `--power` — power-user mode with extended question set
+- `--assumptions` — surface Claude's implementation assumptions about the phase without an interactive session
 
 - Captures how you imagine this phase working
 - Creates CONTEXT.md with your vision, essentials, and boundaries
@@ -72,27 +81,27 @@ Usage: `/sdd-discuss-phase 2`
 Usage: `/sdd-discuss-phase 2 --batch`
 Usage: `/sdd-discuss-phase 2 --batch=3`
 
-**`/sdd-research-phase <number>`**
-Comprehensive ecosystem research for niche/complex domains.
+**`/sdd-mvp-phase <number> [--force]`**
+Plan a phase as a vertical MVP slice — three structured user-story prompts (`As a / I want to / So that`), SPIDR splitting if the story is too large, then delegates to `/sdd-plan-phase` with MVP mode active.
 
-- Discovers standard stack, architecture patterns, pitfalls
-- Creates RESEARCH.md with "how experts build this" knowledge
-- Use for 3D, games, audio, shaders, ML, and other specialized domains
-- Goes beyond "which library" to ecosystem knowledge
+- Mutates the phase's ROADMAP entry: writes `**Mode:** mvp` + replaces `**Goal:**` with the assembled user story
+- Validates the story via `sdd-sdk query user-story.validate` (canonical regex `/^As a .+, I want to .+, so that .+\.$/`)
+- `--force` overrides the status guard (required if the phase is already `in_progress` or `completed`)
+- Pairs with the new-project mode prompt (Vertical MVP vs Horizontal Layers)
 
-Usage: `/sdd-research-phase 3`
+Usage: `/sdd-mvp-phase 1`
+Usage: `/sdd-mvp-phase 2 --force`
 
-**`/sdd-list-phase-assumptions <number>`**
-See what Claude is planning to do before it starts.
-
-- Shows Claude's intended approach for a phase
-- Lets you course-correct if Claude misunderstood your vision
-- No files created - conversational output only
-
-Usage: `/sdd-list-phase-assumptions 3`
-
-**`/sdd-plan-phase <number>`**
+**`/sdd-plan-phase <number> [--research] [--skip-research] [--research-phase <N>] [--view] [--gaps] [--skip-verify] [--tdd] [--mvp]`**
 Create detailed execution plan for a specific phase.
+
+- `--skip-research` — bypass the research subagent
+- `--research-phase <N>` — research-only mode. Spawns the research agent for phase `<N>`, writes `RESEARCH.md`, then exits before the planner runs. Useful for cross-phase research, doc review before committing to a planning approach, and correction-without-replanning loops. Replaces the deleted `sdd-research-phase` standalone command (#3042).
+  - Modifiers: `--research` forces refresh (re-spawn researcher, no prompt). `--view` prints existing `RESEARCH.md` to stdout without spawning. With neither, prompts `update / view / skip` if `RESEARCH.md` already exists.
+- `--gaps` — focus only on closing gaps from a prior plan-check
+- `--skip-verify` — skip the post-plan verifier loop
+- `--tdd` — plan in test-driven order (tests before code)
+- `--mvp` — vertical-slice MVP planning mode
 
 - Generates `.planning/phases/XX-phase-name/XX-YY-PLAN.md`
 - Breaks phase into concrete, actionable tasks
@@ -100,14 +109,21 @@ Create detailed execution plan for a specific phase.
 - Multiple plans per phase supported (XX-01, XX-02, etc.)
 
 Usage: `/sdd-plan-phase 1`
+Usage: `/sdd-plan-phase --research-phase 2` — research only on phase 2 (prompts if `RESEARCH.md` exists)
+Usage: `/sdd-plan-phase --research-phase 2 --view` — print existing `RESEARCH.md`, no spawn
+Usage: `/sdd-plan-phase --research-phase 2 --research` — force-refresh, no prompt
 Result: Creates `.planning/phases/01-foundation/01-01-PLAN.md`
 
 **PRD Express Path:** Pass `--prd path/to/requirements.md` to skip discuss-phase entirely. Your PRD becomes locked decisions in CONTEXT.md. Useful when you already have clear acceptance criteria.
 
 ### Execution
 
-**`/sdd-execute-phase <phase-number>`**
+**`/sdd-execute-phase <phase-number> [--wave N] [--gaps-only] [--tdd]`**
 Execute all plans in a phase, or run a specific wave.
+
+- `--wave N` — execute only wave N (see *Plans within each wave* below)
+- `--gaps-only` — re-run only plans flagged as gaps by a prior verifier
+- `--tdd` — enforce test-driven order during execution
 
 - Groups plans by wave (from frontmatter), executes waves sequentially
 - Plans within each wave run in parallel via Task tool
@@ -120,7 +136,7 @@ Usage: `/sdd-execute-phase 5 --wave 2`
 
 ### Smart Router
 
-**`/sdd-do <description>`**
+**`/sdd-progress --do "<description>"`**
 Route freeform text to the right SDD command automatically.
 
 - Analyzes natural language input to find the best matching SDD command
@@ -128,9 +144,9 @@ Route freeform text to the right SDD command automatically.
 - Resolves ambiguity by asking you to pick between top matches
 - Use when you know what you want but don't know which `/sdd-*` command to run
 
-Usage: `/sdd-do fix the login button`
-Usage: `/sdd-do refactor the auth system`
-Usage: `/sdd-do I want to start a new milestone`
+Usage: `/sdd-progress --do "fix the login button"`
+Usage: `/sdd-progress --do "refactor the auth system"`
+Usage: `/sdd-progress --do "I want to start a new milestone"`
 
 ### Quick Mode
 
@@ -153,7 +169,7 @@ Granular flags are composable: `--discuss --research --validate` gives the same 
 Usage: `/sdd-quick`
 Usage: `/sdd-quick --full`
 Usage: `/sdd-quick --research --validate`
-Result: Creates `.planning/quick/NNN-slug/PLAN.md`, `.planning/quick/NNN-slug/SUMMARY.md`
+Result: Creates `.planning/quick/NNN-slug/PLAN.md`, `.planning/quick/NNN-slug/NNN-slug-SUMMARY.md`
 
 ---
 
@@ -172,26 +188,26 @@ Usage: `/sdd-fast "add .env to gitignore"`
 
 ### Roadmap Management
 
-**`/sdd-add-phase <description>`**
+**`/sdd-phase <description>`**
 Add new phase to end of current milestone.
 
 - Appends to ROADMAP.md
 - Uses next sequential number
 - Updates phase directory structure
 
-Usage: `/sdd-add-phase "Add admin dashboard"`
+Usage: `/sdd-phase "Add admin dashboard"`
 
-**`/sdd-insert-phase <after> <description>`**
+**`/sdd-phase --insert <after> <description>`**
 Insert urgent work as decimal phase between existing phases.
 
 - Creates intermediate phase (e.g., 7.1 between 7 and 8)
 - Useful for discovered work that must happen mid-milestone
 - Maintains phase ordering
 
-Usage: `/sdd-insert-phase 7 "Fix critical auth bug"`
+Usage: `/sdd-phase --insert 7 "Fix critical auth bug"`
 Result: Creates Phase 7.1
 
-**`/sdd-remove-phase <number>`**
+**`/sdd-phase --remove <number>`**
 Remove a future phase and renumber subsequent phases.
 
 - Deletes phase directory and all references
@@ -199,8 +215,14 @@ Remove a future phase and renumber subsequent phases.
 - Only works on future (unstarted) phases
 - Git commit preserves historical record
 
-Usage: `/sdd-remove-phase 17`
+Usage: `/sdd-phase --remove 17`
 Result: Phase 17 deleted, phases 18-20 become 17-19
+
+**`/sdd-phase --edit <number> [--force]`**
+Edit any field of an existing roadmap phase in place, preserving number and position.
+
+- Updates title, description, requirements, dependencies in `ROADMAP.md`
+- `--force` allows editing already-started phases (use with caution)
 
 ### Milestone Management
 
@@ -230,7 +252,7 @@ Usage: `/sdd-complete-milestone 1.0.0`
 
 ### Progress Tracking
 
-**`/sdd-progress`**
+**`/sdd-progress [--next | --forensic | --do "<description>"]`**
 Check project status and intelligently route to next action.
 
 - Shows visual progress bar and completion percentage
@@ -240,7 +262,15 @@ Check project status and intelligently route to next action.
 - Offers to execute next plan or create it if missing
 - Detects 100% milestone completion
 
+Modes:
+- **default** — progress report + intelligent routing
+- **`--next`** — auto-advance to the next logical step (use `--next --force` to bypass safety gates)
+- **`--forensic`** — append a 6-check integrity audit after the progress report
+- **`--do "<text>"`** — smart router: dispatch freeform intent to the matching `/sdd-*` command (see *Smart Router* above)
+
 Usage: `/sdd-progress`
+Usage: `/sdd-progress --next`
+Usage: `/sdd-progress --forensic`
 
 ### Session Management
 
@@ -253,9 +283,10 @@ Resume work from previous session with full context restoration.
 
 Usage: `/sdd-resume-work`
 
-**`/sdd-pause-work`**
+**`/sdd-pause-work [--report]`**
 Create context handoff when pausing work mid-phase.
 
+- `--report` — generate a post-session summary in `.planning/reports/` capturing commits, file changes, and phase progress
 - Creates .continue-here file with current state
 - Updates STATE.md session continuity section
 - Captures in-progress work context
@@ -264,8 +295,10 @@ Usage: `/sdd-pause-work`
 
 ### Debugging
 
-**`/sdd-debug [issue description]`**
+**`/sdd-debug [issue description] [--diagnose]`**
 Systematic debugging with persistent state across context resets.
+
+- `--diagnose` — run a one-shot diagnostic pass without opening a persistent debug session
 
 - Gathers symptoms through adaptive questioning
 - Creates `.planning/debug/[slug].md` to track investigation
@@ -305,7 +338,7 @@ Rapidly sketch UI/design ideas using throwaway HTML mockups with multi-variant e
 Usage: `/sdd-sketch "dashboard layout for the admin panel"`
 Usage: `/sdd-sketch --quick "form card grouping"`
 
-**`/sdd-spike-wrap-up`**
+**`/sdd-spike --wrap-up`**
 Package spike findings into a persistent project skill.
 
 - Curates each spike one-at-a-time (include/exclude/partial/UAT)
@@ -314,9 +347,9 @@ Package spike findings into a persistent project skill.
 - Writes summary to `.planning/spikes/WRAP-UP-SUMMARY.md`
 - Adds auto-load routing line to project CLAUDE.md
 
-Usage: `/sdd-spike-wrap-up`
+Usage: `/sdd-spike --wrap-up`
 
-**`/sdd-sketch-wrap-up`**
+**`/sdd-sketch --wrap-up`**
 Package sketch design findings into a persistent project skill.
 
 - Curates each sketch one-at-a-time (include/exclude/partial/revisit)
@@ -325,27 +358,12 @@ Package sketch design findings into a persistent project skill.
 - Writes summary to `.planning/sketches/WRAP-UP-SUMMARY.md`
 - Adds auto-load routing line to project CLAUDE.md
 
-Usage: `/sdd-sketch-wrap-up`
+Usage: `/sdd-sketch --wrap-up`
 
-### Quick Notes
+### Capturing Ideas, Notes, and Todos
 
-**`/sdd-note <text>`**
-Zero-friction idea capture — one command, instant save, no questions.
-
-- Saves timestamped note to `.planning/notes/` (or `~/.claude/notes/` globally)
-- Three subcommands: append (default), list, promote
-- Promote converts a note into a structured todo
-- Works without a project (falls back to global scope)
-
-Usage: `/sdd-note refactor the hook system`
-Usage: `/sdd-note list`
-Usage: `/sdd-note promote 3`
-Usage: `/sdd-note --global cross-project idea`
-
-### Todo Management
-
-**`/sdd-add-todo [description]`**
-Capture idea or task as todo from current conversation.
+**`/sdd-capture [description]`**
+Capture an idea or task as a structured todo from current conversation.
 
 - Extracts context from conversation (or uses provided description)
 - Creates structured todo file in `.planning/todos/pending/`
@@ -353,20 +371,33 @@ Capture idea or task as todo from current conversation.
 - Checks for duplicates before creating
 - Updates STATE.md todo count
 
-Usage: `/sdd-add-todo` (infers from conversation)
-Usage: `/sdd-add-todo Add auth token refresh`
+Usage: `/sdd-capture` (infers from conversation)
+Usage: `/sdd-capture Add auth token refresh`
 
-**`/sdd-check-todos [area]`**
+**`/sdd-capture --note <text>`**
+Zero-friction note capture — one command, instant save, no questions.
+
+- Saves timestamped note to `.planning/notes/` (or `~/.claude/notes/` globally)
+- Three subcommands: append (default), list, promote
+- Promote converts a note into a structured todo
+- Works without a project (falls back to global scope)
+
+Usage: `/sdd-capture --note refactor the hook system`
+Usage: `/sdd-capture --note list`
+Usage: `/sdd-capture --note promote 3`
+Usage: `/sdd-capture --note --global cross-project idea`
+
+**`/sdd-capture --list [area]`**
 List pending todos and select one to work on.
 
 - Lists all pending todos with title, area, age
-- Optional area filter (e.g., `/sdd-check-todos api`)
+- Optional area filter (e.g., `/sdd-capture --list api`)
 - Loads full context for selected todo
 - Routes to appropriate action (work now, add to phase, brainstorm)
 - Moves todo to done/ when work begins
 
-Usage: `/sdd-check-todos`
-Usage: `/sdd-check-todos api`
+Usage: `/sdd-capture --list`
+Usage: `/sdd-capture --list api`
 
 ### User Acceptance Testing
 
@@ -420,14 +451,23 @@ Usage: `/sdd-pr-branch` or `/sdd-pr-branch main`
 
 ---
 
-**`/sdd-plant-seed [idea]`**
+**`/sdd-capture --seed [idea]`**
 Capture a forward-looking idea with trigger conditions for automatic surfacing.
 
 - Seeds preserve WHY, WHEN to surface, and breadcrumbs to related code
 - Auto-surfaces during `/sdd-new-milestone` when trigger conditions match
 - Better than deferred items — triggers are checked, not forgotten
 
-Usage: `/sdd-plant-seed "add real-time notifications when we build the events system"`
+Usage: `/sdd-capture --seed "add real-time notifications when we build the events system"`
+
+**`/sdd-capture --backlog [description]`**
+Add an idea to the backlog parking lot for future milestones.
+
+- Creates a backlog item under 999.x numbering in ROADMAP.md
+- Reserves ideas without committing to the current milestone
+- Surface and promote later via `/sdd-review-backlog`
+
+Usage: `/sdd-capture --backlog "real-time notifications when events ship"`
 
 ---
 
@@ -452,16 +492,6 @@ Audit milestone completion against original intent.
 
 Usage: `/sdd-audit-milestone`
 
-**`/sdd-plan-milestone-gaps`**
-Create phases to close gaps identified by audit.
-
-- Reads MILESTONE-AUDIT.md and groups gaps into phases
-- Prioritizes by requirement priority (must/should/nice)
-- Adds gap closure phases to ROADMAP.md
-- Ready for `/sdd-plan-phase` on new phases
-
-Usage: `/sdd-plan-milestone-gaps`
-
 ### Configuration
 
 **`/sdd-settings`**
@@ -473,15 +503,19 @@ Configure workflow toggles and model profile interactively.
 
 Usage: `/sdd-settings`
 
-**`/sdd-set-profile <profile>`**
-Quick switch model profile for SDD agents.
+**`/sdd-config [--profile <profile> | --advanced | --integrations]`**
+Configure SDD beyond the basic settings: model profile, advanced tuning, and third-party integrations.
+
+- `--profile <profile>` — quick switch model profile (`quality | balanced | budget | inherit`)
+- `--advanced` — power-user tuning: plan bounce, timeouts, branch templates, cross-AI execution (replaces the former `sdd-settings-advanced`)
+- `--integrations` — third-party API keys, code-review CLI routing, agent-skill injection (replaces the former `sdd-settings-integrations`)
 
 - `quality` — Opus everywhere except verification
 - `balanced` — Opus for planning, Sonnet for execution (default)
 - `budget` — Sonnet for writing, Haiku for research/verification
 - `inherit` — Use current session model for all agents (OpenCode `/model`)
 
-Usage: `/sdd-set-profile budget`
+Usage: `/sdd-config --profile budget`
 
 ### Utility Commands
 
@@ -498,8 +532,11 @@ Usage: `/sdd-cleanup`
 **`/sdd-help`**
 Show this command reference.
 
-**`/sdd-update`**
+**`/sdd-update [--sync] [--reapply]`**
 Update SDD to latest version with changelog preview.
+
+- `--sync` — sync managed SDD skills across runtime roots (replaces the former `sdd-sync-skills`)
+- `--reapply` — reapply local modifications after an update (replaces the former `sdd-reapply-patches`)
 
 - Shows installed vs latest version comparison
 - Displays changelog entries for versions you've missed
@@ -509,13 +546,72 @@ Update SDD to latest version with changelog preview.
 
 Usage: `/sdd-update`
 
-**`/sdd-join-discord`**
-Join the SDD Discord community.
+## Additional Commands
 
-- Get help, share what you're building, stay updated
-- Connect with other SDD users
+The commands above cover the most common day-to-day flows. Every command listed here is also a live `/sdd-*` slash command and is grouped by purpose.
 
-Usage: `/sdd-join-discord`
+### Discovery & Specification
+
+- **`/sdd-explore`** — Socratic ideation and idea routing. Think through ideas before committing to plans.
+- **`/sdd-spec-phase <phase> [--auto] [--text]`** — Clarify WHAT a phase delivers with ambiguity scoring; produces a SPEC.md before discuss-phase.
+- **`/sdd-ai-integration-phase [phase]`** — Generate an AI-SPEC.md design contract for phases that involve building AI systems.
+- **`/sdd-ui-phase [phase]`** — Generate UI design contract (UI-SPEC.md) for frontend phases.
+- **`/sdd-import --from <filepath> | --from-gsd2`** — Ingest external plans with conflict detection, or reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format.
+- **`/sdd-ingest-docs [path] [--mode new|merge] [--manifest <file>] [--resolve auto|interactive]`** — Bootstrap or merge a `.planning/` setup from existing ADRs, PRDs, SPECs, and docs in a repo.
+
+### Planning & Execution
+
+- **`/sdd-ultraplan-phase [phase]`** — [BETA] Offload plan phase to Claude Code's ultraplan cloud; review in browser and import back.
+- **`/sdd-plan-review-convergence <phase> [--codex] [--gemini] [--claude] [--opencode] [--ollama] [--lm-studio] [--llama-cpp] [--all] [--text] [--ws <name>] [--max-cycles N]`** — Cross-AI plan convergence loop — replan with review feedback until no HIGH concerns remain. Supports both cloud reviewers (Codex/Gemini/Claude/OpenCode) and local model runtimes (Ollama, LM Studio, llama.cpp).
+- **`/sdd-autonomous [--from N] [--to N] [--only N] [--interactive]`** — Run all remaining phases autonomously: discuss → plan → execute per phase.
+
+### Quality, Review & Verification
+
+- **`/sdd-code-review <phase> [--depth=quick|standard|deep] [--files file1,file2,...] [--fix [--all] [--auto]]`** — Review source files changed during a phase for bugs, security issues, and code quality problems.
+- **`/sdd-secure-phase [phase]`** — Retroactively verify threat mitigations for a completed phase.
+- **`/sdd-validate-phase [phase]`** — Retroactively audit and fill Nyquist validation gaps for a completed phase.
+- **`/sdd-ui-review [phase]`** — Retroactive 6-pillar visual audit of implemented frontend code.
+- **`/sdd-eval-review [phase]`** — Audit an executed AI phase's evaluation coverage and produce an EVAL-REVIEW.md remediation plan.
+- **`/sdd-audit-fix --source <audit-uat> [--severity medium|high|all] [--max N] [--dry-run]`** — Autonomous audit-to-fix pipeline: find issues, classify, fix, test, commit.
+- **`/sdd-add-tests <phase> [additional instructions]`** — Generate tests for a completed phase based on UAT criteria and implementation.
+
+### Diagnostics & Maintenance
+
+- **`/sdd-health [--repair] [--context]`** — Diagnose planning directory health and optionally repair issues.
+- **`/sdd-forensics [problem description]`** — Post-mortem investigation for failed SDD workflows; diagnoses what went wrong.
+- **`/sdd-undo --last N | --phase NN | --plan NN-MM`** — Safe git revert. Roll back phase or plan commits using the phase manifest with dependency checks.
+- **`/sdd-docs-update [--force] [--verify-only]`** — Generate or update project documentation verified against the codebase.
+- **`/sdd-extract-learnings <phase>`** — Extract decisions, lessons, patterns, and surprises from completed phase artifacts.
+
+### Knowledge & Context
+
+- **`/sdd-graphify [build|query <term>|status|diff]`** — Build, query, and inspect the project knowledge graph in `.planning/graphs/`.
+- **`/sdd-thread [list [--open|--resolved] | close <slug> | status <slug> | name | description]`** — Manage persistent context threads for cross-session work.
+- **`/sdd-profile-user [--questionnaire] [--refresh]`** — Generate developer behavioral profile and create Claude-discoverable artifacts.
+- **`/sdd-stats`** — Display project statistics: phases, plans, requirements, git metrics, and timeline.
+
+### Workflow & Orchestration
+
+- **`/sdd-manager [--analyze-deps]`** — Interactive command center for managing multiple phases from one terminal. `--analyze-deps` scans ROADMAP phases for dependency relationships before parallel execution.
+- **`/sdd-workspace [--new | --list | --remove] [name]`** — Manage SDD workspaces: create, list, or remove isolated workspace environments.
+- **`/sdd-workstreams`** — Manage parallel workstreams: list, create, switch, status, progress, complete, and resume.
+- **`/sdd-review-backlog`** — Review and promote backlog items to active milestone.
+- **`/sdd-milestone-summary [version]`** — Generate a comprehensive project summary from milestone artifacts for team onboarding and review.
+
+### Repository Integration
+
+- **`/sdd-inbox [--issues] [--prs] [--label] [--close-incomplete] [--repo owner/repo]`** — Triage and review open GitHub issues and PRs against project templates and contribution guidelines.
+
+### Namespace Routers (model-facing meta-skills)
+
+These six skills exist primarily for the model to perform two-stage hierarchical routing across 60+ skills. You can invoke them directly when you want to browse a category interactively.
+
+- **`/sdd-context`** — Codebase intelligence routing (map, graphify, docs, learnings).
+- **`/sdd-ideate`** — Exploration / capture routing (explore, sketch, spike, spec, capture).
+- **`/sdd-manage`** — Configuration and workspace routing (workstreams, thread, update, ship, inbox).
+- **`/sdd-project`** — Project-lifecycle routing (milestones, audits, summary).
+- **`/sdd-review`** — Quality-gate routing (code review, debug, audit, security, eval, ui).
+- **`/sdd-workflow`** — Phase-pipeline routing (discuss, plan, execute, verify, phase, progress).
 
 ## Files & Structure
 
@@ -627,7 +723,7 @@ Example config:
 **Adding urgent mid-milestone work:**
 
 ```
-/sdd-insert-phase 5 "Critical security fix"
+/sdd-phase --insert 5 "Critical security fix"
 /sdd-plan-phase 5.1
 /sdd-execute-phase 5.1
 ```
@@ -643,10 +739,12 @@ Example config:
 **Capturing ideas during work:**
 
 ```
-/sdd-add-todo                    # Capture from conversation context
-/sdd-add-todo Fix modal z-index  # Capture with explicit description
-/sdd-check-todos                 # Review and work on todos
-/sdd-check-todos api             # Filter by area
+/sdd-capture                                  # Capture from conversation context
+/sdd-capture Fix modal z-index                # Capture with explicit description
+/sdd-capture --note refactor auth system      # Quick friction-free note
+/sdd-capture --seed "real-time notifications" # Forward-looking idea with triggers
+/sdd-capture --list                           # Review and work on todos
+/sdd-capture --list api                       # Filter by area
 ```
 
 **Debugging an issue:**
