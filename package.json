@@ -3,7 +3,8 @@
   "version": "1.41.0",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
   "bin": {
-    "sdd-cc": "bin/install.js"
+    "sdd-cc": "bin/install.js",
+    "sdd-sdk": "bin/sdd-sdk.js"
   },
   "files": [
     "bin",

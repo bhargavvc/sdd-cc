@@ -146,7 +146,7 @@ jobs:
         run: |
           set -euo pipefail
           npm pack --silent
-          TARBALL=$(ls @bhargavvc/sdd-cc-*.tgz | head -1)
+          TARBALL=$(ls bhargavvc-sdd-cc-*.tgz | head -1)
           echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
           echo "Packed: $TARBALL"
 

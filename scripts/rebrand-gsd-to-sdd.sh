@@ -165,12 +165,12 @@ if [ -f "package.json" ]; then
     package.json
 
   # Fix bin entry: the key might already be partially renamed
-  # Ensure bin is exactly: "sdd-cc": "bin/install.js"
+  # Ensure bin includes sdd-cc (installer) + sdd-sdk (back-compat shim, fix #2441)
   node -e "
     const pkg = require('./package.json');
     const fs = require('fs');
     pkg.name = '@bhargavvc/sdd-cc';
-    pkg.bin = { 'sdd-cc': 'bin/install.js' };
+    pkg.bin = { 'sdd-cc': 'bin/install.js', 'sdd-sdk': 'bin/sdd-sdk.js' };
     pkg.description = pkg.description
       .replace(/Get Shit Done/gi, 'Spec-Driven Development')
       .replace(/GSD/g, 'SDD')
