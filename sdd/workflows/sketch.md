@@ -1,7 +1,7 @@
 <purpose>
 Explore design directions through throwaway HTML mockups before committing to implementation.
 Each sketch produces 2-3 variants for comparison. Saves artifacts to `.planning/sketches/`.
-Companion to `/sdd-sketch --wrap-up`.
+Companion to `/sdd:sketch --wrap-up`.
 
 Supports two modes:
 - **Idea mode** (default) — user describes a design idea to sketch
@@ -331,14 +331,14 @@ After all sketches complete:
 
 **Package findings** — wrap design decisions into a reusable skill
 
-`/sdd-sketch --wrap-up`
+`/sdd:sketch --wrap-up`
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
-- `/sdd-sketch` — sketch more (or run with no argument for frontier mode)
-- `/sdd-plan-phase` — start building the real UI
-- `/sdd-spike` — spike technical feasibility of a design pattern
+- `/sdd:sketch` — sketch more (or run with no argument for frontier mode)
+- `/sdd:plan-phase` — start building the real UI
+- `/sdd:spike` — spike technical feasibility of a design pattern
 
 ───────────────────────────────────────────────────────────────
 </step>

@@ -197,7 +197,7 @@ export interface PlanResult {
 export interface SDDOptions {
   /** Root directory of the project. */
   projectDir: string;
-  /** Path to sdd-tools.cjs. Falls back to <projectDir>/.claude/, then the bundled repo path, then ~/.claude/. */
+  /** Path to sdd-tools.cjs. Falls back to the bundled repo path, then <projectDir>/.claude/, then ~/.claude/. */
   sddToolsPath?: string;
   /**
    * Optional session correlation id for query mutation events when using {@link SDD.createTools}.
@@ -496,6 +496,7 @@ export interface SDDPhaseCompleteEvent extends SDDEventBase {
 export interface PlanInfo {
   id: string;
   wave: number;
+  depends_on: string[];
   autonomous: boolean;
   objective: string | null;
   files_modified: string[];
@@ -505,6 +506,10 @@ export interface PlanInfo {
 
 /**
  * Structured plan index for a phase, grouping plans into dependency waves.
+ *
+ * The `warnings` field carries non-fatal diagnostics — currently used when a
+ * plan's declared `wave:` frontmatter disagrees with the level computed from
+ * its `depends_on` DAG.
  */
 export interface PhasePlanIndex {
   phase: string;
@@ -512,6 +517,7 @@ export interface PhasePlanIndex {
   waves: Record<string, string[]>;
   incomplete: string[];
   has_checkpoints: boolean;
+  warnings?: string[];
 }
 
 /**

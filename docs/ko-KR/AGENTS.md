@@ -386,7 +386,7 @@ SDD는 멀티 에이전트 아키텍처를 사용합니다. 가벼운 오케스�
 | **도구** | Read |
 | **모델 (balanced)** | Sonnet |
 | **색상** | Magenta |
-| **생성물** | `USER-PROFILE.md`, `/sdd-dev-preferences`, `CLAUDE.md` 프로필 섹션 |
+| **생성물** | `USER-PROFILE.md`, `CLAUDE.md` 프로필 섹션 |
 
 **행동 차원.**
 커뮤니케이션 스타일, 결정 패턴, 디버깅 접근 방식, UX 선호도, 벤더 선택, 불만 요인, 학습 스타일, 설명 깊이.

@@ -1,6 +1,6 @@
 ---
 name: sdd-eval-auditor
-description: Retroactive audit of an implemented AI phase's evaluation coverage. Checks implementation against the AI-SPEC.md evaluation plan. Scores each eval dimension as COVERED/PARTIAL/MISSING. Produces a scored EVAL-REVIEW.md with findings, gaps, and remediation guidance. Spawned by /sdd-eval-review orchestrator.
+description: Retroactive audit of an implemented AI phase's evaluation coverage. Checks implementation against the AI-SPEC.md evaluation plan. Scores each eval dimension as COVERED/PARTIAL/MISSING. Produces a scored EVAL-REVIEW.md with findings, gaps, and remediation guidance. Spawned by /sdd:eval-review orchestrator.
 tools: Read, Write, Bash, Grep, Glob
 color: "#EF4444"
 # hooks:

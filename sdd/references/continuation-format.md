@@ -50,7 +50,7 @@ Standard format for presenting next steps after completing a command or workflow
 
 `/clear` then:
 
-`/sdd-execute-phase 2`
+`/sdd:execute-phase 2`
 
 ---
 
@@ -75,7 +75,7 @@ Add note that this is the last plan and what comes after:
 
 `/clear` then:
 
-`/sdd-execute-phase 2`
+`/sdd:execute-phase 2`
 
 ---
 
@@ -97,13 +97,13 @@ Add note that this is the last plan and what comes after:
 
 `/clear` then:
 
-`/sdd-plan-phase 2`
+`/sdd:plan-phase 2`
 
 ---
 
 **Also available:**
-- `/sdd-discuss-phase 2` — gather context first
-- `/sdd-plan-phase --research-phase 2` — investigate unknowns
+- `/sdd:discuss-phase 2` — gather context first
+- `/sdd:plan-phase --research-phase 2` — investigate unknowns
 - Review roadmap
 
 ---
@@ -126,13 +126,13 @@ Show completion status before next action:
 
 `/clear` then:
 
-`/sdd-plan-phase 3`
+`/sdd:plan-phase 3`
 
 ---
 
 **Also available:**
-- `/sdd-discuss-phase 3` — gather context first
-- `/sdd-plan-phase --research-phase 3` — investigate unknowns
+- `/sdd:discuss-phase 3` — gather context first
+- `/sdd:plan-phase --research-phase 3` — investigate unknowns
 - Review what Phase 2 built
 
 ---
@@ -151,11 +151,11 @@ When there's no clear primary action:
 
 `/clear` then one of:
 
-**To plan directly:** `/sdd-plan-phase 3`
+**To plan directly:** `/sdd:plan-phase 3`
 
-**To discuss context first:** `/sdd-discuss-phase 3`
+**To discuss context first:** `/sdd:discuss-phase 3`
 
-**To research unknowns:** `/sdd-plan-phase --research-phase 3`
+**To research unknowns:** `/sdd:plan-phase --research-phase 3`
 
 ---
 ```
@@ -175,7 +175,7 @@ All 4 phases shipped
 
 `/clear` then:
 
-`/sdd-new-milestone`
+`/sdd:new-milestone`
 
 ---
 ```
@@ -218,7 +218,7 @@ Extract: `**02-03: Refresh Token Rotation** — Add /api/auth/refresh with slidi
 ## To Continue
 
 Run `/clear`, then paste:
-/sdd-execute-phase 2
+/sdd:execute-phase 2
 ```
 
 User has no idea what 02-03 is about.
@@ -226,7 +226,7 @@ User has no idea what 02-03 is about.
 ### Don't: Missing /clear explanation
 
 ```
-`/sdd-plan-phase 3`
+`/sdd:plan-phase 3`
 
 Run /clear first.
 ```
@@ -246,7 +246,7 @@ Sounds like an afterthought. Use "Also available:" instead.
 
 ```
 ```
-/sdd-plan-phase 3
+/sdd:plan-phase 3
 ```
 ```
 

@@ -41,7 +41,7 @@ if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 Check `roadmap_exists` from init JSON. If false:
 ```
 ERROR: No roadmap found (.planning/ROADMAP.md)
-Run /sdd-new-project to initialize.
+Run /sdd:new-project to initialize.
 ```
 Exit.
 </step>
@@ -58,7 +58,7 @@ Parse the JSON result. If `found` is false:
 ```
 ERROR: Phase {target} not found in ROADMAP.md
 
-Available phases can be seen with /sdd-progress.
+Available phases can be seen with /sdd:progress.
 ```
 
 Exit.
@@ -258,9 +258,9 @@ Fields changed: {changed_field_list}
 
 ## What's Next
 
-- `/sdd-progress` — view updated roadmap
-- `/sdd-plan-phase {target}` — re-plan this phase (if needed)
-- `/sdd-discuss-phase {target}` — discuss implementation approach
+- `/sdd:progress` — view updated roadmap
+- `/sdd:plan-phase {target}` — re-plan this phase (if needed)
+- `/sdd:discuss-phase {target}` — discuss implementation approach
 
 ---
 ```

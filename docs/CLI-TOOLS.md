@@ -207,7 +207,9 @@ node sdd-tools.cjs config-set-model-profile <profile>
 ```bash
 # Get model for agent based on current profile
 node sdd-tools.cjs resolve-model <agent-name>
-# Returns: opus | sonnet | haiku | inherit
+# Raw output returns the selected model ID/tier.
+# JSON output also includes profile and, when the active runtime supports it,
+# reasoning_effort.
 ```
 
 Agent names: `sdd-planner`, `sdd-executor`, `sdd-phase-researcher`, `sdd-project-researcher`, `sdd-research-synthesizer`, `sdd-verifier`, `sdd-plan-checker`, `sdd-integration-checker`, `sdd-roadmapper`, `sdd-debugger`, `sdd-codebase-mapper`, `sdd-nyquist-auditor`
@@ -418,14 +420,15 @@ node sdd-tools.cjs audit-uat
 # Cross-artifact audit queue — scan `.planning/` for unresolved audit items
 node sdd-tools.cjs audit-open [--json]
 
-# Reverse-migrate a SDD-2 project into the current structure (backs `/sdd-from-gsd2`)
+# Reverse-migrate a SDD-2 project into the current structure (backs `/sdd-import --from-gsd2`)
 node sdd-tools.cjs from-gsd2 [--path <dir>] [--force] [--dry-run]
 
 # Git commit with config checks
-node sdd-tools.cjs commit <message> [--files f1 f2] [--amend] [--no-verify]
+node sdd-tools.cjs commit <message> [--files f1 f2] [--amend] [--no-verify] [--respect-staged]
 ```
 
 > `--no-verify`: Skips pre-commit hooks. Used by parallel executor agents during wave-based execution to avoid build lock contention (e.g., cargo lock fights in Rust projects). The orchestrator runs hooks once after each wave completes. Do not use `--no-verify` during sequential execution — let hooks run normally.
+> `--files <paths>` **staging behaviour**: by default, `--files` runs `git add -- <path>` for each named file before committing. This overwrites any per-hunk staging set up via `git add -p`. Pass `--respect-staged` to skip the `git add` step and commit only what is already in the index within the requested pathspec. If nothing is staged within that scope, the command returns `{ committed: false, reason: 'nothing staged' }` without error. The trailing `-- <paths>` pathspec on the commit is applied under both modes, so files staged outside the `--files` scope are never included (#3061 invariant).
 
 # Web search (requires Brave API key)
 node sdd-tools.cjs websearch <query> [--limit N] [--freshness day|week|month]
@@ -481,14 +484,14 @@ User-facing entry point: `/sdd-graphify` (see [Command Reference](COMMANDS.md#sd
 | Graphify | `lib/graphify.cjs` | Knowledge graph build/query/status/diff/snapshot (backs `/sdd-graphify`) |
 | Learnings | `lib/learnings.cjs` | Extract learnings from phases/SUMMARY artifacts (backs `/sdd-extract-learnings`) |
 | Audit | `lib/audit.cjs` | Phase/milestone audit queue handlers; `audit-open` helper |
-| GSD2 Import | `lib/gsd2-import.cjs` | Reverse-migration importer from SDD-2 projects (backs `/sdd-from-gsd2`) |
+| GSD2 Import | `lib/gsd2-import.cjs` | Reverse-migration importer from SDD-2 projects (backs `/sdd-import --from-gsd2`) |
 | Intel | `lib/intel.cjs` | Queryable codebase intelligence index (backs `/sdd-map-codebase --query`) |
 
 ---
 
 ## Reviewer CLI Routing
 
-`review.models.<cli>` maps a reviewer flavor to a shell command invoked by the code-review workflow. Set via [`/sdd-settings-integrations`](COMMANDS.md#sdd-settings-integrations) or directly:
+`review.models.<cli>` maps a reviewer flavor to a shell command invoked by the code-review workflow. Set via [`/sdd-config --integrations`](COMMANDS.md#sdd-config) or directly:
 
 ```bash
 sdd-sdk query config-set review.models.codex    "codex exec --model gpt-5"
@@ -501,7 +504,7 @@ Slugs are validated against `[a-zA-Z0-9_-]+`; empty or path-containing slugs are
 
 ## Secret Handling
 
-API keys configured via `/sdd-settings-integrations` (`brave_search`, `firecrawl`, `exa_search`) are written plaintext to `.planning/config.json` but are masked (`****<last-4>`) in every `config-set` / `config-get` output, confirmation table, and interactive prompt. See `sdd/bin/lib/secrets.cjs` for the masking implementation. The `config.json` file itself is the security boundary — protect it with filesystem permissions and keep it out of git (`.planning/` is gitignored by default).
+API keys configured via `/sdd-settings` (`brave_search`, `firecrawl`, `exa_search`) are written plaintext to `.planning/config.json` but are masked (`****<last-4>`) in every `config-set` / `config-get` output, confirmation table, and interactive prompt. See `sdd/bin/lib/secrets.cjs` for the masking implementation. The `config.json` file itself is the security boundary — protect it with filesystem permissions and keep it out of git (`.planning/` is gitignored by default).
 
 ---
 

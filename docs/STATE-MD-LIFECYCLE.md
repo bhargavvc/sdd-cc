@@ -107,7 +107,7 @@ is to use the lifecycle stage:
 | `/sdd-discuss-phase` | `discussing` |
 | `/sdd-plan-phase` | `planning` |
 | `/sdd-execute-phase` | `executing` |
-| `/sdd-verify-phase` | `verifying` |
+| `/sdd-verify-work` | `verifying` |
 
 If `status` is left at `in_progress` (the milestone-level value), Scene 1
 renders just `Phase 4.5` without the stage suffix.

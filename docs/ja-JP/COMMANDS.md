@@ -546,15 +546,15 @@ SDDの保証付きでアドホックタスクを実行します。
 /sdd-autonomous --only 4            # フェーズ4のみを自律実行
 ```
 
-### `/sdd-do`
+### `/sdd-fast`
 
 フリーテキストを適切なSDDコマンドにルーティングします。
 
 ```bash
-/sdd-do                             # その後、やりたいことを説明
+/sdd-fast                             # その後、やりたいことを説明
 ```
 
-### `/sdd-note`
+### `/sdd-capture`
 
 手軽にアイデアをキャプチャ — メモの追加、一覧表示、またはTodoへの昇格。
 
@@ -569,9 +569,9 @@ SDDの保証付きでアドホックタスクを実行します。
 | `--global` | メモ操作にグローバルスコープを使用 |
 
 ```bash
-/sdd-note "Consider caching strategy for API responses"
-/sdd-note list
-/sdd-note promote 3
+/sdd-capture "Consider caching strategy for API responses"
+/sdd-capture list
+/sdd-capture promote 3
 ```
 
 ### `/sdd-debug`
@@ -642,7 +642,6 @@ Claude Codeのセッション分析から8つの次元（コミュニケーシ�
 
 **生成されるアーティファクト:**
 - `USER-PROFILE.md` — 完全な行動プロファイル
-- `/sdd-dev-preferences` コマンド — 任意のセッションでプリファレンスをロード
 - `CLAUDE.md` プロファイルセクション — Claude Codeが自動検出
 
 ```bash

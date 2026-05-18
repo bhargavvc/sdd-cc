@@ -28,7 +28,7 @@ AUDITOR_MODEL=$(sdd-sdk query resolve-model sdd-security-auditor --raw)
 SECURITY_CFG=$(sdd-sdk query config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 ```
 
-If `SECURITY_CFG` is `false`: exit with "Security enforcement disabled. Enable via /sdd-settings."
+If `SECURITY_CFG` is `false`: exit with "Security enforcement disabled. Enable via /sdd:settings."
 
 Display banner: `SDD > SECURE PHASE {N}: {name}`
 
@@ -42,7 +42,7 @@ SUMMARY_FILES=$(ls "${PHASE_DIR}"/*-SUMMARY.md 2>/dev/null)
 
 - **State A** (`SECURITY_FILE` non-empty): Audit existing
 - **State B** (`SECURITY_FILE` empty, `PLAN_FILES` and `SUMMARY_FILES` non-empty): Run from artifacts
-- **State C** (`SUMMARY_FILES` empty): Exit — "Phase {N} not executed. Run /sdd-execute-phase {N} first."
+- **State C** (`SUMMARY_FILES` empty): Exit — "Phase {N} not executed. Run /sdd:execute-phase {N} first."
 
 ## 2. Discovery
 
@@ -137,7 +137,7 @@ Handle return:
 ```
 SDD > PHASE {N} SECURITY BLOCKED
 {K} threats open — phase advancement blocked until threats_open: 0
-▶ Fix mitigations then re-run: /sdd-secure-phase {N}
+▶ Fix mitigations then re-run: /sdd:secure-phase {N}
 ▶ Or document accepted risks in SECURITY.md and re-run.
 ```
 
@@ -155,8 +155,8 @@ sdd-sdk query commit "docs(phase-${PHASE}): add/update security threat verificat
 ```
 SDD > PHASE {N} THREAT-SECURE
 threats_open: 0 — all threats have dispositions.
-▶ /sdd-validate-phase {N}    validate test coverage
-▶ /sdd-verify-work {N}       run UAT
+▶ /sdd:validate-phase {N}    validate test coverage
+▶ /sdd:verify-work {N}       run UAT
 ```
 
 Display `/clear` reminder.

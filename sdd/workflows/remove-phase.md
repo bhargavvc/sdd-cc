@@ -53,7 +53,7 @@ Only future phases can be removed:
 - Current phase: {current}
 - Phase {target} is current or completed
 
-To abandon current work, use /sdd-pause-work instead.
+To abandon current work, use /sdd:pause-work instead.
 ```
 
 Exit.
@@ -126,7 +126,7 @@ Changes:
 ## What's Next
 
 Would you like to:
-- `/sdd-progress` — see updated roadmap status
+- `/sdd:progress` — see updated roadmap status
 - Continue with current phase
 - Review roadmap
 

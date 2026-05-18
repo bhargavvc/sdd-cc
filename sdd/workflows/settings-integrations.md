@@ -5,7 +5,7 @@ agent-skill injection (`agent_skills.<agent-type>`). Writes to
 `.planning/config.json` via `sdd-sdk`/`sdd-tools` so unrelated keys are
 preserved, never clobbered.
 
-This command is deliberately separate from `/sdd-settings` (workflow toggles)
+This command is deliberately separate from `/sdd:settings` (workflow toggles)
 and any `/sdd-settings-advanced` tuning surface. It exists because API keys and
 cross-tool routing are *connectivity* concerns, not workflow or tuning knobs.
 </purpose>
@@ -264,7 +264,7 @@ Notes:
   and not displayed in error messages.
 
 Quick commands:
-- /sdd-settings — workflow toggles and model profile
+- /sdd:settings — workflow toggles and model profile
 - /sdd-set-profile <profile> — switch model profile
 ```
 </step>

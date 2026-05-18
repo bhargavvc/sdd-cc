@@ -21,8 +21,8 @@
  * pattern introduced by #2551).
  *
  * See:
- *   - https://github.com/bhargavvc/sdd-cc/issues/2551 (this test)
- *   - https://github.com/bhargavvc/sdd-cc/issues/2361 (agent budget)
+ *   - https://github.com/gsd-build/sdd/issues/2551 (this test)
+ *   - https://github.com/gsd-build/sdd/issues/2361 (agent budget)
  */
 
 const { test, describe } = require('node:test');

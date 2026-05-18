@@ -14,7 +14,7 @@ const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'sdd');
 const NAMESPACE_SKILLS = [
   { file: 'ns-workflow.md', name: 'sdd-workflow' },
   { file: 'ns-project.md',  name: 'sdd-project' },
-  { file: 'ns-review.md',   name: 'sdd-review' },
+  { file: 'ns-review.md',   name: 'sdd-quality' },
   { file: 'ns-context.md',  name: 'sdd-context' },
   { file: 'ns-manage.md',   name: 'sdd-manage' },
   { file: 'ns-ideate.md',   name: 'sdd-ideate' },

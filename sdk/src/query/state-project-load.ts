@@ -13,38 +13,9 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { homedir } from 'node:os';
-import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { planningPaths } from './helpers.js';
 import type { QueryHandler } from './utils.js';
-import { SDDError, ErrorClassification } from '../errors.js';
-
-const BUNDLED_CORE_CJS = fileURLToPath(
-  new URL('../../../sdd/bin/lib/core.cjs', import.meta.url),
-);
-
-function resolveCoreCjsPath(projectDir: string): string | null {
-  const candidates = [
-    BUNDLED_CORE_CJS,
-    join(projectDir, '.claude', 'sdd', 'bin', 'lib', 'core.cjs'),
-    join(homedir(), '.claude', 'sdd', 'bin', 'lib', 'core.cjs'),
-  ];
-  return candidates.find(p => existsSync(p)) ?? null;
-}
-
-function loadConfigCjs(projectDir: string): Record<string, unknown> {
-  const corePath = resolveCoreCjsPath(projectDir);
-  if (!corePath) {
-    throw new SDDError(
-      'state load: sdd/bin/lib/core.cjs not found. Install SDD (e.g. npm i -g @bhargavvc/sdd-cc) or clone with sdd next to the SDK.',
-      ErrorClassification.Blocked,
-    );
-  }
-  const req = createRequire(import.meta.url);
-  const { loadConfig } = req(corePath) as { loadConfig: (cwd: string) => Record<string, unknown> };
-  return loadConfig(projectDir);
-}
+import { loadLegacyCoreConfig } from '../sdk-package-compatibility.js';
 
 /**
  * Query handler for `state load` / bare `state` (normalize → `state.load`).
@@ -52,7 +23,7 @@ function loadConfigCjs(projectDir: string): Record<string, unknown> {
  * Port of `cmdStateLoad` from `sdd/bin/lib/state.cjs` lines 44–86.
  */
 export const stateProjectLoad: QueryHandler = async (_args, projectDir, workstream) => {
-  const config = loadConfigCjs(projectDir);
+  const config = loadLegacyCoreConfig(projectDir);
   const planDir = planningPaths(projectDir, workstream).planning;
 
   let stateRaw = '';

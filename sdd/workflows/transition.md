@@ -7,10 +7,10 @@ There is no `/sdd-transition` command. This workflow is invoked automatically by
 verification. Users should never be told to run `/sdd-transition`.
 
 **Valid user commands for phase progression:**
-- `/sdd-discuss-phase {N}` — discuss a phase before planning
-- `/sdd-plan-phase {N}` — plan a phase
-- `/sdd-execute-phase {N}` — execute a phase
-- `/sdd-progress` — see roadmap progress
+- `/sdd:discuss-phase {N}` — discuss a phase before planning
+- `/sdd:plan-phase {N}` — plan a phase
+- `/sdd:execute-phase {N}` — execute a phase
+- `/sdd:progress` — see roadmap progress
 
 </internal_workflow>
 
@@ -93,7 +93,7 @@ Append to the completion confirmation message (regardless of mode):
 Outstanding verification items in this phase:
 {list filenames}
 
-These will carry forward as debt. Review: `/sdd-audit-uat`
+These will carry forward as debt. Review: `/sdd:audit-uat`
 ```
 
 This does NOT block transition — it ensures the user sees the debt before confirming.
@@ -468,7 +468,7 @@ Next: Phase [X+1] — [Name]
 ⚡ Auto-continuing: Plan Phase [X+1] in detail
 ```
 
-Exit skill and invoke SlashCommand("/sdd-plan-phase [X+1] --auto ${SDD_WS}")
+Exit skill and invoke SlashCommand("/sdd:plan-phase [X+1] --auto ${SDD_WS}")
 
 **If CONTEXT.md does NOT exist:**
 
@@ -480,7 +480,7 @@ Next: Phase [X+1] — [Name]
 ⚡ Auto-continuing: Discuss Phase [X+1] first
 ```
 
-Exit skill and invoke SlashCommand("/sdd-discuss-phase [X+1] --auto ${SDD_WS}")
+Exit skill and invoke SlashCommand("/sdd:discuss-phase [X+1] --auto ${SDD_WS}")
 
 </if>
 
@@ -499,13 +499,13 @@ Exit skill and invoke SlashCommand("/sdd-discuss-phase [X+1] --auto ${SDD_WS}")
 
 `/clear` then:
 
-`/sdd-discuss-phase [X+1] ${SDD_WS}` — gather context and clarify approach
+`/sdd:discuss-phase [X+1] ${SDD_WS}` — gather context and clarify approach
 
 ---
 
 **Also available:**
-- `/sdd-plan-phase [X+1] ${SDD_WS}` — skip discussion, plan directly
-- `/sdd-plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
+- `/sdd:plan-phase [X+1] ${SDD_WS}` — skip discussion, plan directly
+- `/sdd:plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
 
 ---
 ```
@@ -524,13 +524,13 @@ Exit skill and invoke SlashCommand("/sdd-discuss-phase [X+1] --auto ${SDD_WS}")
 
 `/clear` then:
 
-`/sdd-plan-phase [X+1] ${SDD_WS}`
+`/sdd:plan-phase [X+1] ${SDD_WS}`
 
 ---
 
 **Also available:**
-- `/sdd-discuss-phase [X+1] ${SDD_WS}` — revisit context
-- `/sdd-plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
+- `/sdd:discuss-phase [X+1] ${SDD_WS}` — revisit context
+- `/sdd:plan-phase --research-phase [X+1] ${SDD_WS}` — investigate unknowns
 
 ---
 ```
@@ -576,18 +576,18 @@ This workstream's phases are complete. Other workstreams are still active:
 
 Archive this workstream:
 
-`/sdd-workstreams complete {current_ws_name} ${SDD_WS}`
+`/sdd:workstreams complete {current_ws_name} ${SDD_WS}`
 
 See overall milestone progress:
 
-`/sdd-workstreams progress ${SDD_WS}`
+`/sdd:workstreams progress ${SDD_WS}`
 
 <sub>Milestone completion will be available once all workstreams finish.</sub>
 
 ---
 ```
 
-Do NOT suggest `/sdd-complete-milestone` or `/sdd-new-milestone`.
+Do NOT suggest `/sdd:complete-milestone` or `/sdd:new-milestone`.
 Do NOT auto-invoke any further slash commands.
 
 **Stop here.** The user must explicitly decide what to do next.
@@ -615,7 +615,7 @@ Phase {X} marked complete.
 ⚡ Auto-continuing: Complete milestone and archive
 ```
 
-Exit skill and invoke SlashCommand("/sdd-complete-milestone {version} ${SDD_WS}")
+Exit skill and invoke SlashCommand("/sdd:complete-milestone {version} ${SDD_WS}")
 
 </if>
 
@@ -634,7 +634,7 @@ Exit skill and invoke SlashCommand("/sdd-complete-milestone {version} ${SDD_WS}"
 
 `/clear` then:
 
-`/sdd-complete-milestone {version} ${SDD_WS}`
+`/sdd:complete-milestone {version} ${SDD_WS}`
 
 ---
 

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const dispatchSpy = vi.hoisted(() => vi.fn());
 const runQueryDispatchSpy = vi.hoisted(() => vi.fn());
+const resolveSddToolsPathSeamSpy = vi.hoisted(() => vi.fn(() => '/mock/sdd-tools.cjs'));
 
 vi.mock('./helpers.js', () => ({
   findProjectRoot: (projectDir: string) => projectDir,
@@ -15,12 +16,18 @@ vi.mock('./query-dispatch.js', () => ({
   runQueryDispatch: (...args: unknown[]) => runQueryDispatchSpy(...args),
 }));
 
+vi.mock('../query-sdd-tools-path.js', () => ({
+  resolveSddToolsPath: (...args: unknown[]) => resolveSddToolsPathSeamSpy(...args),
+}));
+
 import { runQueryCliCommand } from './query-cli-adapter.js';
 
 describe('query-cli-adapter', () => {
   beforeEach(() => {
     dispatchSpy.mockReset();
     runQueryDispatchSpy.mockReset();
+    resolveSddToolsPathSeamSpy.mockReset();
+    resolveSddToolsPathSeamSpy.mockReturnValue('/mock/sdd-tools.cjs');
   });
 
   it('returns validation failure for missing query command', async () => {
@@ -52,6 +59,20 @@ describe('query-cli-adapter', () => {
     await runQueryCliCommand({
       projectDir: process.cwd(),
       ws: 'alpha',
+      queryArgv: ['state', 'show'],
+    });
+  });
+
+  it('wires resolveSddToolsPath from the query seam module', async () => {
+    runQueryDispatchSpy.mockImplementationOnce(async (input: any) => {
+      expect(typeof input.resolveSddToolsPath).toBe('function');
+      expect(input.resolveSddToolsPath('/tmp/project')).toBe('/mock/sdd-tools.cjs');
+      expect(resolveSddToolsPathSeamSpy).toHaveBeenCalledWith('/tmp/project');
+      return { ok: true, exit_code: 0, stdout: '', stderr: [] };
+    });
+
+    await runQueryCliCommand({
+      projectDir: process.cwd(),
       queryArgv: ['state', 'show'],
     });
   });

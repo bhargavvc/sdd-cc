@@ -28,7 +28,7 @@ Todos are captured during work sessions with /sdd-add-todo.
 
 Would you like to:
 
-1. Continue with current phase (/sdd-progress)
+1. Continue with current phase (/sdd:progress)
 2. Add a todo now (/sdd-add-todo)
 ```
 
@@ -37,8 +37,8 @@ Exit.
 
 <step name="parse_filter">
 Check for area filter in arguments:
-- `/sdd-capture --list` → show all
-- `/sdd-capture --list api` → filter to area:api only
+- `/sdd:capture --list` → show all
+- `/sdd:capture --list api` → filter to area:api only
 </step>
 
 <step name="list_todos">
@@ -56,7 +56,7 @@ Pending Todos:
 ---
 
 Reply with a number to view details, or:
-- `/sdd-capture --list [area]` to filter by area
+- `/sdd:capture --list [area]` to filter by area
 - `q` to exit
 ```
 

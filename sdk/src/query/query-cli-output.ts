@@ -1,5 +1,5 @@
 import { SDDError, exitCodeFor } from '../errors.js';
-import { SDDToolsError } from '../sdd-tools.js';
+import { SDDToolsError } from '../sdd-tools-error.js';
 import type { QueryDispatchResult } from './query-dispatch-contract.js';
 
 export interface QueryCliAdapterOutput {

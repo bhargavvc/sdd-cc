@@ -209,8 +209,8 @@ describe('/sdd-settings advertises /sdd-settings-advanced', () => {
   test('settings workflow mentions canonical /sdd-config --advanced', () => {
     const text = fs.readFileSync(SETTINGS_WORKFLOW_PATH, 'utf-8');
     assert.ok(
-      text.includes('sdd-config --advanced'),
-      'sdd/workflows/settings.md must mention /sdd-config --advanced'
+      text.includes('/sdd:config --advanced'),
+      'sdd/workflows/settings.md must mention /sdd:config --advanced'
     );
     assert.ok(
       !text.includes('sdd-settings-advanced') && !text.includes('sdd:settings-advanced'),

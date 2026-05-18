@@ -45,8 +45,8 @@ Full roster at `agents/sdd-*.md`. The "Primary doc" column flags whether [`docs/
 | sdd-domain-researcher | Surfaces domain-expert evaluation criteria and failure modes for an AI system (AI-SPEC.md §1b). | `/sdd-ai-integration-phase` | advanced stub |
 | sdd-eval-planner | Designs structured evaluation strategy for an AI phase (AI-SPEC.md §5–§7). | `/sdd-ai-integration-phase` | advanced stub |
 | sdd-eval-auditor | Retroactive audit of an AI phase's evaluation coverage; produces EVAL-REVIEW.md (COVERED/PARTIAL/MISSING). | `/sdd-eval-review` | advanced stub |
-| sdd-framework-selector | ≤6-question interactive decision matrix that scores and recommends an AI/LLM framework. | `/sdd-ai-integration-phase`, `/sdd-select-framework` | advanced stub |
-| sdd-intel-updater | Writes structured intel files (`.planning/intel/*.json`) used as a queryable codebase knowledge base. | `/sdd-intel` | advanced stub |
+| sdd-framework-selector | ≤6-question interactive decision matrix that scores and recommends an AI/LLM framework. | `/sdd-ai-integration-phase` | advanced stub |
+| sdd-intel-updater | Writes structured intel files (`.planning/intel/*.json`) used as a queryable codebase knowledge base. | `/sdd-map-codebase --query` | advanced stub |
 | sdd-doc-classifier | Classifies a single planning document as ADR, PRD, SPEC, DOC, or UNKNOWN; spawned in parallel to process the doc corpus. | `/sdd-ingest-docs` | advanced stub |
 | sdd-doc-synthesizer | Synthesizes classified planning docs into a single consolidated context with precedence rules, cycle detection, and three-bucket conflicts report. | `/sdd-ingest-docs` | advanced stub |
 
@@ -54,7 +54,7 @@ Full roster at `agents/sdd-*.md`. The "Primary doc" column flags whether [`docs/
 
 ---
 
-## Commands (66 shipped)
+## Commands (67 shipped)
 
 Full roster at `commands/sdd/*.md`. The groupings below mirror `docs/COMMANDS.md` section order; each row carries the command name, a one-line role derived from the command's frontmatter `description:`, and a link to the source file. `tests/command-count-sync.test.cjs` locks the count against the filesystem.
 
@@ -64,12 +64,12 @@ These six routers are descriptor-only entries that the model picks first; the bo
 
 | Command | Role | Source |
 |---------|------|--------|
-| `/sdd-ns-workflow` | Phase pipeline router — discuss / plan / execute / verify / phase / progress. | [commands/sdd/ns-workflow.md](../commands/sdd/ns-workflow.md) |
-| `/sdd-ns-project` | Project lifecycle router — milestones, audits, summary. | [commands/sdd/ns-project.md](../commands/sdd/ns-project.md) |
-| `/sdd-ns-review` | Quality-gate router — code review, debug, audit, security, eval, ui. | [commands/sdd/ns-review.md](../commands/sdd/ns-review.md) |
-| `/sdd-ns-context` | Codebase-intelligence router — map, graphify, docs, learnings. | [commands/sdd/ns-context.md](../commands/sdd/ns-context.md) |
-| `/sdd-ns-manage` | Management router — config, workspace, workstreams, thread, update, ship, inbox. | [commands/sdd/ns-manage.md](../commands/sdd/ns-manage.md) |
-| `/sdd-ns-ideate` | Exploration & capture router — explore, sketch, spike, spec, capture. | [commands/sdd/ns-ideate.md](../commands/sdd/ns-ideate.md) |
+| `/sdd-workflow` | Phase pipeline router — discuss / plan / execute / verify / phase / progress. | [commands/sdd/ns-workflow.md](../commands/sdd/ns-workflow.md) |
+| `/sdd-project` | Project lifecycle router — milestones, audits, summary. | [commands/sdd/ns-project.md](../commands/sdd/ns-project.md) |
+| `/sdd-quality` | Quality-gate router — code review, debug, audit, security, eval, ui. | [commands/sdd/ns-review.md](../commands/sdd/ns-review.md) |
+| `/sdd-context` | Codebase-intelligence router — map, graphify, docs, learnings. | [commands/sdd/ns-context.md](../commands/sdd/ns-context.md) |
+| `/sdd-manage` | Management router — config, workspace, workstreams, thread, update, ship, inbox. | [commands/sdd/ns-manage.md](../commands/sdd/ns-manage.md) |
+| `/sdd-ideate` | Exploration & capture router — explore, sketch, spike, spec, capture. | [commands/sdd/ns-ideate.md](../commands/sdd/ns-ideate.md) |
 
 ### Core Workflow
 
@@ -158,6 +158,7 @@ These six routers are descriptor-only entries that the model picks first; the bo
 | `/sdd-settings` | Configure SDD workflow toggles and model profile. | [commands/sdd/settings.md](../commands/sdd/settings.md) |
 | `/sdd-config` | Configure SDD settings — workflow toggles (default), advanced knobs (`--advanced`), integrations (`--integrations`), or model profile (`--profile`). | [commands/sdd/config.md](../commands/sdd/config.md) |
 | `/sdd-pr-branch` | Create a clean PR branch by filtering out `.planning/` commits. | [commands/sdd/pr-branch.md](../commands/sdd/pr-branch.md) |
+| `/sdd-surface` | Toggle which skills are surfaced — apply a profile, list, or disable a cluster without reinstall. | [commands/sdd/surface.md](../commands/sdd/surface.md) |
 | `/sdd-update` | Update SDD to latest version; use `--sync` to sync skills across runtimes or `--reapply` to reapply local patches. | [commands/sdd/update.md](../commands/sdd/update.md) |
 | `/sdd-help` | Show available SDD commands and usage guide. | [commands/sdd/help.md](../commands/sdd/help.md) |
 
@@ -232,7 +233,7 @@ Full roster at `sdd/workflows/*.md`. Workflows are thin orchestrators that comma
 | `remove-workspace.md` | Remove a SDD workspace and clean up worktrees. | `/sdd-workspace --remove` |
 | `resume-project.md` | Resume work — restore full context from STATE.md, HANDOFF.json, and artifacts. | `/sdd-resume-work` |
 | `review.md` | Cross-AI plan review via external CLIs; produces REVIEWS.md. | `/sdd-review` |
-| `scan.md` | Rapid single-focus codebase scan — lightweight alternative to map-codebase. | `/sdd-scan` |
+| `scan.md` | Rapid single-focus codebase scan — lightweight alternative to map-codebase. | `/sdd-map-codebase --fast` |
 | `secure-phase.md` | Retroactive threat-mitigation audit for a completed phase. | `/sdd-secure-phase` |
 | `session-report.md` | Session report — token usage, work summary, outcomes. | `/sdd-pause-work --report` |
 | `settings.md` | Configure SDD workflow toggles and model profile. | `/sdd-settings`, `/sdd-config --profile` |
@@ -261,7 +262,7 @@ Full roster at `sdd/workflows/*.md`. Workflows are thin orchestrators that comma
 
 ---
 
-## References (59 shipped)
+## References (60 shipped)
 
 Full roster at `sdd/references/*.md`. References are shared knowledge documents that workflows and agents `@-reference`. The groupings below match [`docs/ARCHITECTURE.md`](ARCHITECTURE.md#references-sddreferencesmd) — core, workflow, thinking-model clusters, and the modular planner decomposition.
 
@@ -350,22 +351,27 @@ The `sdd-planner` agent is decomposed into a core agent plus reference modules t
 | `planner-revision.md` | Plan revision patterns for iterative refinement. |
 | `planner-source-audit.md` | Planner source-audit and authority-limit rules. |
 | `planner-mvp-mode.md` | Vertical-slice planning rules for MVP mode. |
+| `planner-human-verify-mode.md` | Rules for `workflow.human_verify_mode = end-of-phase`: suppress `checkpoint:human-verify` task emission and route deferred items via `<verify><human-check>`. |
 | `skeleton-template.md` | SKELETON.md template emitted for new-project Walking Skeleton (Phase 1 + `--mvp`). |
 | `user-story-template.md` | User story format for MVP planning — "As a / I want to / So that" structured fields. |
 | `spidr-splitting.md` | SPIDR splitting decomposition rules for handling large user stories in MVP mode. |
 
-> **Subdirectory:** `sdd/references/few-shot-examples/` contains additional few-shot examples (`plan-checker.md`, `verifier.md`) that are referenced from specific agents. These are not counted in the 59 top-level references.
+> **Subdirectory:** `sdd/references/few-shot-examples/` contains additional few-shot examples (`plan-checker.md`, `verifier.md`) that are referenced from specific agents. These are not counted in the 60 top-level references.
 
 ---
 
-## CLI Modules (42 shipped)
+## CLI Modules (60 shipped)
 
 Full listing: `sdd/bin/lib/*.cjs`.
 
 | Module | Responsibility |
 |--------|----------------|
+| `active-workstream-store.cjs` | Workstream source precedence and selection (CLI `--ws` > `SDD_WORKSTREAM` env > stored pointer); name validation and environment propagation |
+| `adr-parser.cjs` | ADR decision parser for plan-phase ingest express path; normalizes section synonyms, parses status/decision/scope fences, and enforces status rejection gates |
 | `artifacts.cjs` | Canonical artifact registry — known `.planning/` root file names; used by `sdd-health` W019 lint |
 | `audit.cjs` | Audit dispatch, audit open sessions, audit storage helpers |
+| `cjs-command-router-adapter.cjs` | Shared compatibility adapter for manifest-backed CJS command-family routers |
+| `clusters.cjs` | Skill cluster definitions for the runtime surface module (ADR-0011 Phase 2) |
 | `command-aliases.generated.cjs` | Generated CJS alias/subcommand metadata for manifest-backed family routers |
 | `commands.cjs` | Misc CLI commands (slug, timestamp, todos, scaffolding, stats) |
 | `config-schema.cjs` | Single source of truth for `VALID_CONFIG_KEYS` and dynamic key patterns; imported by both the validator and the config-schema-docs parity test |
@@ -375,37 +381,51 @@ Full listing: `sdd/bin/lib/*.cjs`.
 | `decisions.cjs` | Shared parser for CONTEXT.md `<decisions>` blocks (D-NN entries); used by `gap-checker.cjs` and intended for #2492 plan/verify decision gates |
 | `docs.cjs` | Docs-update workflow init, Markdown scanning, monorepo detection |
 | `drift.cjs` | Post-execute codebase structural drift detector (#2003): classifies file changes into new-dir/barrel/migration/route categories and round-trips `last_mapped_commit` frontmatter |
+| `fallow-runner.cjs` | Fallow audit adapter for `/sdd-code-review`: binary resolution (`PATH` then `node_modules/.bin`), actionable missing-binary errors, and structural findings normalization |
 | `frontmatter.cjs` | YAML frontmatter CRUD operations |
 | `gap-checker.cjs` | Post-planning gap analysis (#2493): unified REQUIREMENTS.md + CONTEXT.md decisions vs PLAN.md coverage report (`sdd-tools gap-analysis`) |
 | `graphify.cjs` | Knowledge-graph build/query/status/diff for `/sdd-graphify` |
-| `gsd2-import.cjs` | External-plan ingest for `/sdd-from-gsd2` |
+| `gsd2-import.cjs` | External-plan ingest for `/sdd-import --from-gsd2` |
 | `init-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools init` |
 | `init.cjs` | Compound context loading for each workflow type |
 | `install-profiles.cjs` | Install profile allowlist + skill staging for `--minimal` install (#2762); single source of truth for which `sdd-*` skills/agents land in runtime config dirs |
-| `intel.cjs` | Codebase intel store backing `/sdd-intel` and `sdd-intel-updater` |
+| `installer-migration-authoring.cjs` | Installer migration authoring guardrails for record metadata, explicit scopes, ownership evidence, and runtime contract citations |
+| `installer-migration-report.cjs` | Installer migration report projection and blocked-action guard for install/update integration |
+| `installer-migrations.cjs` | Installer migration planning, artifact classification, install-state persistence, journaled apply, and rollback helpers |
+| `intel.cjs` | Codebase intel store backing `/sdd-map-codebase --query` and `sdd-intel-updater` |
 | `learnings.cjs` | Cross-phase learnings extraction for `/sdd-extract-learnings` |
 | `milestone.cjs` | Milestone archival, requirements marking |
-| `model-profiles.cjs` | Model profile resolution table (authoritative profile data) |
+| `model-catalog.cjs` | CJS adapter over the shared model catalog JSON; exports canonical runtime tier defaults, agent profile maps, alias maps, and routing metadata for all CLI consumers |
+| `model-profiles.cjs` | Backward-compatible profile helpers derived from `model-catalog.cjs`; no longer owns its own model table |
 | `phase-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools phase` |
 | `phase.cjs` | Phase directory operations, decimal numbering, plan indexing |
 | `phases-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools phases` |
+| `plan-scan.cjs` | Canonical phase-plan scanner — shared helper for detecting plan and summary files in flat and nested layouts (k014); consumed by state, roadmap, init, and workstream inventory paths |
 | `planning-workspace.cjs` | Planning path/workstream seam (`planningDir`, `planningPaths`, active-workstream routing, `.planning/.lock` orchestration) |
 | `profile-output.cjs` | Profile rendering, USER-PROFILE.md and dev-preferences.md generation |
 | `profile-pipeline.cjs` | User behavioral profiling data pipeline, session file scanning |
+| `review-reviewer-selection.cjs` | Reviewer selection/normalization helpers for `/sdd-review` default reviewer policy and precedence |
 | `roadmap-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools roadmap` |
 | `roadmap.cjs` | ROADMAP.md parsing, phase extraction, plan progress |
 | `runtime-homes.cjs` | Canonical runtime → global config/skills directory mapping; first-class support for all 15 runtimes including Hermes nested layout and Cline rules-based exclusion (#3126) |
 | `schema-detect.cjs` | Schema-drift detection for ORM patterns (Prisma, Drizzle, etc.) |
 | `secrets.cjs` | Secret-config masking convention (`****<last-4>`) for integration keys managed by `/sdd-config --integrations` — keeps plaintext out of `config-set` output |
 | `security.cjs` | Path traversal prevention, prompt injection detection, safe JSON/shell helpers |
+| `shell-command-projection.cjs` | Runtime-aware shell command projection for managed hook serialization: decides PowerShell call-operator usage by runtime/platform and normalizes Windows script path tokens |
 | `state-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools state` |
 | `state.cjs` | STATE.md parsing, updating, progression, metrics |
+| `state-document.cjs` | Pure STATE.md field extraction, replacement, status normalization, and progress calculation transforms |
+| `state-document.generated.cjs` | GENERATED — CJS artifact emitted from `sdk/src/query/state-document.ts` via `sdk/scripts/gen-state-document.ts`; do not edit directly |
+| `surface.cjs` | Runtime surface module — manages the runtime enable/disable surface state independently of the install-time profile marker (ADR-0011 Phase 2) |
 | `template.cjs` | Template selection and filling with variable substitution |
 | `uat.cjs` | UAT file parsing, verification debt tracking, audit-uat support |
 | `validate-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools validate` |
 | `verify-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools verify` |
 | `verify.cjs` | Plan structure, phase completeness, reference, commit validation |
+| `workstream-inventory.cjs` | Shared workstream inventory projection: state fields, phase/plan/summary counts, roadmap phase count, and active marker |
+| `workstream-name-policy.cjs` | Canonical workstream name validation (`isValidActiveWorkstreamName`) and slug normalization (`toWorkstreamSlug`); shared by all workstream callers |
 | `workstream.cjs` | Workstream CRUD, migration, session-scoped active pointer |
+| `worktree-safety.cjs` | Worktree-root resolution and non-destructive prune policy decisions; owns W017 health-check logic |
 
 [`docs/CLI-TOOLS.md`](CLI-TOOLS.md) may describe a subset of these modules; when it disagrees with the filesystem, this table and the directory listing are authoritative.
 

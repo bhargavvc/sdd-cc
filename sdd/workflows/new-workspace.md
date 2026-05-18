@@ -73,7 +73,7 @@ Error:
 No git repos found in the current directory and this is not a git repo.
 
 Run this command from a directory containing git repos, or specify repos explicitly:
-  /sdd-workspace --new --name my-workspace --repos /path/to/repo1,/path/to/repo2
+  /sdd:workspace --new --name my-workspace --repos /path/to/repo1,/path/to/repo2
 ```
 Exit.
 
@@ -84,7 +84,7 @@ Error:
 Error: --auto requires --repos to specify which repos to include.
 
 Usage:
-  /sdd-workspace --new --name my-workspace --repos repo1,repo2 --auto
+  /sdd:workspace --new --name my-workspace --repos repo1,repo2 --auto
 ```
 Exit.
 
@@ -203,7 +203,7 @@ Workspace created: $TARGET_PATH
 
 Next steps:
   cd "$TARGET_PATH"
-  /sdd-new-project    # Initialize SDD in the workspace
+  /sdd:new-project    # Initialize SDD in the workspace
 ```
 
 **If some repos failed:**
@@ -216,7 +216,7 @@ Workspace created with $SUCCESS_COUNT of $TOTAL_COUNT repos: $TARGET_PATH
 
 Next steps:
   cd "$TARGET_PATH"
-  /sdd-new-project    # Initialize SDD in the workspace
+  /sdd:new-project    # Initialize SDD in the workspace
 ```
 
 **Offer to initialize SDD (if not `--auto`):**
@@ -225,7 +225,7 @@ Use AskUserQuestion:
 - header: "Initialize SDD"
 - question: "Would you like to initialize a SDD project in the new workspace?"
 - options:
-  - "Yes — run /sdd-new-project" → tell user to `cd "$TARGET_PATH"` first, then run `/sdd-new-project`
+  - "Yes — run /sdd:new-project" → tell user to `cd "$TARGET_PATH"` first, then run `/sdd:new-project`
   - "No — I'll set it up later" → done
 
 </process>

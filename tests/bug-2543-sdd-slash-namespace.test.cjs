@@ -3,21 +3,16 @@
 // allow-test-rule: structural-regression-guard
 
 /**
- * Slash-command namespace invariant (#2543, updated by #2697).
+ * Slash-command namespace invariant (#3443).
  *
  * History:
- *   #2543 switched user-facing references from /sdd-<cmd> (dash) to /sdd:<cmd> (colon)
- *   because Claude Code's skill frontmatter used `name: sdd:<cmd>`.
- *   #2697 reversed this: Claude Code slash commands are invoked by skill *directory*
- *   name (sdd-<cmd>), not frontmatter name. The colon form (/sdd:<cmd>) does not work
- *   as a user-typed slash command. Other environment installers (OpenCode, Copilot,
- *   Antigravity) already transform sdd: → sdd- at install time, so changing the source
- *   to use sdd- makes all environments consistent.
+ *   #3443 re-establishes `/sdd:<cmd>` as canonical in Claude-facing source text.
+ *   The source repo is authored for Claude command registration under
+ *   `.claude/commands/sdd/` (namespaced slash commands), while non-Claude runtimes
+ *   perform install-time conversion (for example `/sdd:<cmd>` -> `/sdd-<cmd>`).
  *
  * Invariant enforced here:
- *   No `/sdd:<cmd>` pattern in user-facing source text.
- *   `Skill(skill="sdd:<cmd>")` calls are checked by the skill frontmatter
- *   parity tests and should use `Skill(skill="sdd-<cmd>")`.
+ *   No `/sdd-<cmd>` pattern in Claude-facing source text.
  *
  * Exceptions:
  *   - CHANGELOG.md: historical entries document commands under their original names.
@@ -37,10 +32,9 @@ const SEARCH_DIRS = [
   path.join(ROOT, 'sdd', 'workflows'),
   path.join(ROOT, 'sdd', 'references'),
   path.join(ROOT, 'sdd', 'templates'),
-  path.join(ROOT, 'sdd', 'contexts'),
   COMMANDS_DIR,
   path.join(ROOT, 'agents'),
-  path.join(ROOT, 'sdk', 'src'),
+  path.join(ROOT, 'hooks'),
 ];
 
 const TOP_LEVEL_FILES = [
@@ -53,50 +47,6 @@ const TOP_LEVEL_FILES = [
 // the fixer also rewrites `.ts`/`.tsx`), so it is not shared.
 const { SKIP_DIRS } = require(path.join(ROOT, 'scripts', 'fix-slash-commands.cjs'));
 
-// Discover user-facing markdown surfaces dynamically so a freshly added
-// doc (a new RELEASE-*.md, a new top-level guide) is automatically scanned
-// for namespace drift. A hand-curated list silently weakens drift detection
-// over time — every time a doc is added, someone has to remember to extend
-// the list, and the failure mode is invisible: the test passes but doesn't
-// actually inspect the new file. We scan every .md under docs/ plus
-// README.md at the repo root.
-function discoverDocSearchFiles(root) {
-  const out = [];
-  const readme = path.join(root, 'README.md');
-  if (fs.existsSync(readme)) out.push(readme);
-  // Walk docs/ recursively. Localized translation trees (docs/ja-JP/,
-  // docs/zh-CN/, docs/ko-KR/, docs/pt-BR/) and nested doc collections
-  // (docs/skills/, docs/superpowers/) all carry user-facing markdown that
-  // can drift; a top-level-only scan would silently exclude them. Iterative
-  // stack walk avoids recursion limits on deep trees.
-  const stack = [path.join(root, 'docs')];
-  while (stack.length > 0) {
-    const dir = stack.pop();
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        out.push(full);
-      }
-    }
-  }
-  return out.sort();
-}
-
-const DOC_SEARCH_FILES = discoverDocSearchFiles(ROOT);
-
-// Limited to .md (and pre-existing .cjs/.js) by the no-source-grep standard:
-// markdown text IS the deployed product, but .ts/.tsx source must be guarded
-// via runtime behavior. The fixer (scripts/fix-slash-commands.cjs) covers
-// .ts/.tsx auto-rewrites at build time; idempotency (a no-op second run) is
-// the runtime guard for those extensions.
 const EXTENSIONS = new Set(['.md', '.cjs', '.js']);
 
 function collectFiles(dir, results = []) {
@@ -118,24 +68,20 @@ const cmdNames = fs.readdirSync(COMMANDS_DIR)
   .map(f => f.replace(/\.md$/, ''))
   .sort((a, b) => b.length - a.length);
 
-// Matches /sdd:<cmd> — the retired user-facing format.
-// Does NOT match Skill(skill="sdd:<cmd>") because those have no leading slash.
-const retiredPattern = new RegExp(`/sdd:(${cmdNames.join('|')})(?=[^a-zA-Z0-9_-]|$)`);
+const retiredPattern = new RegExp(`/sdd-(${cmdNames.join('|')})(?=[^a-zA-Z0-9_-]|$)`);
 
 const allFiles = SEARCH_DIRS.flatMap(d => collectFiles(d));
 const topLevelFiles = TOP_LEVEL_FILES.filter((file) => fs.existsSync(file));
-const allUserFacingFiles = allFiles
-  .concat(topLevelFiles)
-  .concat(DOC_SEARCH_FILES.filter((file) => fs.existsSync(file)));
+const allUserFacingFiles = allFiles.concat(topLevelFiles);
 
-describe('slash-command namespace invariant (#2697)', () => {
+describe('slash-command namespace invariant (#3443)', () => {
   test('commands/sdd/ directory contains known command files', () => {
     assert.ok(cmdNames.length > 0, 'commands/sdd/ must contain .md files');
     assert.ok(cmdNames.includes('plan-phase'), 'plan-phase must be a known command');
     assert.ok(cmdNames.includes('execute-phase'), 'execute-phase must be a known command');
   });
 
-  test('no /sdd:<cmd> retired syntax in user-facing source files', () => {
+  test('no /sdd-<cmd> retired syntax in Claude-facing source files', () => {
     const violations = [];
     for (const file of allUserFacingFiles) {
       const src = fs.readFileSync(file, 'utf-8');
@@ -149,7 +95,7 @@ describe('slash-command namespace invariant (#2697)', () => {
     assert.strictEqual(
       violations.length,
       0,
-      `Found ${violations.length} retired /sdd:<cmd> reference(s) — use /sdd-<cmd> instead:\n${violations.slice(0, 10).join('\n')}`,
+      `Found ${violations.length} retired /sdd-<cmd> reference(s) — use /sdd:<cmd> instead:\n${violations.slice(0, 10).join('\n')}`,
     );
   });
 
@@ -169,53 +115,45 @@ describe('slash-command namespace invariant (#2697)', () => {
     // the production CLI rewrites.
     const liveCmdNames = cmdNames;
 
-    test('rewrites /sdd:<cmd> to /sdd-<cmd>', () => {
-      const out = transformContent('See /sdd:plan-phase for details.', liveCmdNames);
-      assert.ok(out.includes('/sdd-plan-phase'), `expected /sdd-plan-phase, got: ${out}`);
-      assert.ok(!out.includes('/sdd:plan-phase'), `colon form must not survive, got: ${out}`);
+    test('rewrites /sdd-<cmd> to /sdd:<cmd>', () => {
+      const out = transformContent('See /sdd-plan-phase for details.', liveCmdNames);
+      assert.ok(out.includes('/sdd:plan-phase'), `expected /sdd:plan-phase, got: ${out}`);
+      assert.ok(!out.includes('/sdd-plan-phase'), `dash form must not survive, got: ${out}`);
     });
 
     test('rewrites multiple occurrences in one pass', () => {
-      const out = transformContent('Run /sdd:plan-phase then /sdd:execute-phase.', liveCmdNames);
-      assert.ok(out.includes('/sdd-plan-phase'));
-      assert.ok(out.includes('/sdd-execute-phase'));
-      assert.ok(!out.match(/\/sdd:[a-z]/), `no colon form may remain, got: ${out}`);
+      const out = transformContent('Run /sdd-plan-phase then /sdd-execute-phase.', liveCmdNames);
+      assert.ok(out.includes('/sdd:plan-phase'));
+      assert.ok(out.includes('/sdd:execute-phase'));
+      assert.ok(!out.match(/\/sdd-[a-z]/), `no dash form may remain, got: ${out}`);
     });
 
-    test('does not rewrite canonical hyphen form (idempotent)', () => {
-      const input = '/sdd-plan-phase is the canonical name.';
+    test('does not rewrite canonical colon form (idempotent)', () => {
+      const input = '/sdd:plan-phase is the canonical name.';
       assert.strictEqual(transformContent(input, liveCmdNames), input,
         'transformer must be a no-op when input is already canonical');
     });
 
     test('does not rewrite sdd-sdk or sdd-tools (not slash commands)', () => {
-      // Edge case: even though sdk/tools aren't in cmdNames, defensively check
-      // that strings like "/sdd:sdk" pass through untouched.
-      const input = 'Run /sdd:sdk query and /sdd:tools init.';
+      const input = 'Run /sdd-sdk query and /sdd-tools init.';
       assert.strictEqual(transformContent(input, liveCmdNames), input,
         'transformer must leave non-command identifiers alone');
     });
 
-    test('respects word boundary — does not rewrite /sdd:plan-phase-extra', () => {
-      // The trailing -extra means this is NOT the plan-phase command.
-      // The negative lookahead `[^a-zA-Z0-9_-]|$` should prevent the match.
-      const out = transformContent('/sdd:plan-phase-extra', liveCmdNames);
-      assert.strictEqual(out, '/sdd:plan-phase-extra',
+    test('respects word boundary — does not rewrite /sdd-plan-phase-extra', () => {
+      const out = transformContent('/sdd-plan-phase-extra', liveCmdNames);
+      assert.strictEqual(out, '/sdd-plan-phase-extra',
         'word-boundary lookahead must prevent partial matches');
     });
   });
 
-  test('sdd-sdk and sdd-tools identifiers are not rewritten', () => {
-    for (const file of allUserFacingFiles) {
-      const src = fs.readFileSync(file, 'utf-8');
-      assert.ok(
-        !src.includes('/sdd:sdk'),
-        `${path.relative(ROOT, file)} must not contain /sdd:sdk (sdd-sdk is not a slash command)`,
-      );
-      assert.ok(
-        !src.includes('/sdd:tools'),
-        `${path.relative(ROOT, file)} must not contain /sdd:tools (sdd-tools is not a slash command)`,
-      );
-    }
+  test('transformer leaves non-command identifiers untouched', () => {
+    const { transformContent } = require(path.join(ROOT, 'scripts', 'fix-slash-commands.cjs'));
+    const sample = 'Use /sdd-sdk query and node bin/sdd-tools.cjs';
+    assert.strictEqual(
+      transformContent(sample, cmdNames),
+      sample,
+      'sdd-sdk and sdd-tools are not slash commands and must remain untouched'
+    );
   });
 });

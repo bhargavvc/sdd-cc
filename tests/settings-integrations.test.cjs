@@ -272,8 +272,8 @@ describe('#2529 /sdd-settings mentions new command', () => {
   test('settings workflow mentions canonical /sdd-config --integrations', () => {
     const src = fs.readFileSync(SETTINGS_WORKFLOW_PATH, 'utf-8');
     assert.ok(
-      src.includes('sdd-config --integrations'),
-      'settings.md must mention /sdd-config --integrations'
+      src.includes('/sdd:config --integrations'),
+      'settings.md must mention /sdd:config --integrations'
     );
     assert.ok(
       !src.includes('/sdd-settings-integrations'),

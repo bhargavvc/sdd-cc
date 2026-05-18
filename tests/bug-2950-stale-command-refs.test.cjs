@@ -7,12 +7,12 @@
  * sdd-spike-wrap-up, sdd-sketch-wrap-up, sdd-code-review-fix).
  *
  * Fix: Update every occurrence to the new consolidated forms:
- *   /sdd-phase (no flag | --insert | --remove)
- *   /sdd-capture
- *   /sdd-config (--profile | --integrations | --advanced)
- *   /sdd-spike --wrap-up
- *   /sdd-sketch --wrap-up
- *   /sdd-code-review --fix
+ *   /sdd:phase (no flag | --insert | --remove)
+ *   /sdd:capture
+ *   /sdd:config (--profile | --integrations | --advanced)
+ *   /sdd:spike --wrap-up
+ *   /sdd:sketch --wrap-up
+ *   /sdd:code-review --fix
  */
 
 'use strict';
@@ -45,42 +45,42 @@ const DELETED_COMMANDS = [
 // Per-file assertions: [file, deletedCmd, newForm]
 const FILE_ASSERTIONS = [
   // help.md
-  ['help.md', '/sdd-add-phase', '/sdd-phase "Add admin dashboard"'],
-  ['help.md', '/sdd-insert-phase', '/sdd-phase --insert 7 "Fix critical auth bug"'],
-  ['help.md', '/sdd-remove-phase', '/sdd-phase --remove 17'],
-  ['help.md', '/sdd-spike-wrap-up', '/sdd-spike --wrap-up'],
-  ['help.md', '/sdd-sketch-wrap-up', '/sdd-sketch --wrap-up'],
-  ['help.md', '/sdd-add-todo', '/sdd-capture'],
-  ['help.md', '/sdd-set-profile', '/sdd-config --profile budget'],
+  ['help.md', '/sdd-add-phase', '/sdd:phase "Add admin dashboard"'],
+  ['help.md', '/sdd-insert-phase', '/sdd:phase --insert 7 "Fix critical auth bug"'],
+  ['help.md', '/sdd-remove-phase', '/sdd:phase --remove 17'],
+  ['help.md', '/sdd-spike-wrap-up', '/sdd:spike --wrap-up'],
+  ['help.md', '/sdd-sketch-wrap-up', '/sdd:sketch --wrap-up'],
+  ['help.md', '/sdd-add-todo', '/sdd:capture'],
+  ['help.md', '/sdd-set-profile', '/sdd:config --profile budget'],
 
   // do.md
-  ['do.md', '/sdd-spike-wrap-up', '/sdd-spike --wrap-up'],
-  ['do.md', '/sdd-sketch-wrap-up', '/sdd-sketch --wrap-up'],
-  ['do.md', '/sdd-add-phase', '/sdd-phase'],
-  ['do.md', '/sdd-add-todo', '/sdd-capture'],
+  ['do.md', '/sdd-spike-wrap-up', '/sdd:spike --wrap-up'],
+  ['do.md', '/sdd-sketch-wrap-up', '/sdd:sketch --wrap-up'],
+  ['do.md', '/sdd-add-phase', '/sdd:phase'],
+  ['do.md', '/sdd-add-todo', '/sdd:capture'],
 
   // settings.md
-  ['settings.md', '/sdd-code-review-fix', '/sdd-code-review --fix'],
-  ['settings.md', '/sdd-settings-integrations', '/sdd-config --integrations'],
-  ['settings.md', '/sdd-set-profile', '/sdd-config --profile'],
-  ['settings.md', '/sdd-settings-advanced', '/sdd-config --advanced'],
+  ['settings.md', '/sdd-code-review-fix', '/sdd:code-review --fix'],
+  ['settings.md', '/sdd-settings-integrations', '/sdd:config --integrations'],
+  ['settings.md', '/sdd-set-profile', '/sdd:config --profile'],
+  ['settings.md', '/sdd-settings-advanced', '/sdd:config --advanced'],
 
   // discuss-phase.md
-  ['discuss-phase.md', '/sdd-spike-wrap-up', '/sdd-spike --wrap-up'],
-  ['discuss-phase.md', '/sdd-sketch-wrap-up', '/sdd-sketch --wrap-up'],
+  ['discuss-phase.md', '/sdd-spike-wrap-up', '/sdd:spike --wrap-up'],
+  ['discuss-phase.md', '/sdd-sketch-wrap-up', '/sdd:sketch --wrap-up'],
 
   // new-project.md
-  ['new-project.md', '/sdd-spike-wrap-up', '/sdd-spike --wrap-up'],
-  ['new-project.md', '/sdd-sketch-wrap-up', '/sdd-sketch --wrap-up'],
+  ['new-project.md', '/sdd-spike-wrap-up', '/sdd:spike --wrap-up'],
+  ['new-project.md', '/sdd-sketch-wrap-up', '/sdd:sketch --wrap-up'],
 
   // plan-phase.md
-  ['plan-phase.md', '/sdd-insert-phase', '/sdd-phase --insert'],
+  ['plan-phase.md', '/sdd-insert-phase', '/sdd:phase --insert'],
 
   // spike.md
-  ['spike.md', '/sdd-spike-wrap-up', '/sdd-spike --wrap-up'],
+  ['spike.md', '/sdd-spike-wrap-up', '/sdd:spike --wrap-up'],
 
   // sketch.md
-  ['sketch.md', '/sdd-sketch-wrap-up', '/sdd-sketch --wrap-up'],
+  ['sketch.md', '/sdd-sketch-wrap-up', '/sdd:sketch --wrap-up'],
 ];
 
 describe('bug #2950: stale deleted-command references removed from workflow files', () => {

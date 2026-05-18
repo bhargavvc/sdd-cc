@@ -122,7 +122,7 @@ User-facing entry points. Each file contains YAML frontmatter (name, description
 
 #### Two-stage hierarchical routing (v1.40, [#2792](https://github.com/bhargavvc/sdd-cc/issues/2792))
 
-To keep the eager skill-listing token cost low, v1.40 introduces six namespace **meta-skills** (`sdd-workflow`, `sdd-project`, `sdd-review`, `sdd-context`, `sdd-manage`, `sdd-ideate` — sourced from `commands/sdd/ns-*.md`, but the invocable `name:` is the bare form shown here) layered above the concrete sub-skills. The model sees 6 namespace routers (~120 tokens) instead of a flat 86-skill listing (~2,150 tokens), selects a namespace, then routes to the concrete sub-skill via a routing table embedded in the namespace router's body. Namespace skills are **additive** — every concrete command is still directly invocable.
+To keep the eager skill-listing token cost low, v1.40 introduces six namespace **meta-skills** (`sdd-workflow`, `sdd-project`, `sdd-quality`, `sdd-context`, `sdd-manage`, `sdd-ideate` — sourced from `commands/sdd/ns-*.md`, but the invocable `name:` is the bare form shown here) layered above the concrete sub-skills. The model sees 6 namespace routers (~120 tokens) instead of a flat 86-skill listing (~2,150 tokens), selects a namespace, then routes to the concrete sub-skill via a routing table embedded in the namespace router's body. Namespace skills are **additive** — every concrete command is still directly invocable.
 
 The router descriptions use pipe-separated keyword tags (≤ 60 chars) per the Tool Attention research showing keyword-dense tags outperform prose for routing at ~40 % the token cost.
 
@@ -433,7 +433,11 @@ ui-phase → UI-SPEC.md (design contract, optional)
 plan-phase
     ├── Research gate (blocks if RESEARCH.md has unresolved open questions)
     ├── Phase Researcher → RESEARCH.md
+    │       └── Package Legitimacy Gate: slopcheck on every package; [SLOP] removed,
+    │           [SUS]/[ASSUMED] flagged; Audit table written to RESEARCH.md
     ├── Planner (with reachability check) → PLAN.md files
+    │       └── checkpoint:human-verify injected before [ASSUMED]/[SUS] installs;
+    │           T-{phase}-SC STRIDE row added for install-bearing plans
     ├── Plan Checker → Verify loop (max 3x)
     ├── Requirements coverage gate (REQ-IDs → plans)
     └── Decision coverage gate (CONTEXT.md `<decisions>` → plans, BLOCKING — #2492)
@@ -480,7 +484,8 @@ UI-SPEC.md (per phase) ───────────────────
 
 ```
 ~/.claude/                          # Claude Code (global install)
-├── commands/sdd/*.md               # Slash commands (authoritative roster: docs/INVENTORY.md)
+├── skills/sdd-*/SKILL.md           # Global skills (authoritative roster: docs/INVENTORY.md)
+├── commands/sdd/*.md               # Local Claude installs use slash commands instead of global skills
 ├── sdd/
 │   ├── bin/sdd-tools.cjs           # CLI utility
 │   ├── bin/lib/*.cjs               # Domain modules (authoritative roster: docs/INVENTORY.md)
@@ -496,12 +501,20 @@ UI-SPEC.md (per phase) ───────────────────
 
 Equivalent paths for other runtimes:
 
-- **OpenCode:** `~/.config/opencode/` or `~/.opencode/`
-- **Kilo:** `~/.config/kilo/` or `~/.kilo/`
-- **Gemini CLI:** `~/.gemini/`
-- **Codex:** `~/.codex/` (uses skills instead of commands)
-- **Copilot:** `~/.github/`
-- **Antigravity:** `~/.gemini/antigravity/` (global) or `./.agent/` (local)
+- **OpenCode:** `~/.config/opencode/` global or `./.opencode/` local
+- **Kilo:** `~/.config/kilo/` global or `./.kilo/` local
+- **Gemini CLI:** `~/.gemini/` global or `./.gemini/` local
+- **Codex:** `~/.codex/` global or `./.codex/` local
+- **Copilot:** `~/.copilot/` global or `./.github/` local
+- **Antigravity:** `~/.gemini/antigravity/` global or `./.agent/` local
+- **Cursor:** `~/.cursor/` global or `./.cursor/` local
+- **Windsurf:** `~/.codeium/windsurf/` global or `./.windsurf/` local
+- **Augment Code:** `~/.augment/` global or `./.augment/` local
+- **Trae:** `~/.trae/` global or `./.trae/` local
+- **Qwen Code:** `~/.qwen/` global or `./.qwen/` local
+- **Hermes Agent:** `~/.hermes/` global or `./.hermes/` local
+- **CodeBuddy:** `~/.codebuddy/` global or `./.codebuddy/` local
+- **Cline:** `~/.cline/` global or project-root `.clinerules` local
 
 ### Project Files (`.planning/`)
 
@@ -583,11 +596,11 @@ verification.
 
 ## Installer Architecture
 
-The installer (`bin/install.js`, ~3,000 lines) handles:
+The installer (`bin/install.js`, ~10,700 lines) handles:
 
-1. **Runtime detection** — Interactive prompt or CLI flags (`--claude`, `--opencode`, `--gemini`, `--kilo`, `--codex`, `--copilot`, `--antigravity`, `--cursor`, `--windsurf`, `--trae`, `--cline`, `--augment`, `--all`)
+1. **Runtime detection** — Interactive prompt or CLI flags (`--claude`, `--opencode`, `--gemini`, `--kilo`, `--codex`, `--copilot`, `--antigravity`, `--cursor`, `--windsurf`, `--augment`, `--trae`, `--qwen`, `--hermes`, `--codebuddy`, `--cline`, `--all`)
 2. **Location selection** — Global (`--global`) or local (`--local`)
-3. **File deployment** — Copies commands, workflows, references, templates, agents, hooks
+3. **File deployment** — Copies commands, skills, workflows, references, templates, agents, and hooks
 4. **Runtime adaptation** — Transforms file content per runtime:
   - Claude Code: Uses as-is
   - OpenCode: Converts commands/agents to OpenCode-compatible flat command + subagent format
@@ -596,7 +609,12 @@ The installer (`bin/install.js`, ~3,000 lines) handles:
   - Copilot: Maps tool names (Read→read, Bash→execute, etc.)
   - Gemini: Adjusts hook event names (`AfterTool` instead of `PostToolUse`)
   - Antigravity: Skills-first with Google model equivalents
+  - Cursor: Skills-first with Cursor rule references
+  - Windsurf: Skills-first with Windsurf rule references
   - Trae: Skills-first install to `~/.trae` / `./.trae` with no `settings.json` or hook integration
+  - Qwen Code: Skills-first with Qwen-branded path and prompt rewrites
+  - Hermes Agent: Category-based skills under `skills/sdd/`
+  - CodeBuddy: Skills-first with CodeBuddy path and prompt rewrites
   - Cline: Writes `.clinerules` for rule-based integration
   - Augment Code: Skills-first with full skill conversion and config management
 5. **Path normalization** — Replaces `~/.claude/` paths with runtime-specific paths
@@ -604,6 +622,14 @@ The installer (`bin/install.js`, ~3,000 lines) handles:
 7. **Patch backup** — Since v1.17, backs up locally modified files to `sdd-local-patches/` for `/sdd-update --reapply`
 8. **Manifest tracking** — Writes `sdd-file-manifest.json` for clean uninstall
 9. **Uninstall mode** — `--uninstall` removes all SDD files, hooks, and settings
+
+Install-time file moves, stale-artifact cleanup, config rewrites, and user-data
+preservation are governed by the Installer Migration Module. See
+[Installer Migrations](installer-migrations.md) and
+[ADR 0008](adr/0008-installer-migration-module.md).
+The migration module also owns the gated first-time baseline scan for legacy
+installs, classifying known runtime install surfaces before later migrations
+remove or rewrite anything.
 
 ### Platform Handling
 
@@ -653,6 +679,30 @@ Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→
 - Missing bridge files handled gracefully (subagents, fresh sessions)
 - Context monitor is advisory — never issues imperative commands that override user preferences
 
+### Package Legitimacy Gate (v1.42.1)
+
+The researcher → planner → executor pipeline includes a supply-chain gate against slopsquatting (AI-hallucinated package names pre-registered with malicious post-install scripts).
+
+**Threat model:** SDD automates the full path from "researcher names a package" to "executor runs `npm install`". A hallucinated name that passes `npm view` (proving only registration, not legitimacy) would previously flow through undetected. ~20% of AI-generated package references are hallucinated; ~43% of those names recur consistently across prompts, making pre-registration economically viable for attackers.
+
+**Gate layers:**
+
+| Layer | Component | Action |
+|-------|-----------|--------|
+| Research | `sdd-phase-researcher` | Runs `slopcheck install <pkgs> --json`; writes `## Package Legitimacy Audit` table to RESEARCH.md; strips `[SLOP]` packages before RESEARCH.md is written |
+| Planning | `sdd-planner` | Reads Audit table; inserts `checkpoint:human-verify` before any `[ASSUMED]` or `[SUS]` install task; adds `T-{phase}-SC` STRIDE supply-chain row to `<threat_model>` |
+| Execution | `sdd-executor` | RULE 3 excludes package installation from auto-fix scope; failed installs surface as checkpoints, never silent substitutions |
+
+**Claim provenance integration:** Package names discovered via WebSearch are tagged `[ASSUMED]` (not `[VERIFIED]`) regardless of `npm view` result. This extends the existing `[ASSUMED]` / `[VERIFIED]` / `[CITED]` provenance system by enforcing the provenance tag as a hard gate at the install boundary — `[ASSUMED]` always generates a `checkpoint:human-verify` in PLAN.md.
+
+**Ecosystem coverage:** The researcher uses registry-specific verification commands — `npm view` (Node), `pip index versions` (Python), `cargo search` (Rust) — rather than a single generic check. This catches cross-ecosystem hallucination (~9% rate documented in 2025 USENIX research).
+
+**Graceful degradation:** If `slopcheck` is unavailable, every recommended package is tagged `[ASSUMED]` and gated with a checkpoint. Research and planning proceed; the system never hard-fails on a missing tool dependency.
+
+**External dependency:** `slopcheck` (MIT, pip-installable). If abandoned, the `[ASSUMED]`-gate fallback maintains human-checkpoint coverage.
+
+---
+
 ### Security Hooks (v1.27)
 
 **Prompt Guard** (`sdd-prompt-guard.js`):
@@ -675,20 +725,46 @@ Debounce: 5 tool uses between repeated warnings. Severity escalation (WARNING→
 
 SDD supports multiple AI coding runtimes through a unified command/workflow architecture:
 
+### Runtime Install Contract Matrix
 
-| Runtime      | Command Format | Agent System     | Config Location          |
-| ------------ | -------------- | ---------------- | ------------------------ |
-| Claude Code  | `/sdd-command` | Task spawning    | `~/.claude/`             |
-| OpenCode     | `/sdd-command` | Subagent mode    | `~/.config/opencode/`    |
-| Kilo         | `/sdd-command` | Subagent mode    | `~/.config/kilo/`        |
-| Gemini CLI   | `/sdd-command` | Task spawning    | `~/.gemini/`             |
-| Codex        | `$sdd-command` | Skills           | `~/.codex/`              |
-| Copilot      | `/sdd-command` | Agent delegation | `~/.github/`             |
-| Antigravity  | Skills         | Skills           | `~/.gemini/antigravity/` |
-| Trae         | Skills         | Skills           | `~/.trae/`               |
-| Cline        | Rules          | Rules            | `.clinerules`            |
-| Augment Code | Skills         | Skills           | Augment config           |
+This matrix describes the runtime surfaces the installer materializes today.
+The migration-specific ownership and source snapshots live in
+[Installer Migrations](installer-migrations.md#runtime-configuration-contract-registry).
 
+| Runtime | Global root | Local root | Invocation surface | Agent surface | Config and hooks |
+| --- | --- | --- | --- | --- | --- |
+| Claude Code | `~/.claude` | `./.claude` | Global `skills/sdd-*/SKILL.md`; local `commands/sdd/*.md` | `agents/sdd-*.md` | `settings.json` hook and statusLine entries |
+| OpenCode | `~/.config/opencode` | `./.opencode` | `command/sdd-*.md` | `agents/sdd-*.md` | `opencode.json` or `opencode.jsonc`; no SDD hooks |
+| Kilo | `~/.config/kilo` | `./.kilo` | `command/sdd-*.md` | `agents/sdd-*.md` | `kilo.json` or `kilo.jsonc`; no SDD hooks |
+| Gemini CLI | `~/.gemini` | `./.gemini` | `commands/sdd/*.toml` | `agents/sdd-*.md` | `settings.json` feature flag, hooks, and statusline |
+| Codex | `~/.codex` | `./.codex` | `skills/sdd-*/SKILL.md` | `agents/` source markdown plus per-agent TOML | `config.toml` `[agents.sdd-*]`, `[features].hooks` (canonical; legacy alias `codex_hooks` is recognized and migrated forward on reinstall, #3566), and hook tables |
+| GitHub Copilot | `~/.copilot` | `./.github` | `skills/sdd-*/SKILL.md` and `copilot-instructions.md` | `.agent.md` files | No SDD hooks or statusline |
+| Antigravity | `~/.gemini/antigravity` | `./.agent` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Gemini-style `settings.json` hook entries when installed by SDD |
+| Cursor | `~/.cursor` | `./.cursor` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Rule references under `rules/`; no SDD hooks |
+| Windsurf | `~/.codeium/windsurf` | `./.windsurf` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Rule references under `rules/`; no SDD hooks |
+| Augment Code | `~/.augment` | `./.augment` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | No SDD hooks or statusline |
+| Trae | `~/.trae` | `./.trae` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Rule references under `rules/`; no SDD hooks |
+| Qwen Code | `~/.qwen` | `./.qwen` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Common SDD settings and hook entries where supported |
+| Hermes Agent | `~/.hermes` | `./.hermes` | `skills/sdd/DESCRIPTION.md` plus `skills/sdd/sdd-*/SKILL.md` | `agents/sdd-*.md` | Common SDD settings and hook entries where supported |
+| CodeBuddy | `~/.codebuddy` | `./.codebuddy` | `skills/sdd-*/SKILL.md` | `agents/sdd-*.md` | Common SDD settings and hook entries where supported |
+| Cline | `~/.cline` | project root | `.clinerules` | Rules only | No SDD hooks or statusline |
+
+### Upstream Contract Sources
+
+Runtime install expectations are checked against primary documentation where
+available. The current source snapshot is 2026-05-11:
+
+- Claude Code: Anthropic slash commands, settings, hooks, and subagents docs.
+- OpenCode and Kilo: OpenCode config docs and Kilo custom subagent docs.
+- Gemini CLI and Qwen Code: command/config docs; Qwen command docs were last
+  updated 2026-05-06.
+- Codex: OpenAI Codex docs and `config-schema.json`; the installer also carries
+  Codex 0.124.0 compatibility for agent table shape.
+- Copilot, Cursor, Cline, Augment, Hermes, and CodeBuddy: vendor docs for
+  custom instructions, rules, skills, or config.
+- Antigravity, Windsurf, and Trae: source-limited rows. The installer documents
+  current compatibility shims, and migrations must refresh those sources before
+  rewriting their config.
 
 ### Abstraction Points
 

@@ -26,9 +26,11 @@ const { promisify } = require('util');
 const { performance } = require('perf_hooks');
 const { runSddTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
-const {
-  normalizeMd,
-} = require('../sdd/bin/lib/core.cjs');
+const { normalizeContent } = require('../sdd/bin/lib/shell-command-projection.cjs');
+// normalizeMd was removed from core.cjs (Phase 4 — issue #3468); the same algorithm now
+// lives in the shell-command-projection seam. Wrap normalizeContent so existing
+// behavioral / snapshot / perf assertions stay point-of-truth.
+const normalizeMd = (input) => normalizeContent('test.md', input).content;
 
 const execAsync = promisify(exec);
 

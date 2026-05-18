@@ -1,7 +1,7 @@
 <purpose>
 Spike an idea through experiential exploration — build focused experiments to feel the pieces
 of a future app, validate feasibility, and produce verified knowledge for the real build.
-Saves artifacts to `.planning/spikes/`. Companion to `/sdd-spike --wrap-up`.
+Saves artifacts to `.planning/spikes/`. Companion to `/sdd:spike --wrap-up`.
 
 Supports two modes:
 - **Idea mode** (default) — user describes an idea to spike
@@ -421,14 +421,14 @@ sdd-sdk query commit "docs(spikes): update conventions" --files .planning/spikes
 
 **Package findings** — wrap spike knowledge into an implementation blueprint
 
-`/sdd-spike --wrap-up`
+`/sdd:spike --wrap-up`
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
-- `/sdd-spike` — spike more ideas (or run with no argument for frontier mode)
-- `/sdd-plan-phase` — start planning the real implementation
-- `/sdd-explore` — continue exploring the idea
+- `/sdd:spike` — spike more ideas (or run with no argument for frontier mode)
+- `/sdd:plan-phase` — start planning the real implementation
+- `/sdd:explore` — continue exploring the idea
 
 ───────────────────────────────────────────────────────────────
 </step>

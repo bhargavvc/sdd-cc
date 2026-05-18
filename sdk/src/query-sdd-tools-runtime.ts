@@ -43,7 +43,13 @@ export function createSDDToolsRuntime(opts: {
 
   const nativeDirectAdapter = new QueryNativeDirectAdapter({
     timeoutMs: opts.timeoutMs,
-    dispatch: (registryCommand, registryArgs) => registry.dispatch(registryCommand, registryArgs, opts.projectDir),
+    // #3591: forward opts.workstream to the registry so native dispatch
+    // routes planning-path queries to .planning/workstreams/<name>/
+    // instead of the root .planning tree. createSDDToolsRuntime accepts
+    // workstream and the QuerySubprocessAdapter already forwards it
+    // (line 38); the native dispatch closure was the only seam that
+    // dropped it, silently routing SDDTools-native queries to root.
+    dispatch: (registryCommand, registryArgs) => registry.dispatch(registryCommand, registryArgs, opts.projectDir, opts.workstream),
     ...nativeErrorFactory,
   });
 

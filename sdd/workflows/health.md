@@ -101,10 +101,10 @@ Errors: N | Warnings: N | Info: N
 ## Errors
 
 - [E001] config.json: JSON parse error at line 5
-  Fix: Run /sdd-health --repair to reset to defaults
+  Fix: Run /sdd:health --repair to reset to defaults
 
 - [E002] PROJECT.md not found
-  Fix: Run /sdd-new-project to create
+  Fix: Run /sdd:new-project to create
 ```
 
 **If warnings exist:**
@@ -129,7 +129,7 @@ Errors: N | Warnings: N | Info: N
 **Footer (if repairable issues exist and --repair was NOT used):**
 ```
 ---
-N issues can be auto-repaired. Run: /sdd-health --repair
+N issues can be auto-repaired. Run: /sdd:health --repair
 ```
 </step>
 
@@ -139,7 +139,7 @@ N issues can be auto-repaired. Run: /sdd-health --repair
 Ask user if they want to run repairs:
 
 ```
-Would you like to run /sdd-health --repair to fix N issues automatically?
+Would you like to run /sdd:health --repair to fix N issues automatically?
 ```
 
 If yes, re-run with --repair flag and display results.

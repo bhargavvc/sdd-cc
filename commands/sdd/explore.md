@@ -15,7 +15,7 @@ Open-ended Socratic ideation session. Guides the developer through exploring an 
 probing questions, optionally spawns research, then routes outputs to the appropriate SDD
 artifacts (notes, todos, seeds, research questions, requirements, or new phases).
 
-Accepts an optional topic argument: `/sdd-explore authentication strategy`
+Accepts an optional topic argument: `/sdd:explore authentication strategy`
 </objective>
 
 <execution_context>

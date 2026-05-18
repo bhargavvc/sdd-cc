@@ -90,7 +90,7 @@ Agent(
 **Documents produced:**
 {list of documents written with line counts}
 
-Use `/sdd-map-codebase` for a comprehensive 4-area parallel scan.
+Use `/sdd:map-codebase` for a comprehensive 4-area parallel scan.
 ```
 
 </process>

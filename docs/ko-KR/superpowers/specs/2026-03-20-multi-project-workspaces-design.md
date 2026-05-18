@@ -1,4 +1,4 @@
-# 멀티 프로젝트 워크스페이스 (`/sdd-new-workspace`)
+# 멀티 프로젝트 워크스페이스 (`/sdd-workspace --new`)
 
 **Issue:** #1241
 **Date:** 2026-03-20
@@ -18,13 +18,13 @@ SDD는 작업 디렉토리당 하나의 `.planning/` 디렉토리에 종속되�
 
 ## 명령어
 
-### `/sdd-new-workspace`
+### `/sdd-workspace --new`
 
 저장소 복사본과 자체 `.planning/`이 있는 워크스페이스 디렉토리를 생성합니다.
 
-```
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
-/sdd-new-workspace --name feature-b --repos . --strategy worktree   # 동일 저장소 격리
+```bash
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
+/sdd-workspace --new --name feature-b --repos . --strategy worktree   # 동일 저장소 격리
 ```
 
 **인수.**
@@ -38,11 +38,11 @@ SDD는 작업 디렉토리당 하나의 `.planning/` 디렉토리에 종속되�
 | `--branch` | 아니오 | `workspace/<name>` | 체크아웃할 브랜치 |
 | `--auto` | 아니오 | false | 대화형 질문 건너뛰고 기본값 사용 |
 
-### `/sdd-list-workspaces`
+### `/sdd-workspace --list`
 
 워크스페이스 매니페스트를 위해 `~/sdd-workspaces/*/WORKSPACE.md`를 스캔합니다. 이름, 경로, 저장소 수, SDD 상태(PROJECT.md 존재 여부, 현재 페이즈)가 있는 표를 표시합니다.
 
-### `/sdd-remove-workspace`
+### `/sdd-workspace --remove`
 
 확인 후 워크스페이스 디렉토리를 제거합니다. worktree 전략의 경우 먼저 각 멤버 저장소에 대해 `git worktree remove`를 실행합니다. 저장소에 커밋되지 않은 변경사항이 있으면 거부합니다.
 
@@ -89,7 +89,7 @@ Strategy: worktree
 
 ## 워크플로우
 
-### `/sdd-new-workspace` 워크플로우 단계
+### `/sdd-workspace --new` 워크플로우 단계
 
 1. **설정** — `init new-workspace` 호출, JSON 컨텍스트 파싱
 2. **입력 수집** — `--name`/`--repos`/`--path`가 제공되지 않으면 대화형으로 질문합니다. 저장소의 경우 cwd의 하위 `.git` 디렉토리를 옵션으로 표시합니다.

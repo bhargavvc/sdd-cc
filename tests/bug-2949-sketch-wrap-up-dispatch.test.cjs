@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * SDD Tests — /sdd-sketch --wrap-up silently no-ops (#2949)
+ * SDD Tests — /sdd:sketch --wrap-up silently no-ops (#2949)
  *
  * The --wrap-up flag was documented in commands/sdd/sketch.md but never dispatched.
  * The sketch-wrap-up.md micro-skill entry point was deleted in #2790 and the dispatch
@@ -56,11 +56,11 @@ describe('bug-2949: sketch --wrap-up dispatch wiring', () => {
     );
   });
 
-  test('workflows/sketch.md DOES contain new /sdd-sketch --wrap-up form', () => {
+  test('workflows/sketch.md DOES contain new /sdd:sketch --wrap-up form', () => {
     const content = fs.readFileSync(SKETCH_WORKFLOW, 'utf8');
     assert.ok(
-      content.includes('/sdd-sketch --wrap-up'),
-      'workflows/sketch.md should reference /sdd-sketch --wrap-up (the new form)'
+      content.includes('/sdd:sketch --wrap-up'),
+      'workflows/sketch.md should reference /sdd:sketch --wrap-up (the new form)'
     );
   });
 });

@@ -56,7 +56,7 @@ Enable it with:
 
   sdd config-set workflow.plan_review_convergence true
 
-Then re-run: /sdd-plan-review-convergence {PHASE}
+Then re-run: /sdd:plan-review-convergence {PHASE}
 ```
 
 ## 2. Initialize
@@ -102,7 +102,7 @@ Display: `◆ No plans found — spawning initial planning agent...`
 ```text
 Agent(
   description="Initial planning Phase {PHASE}",
-  prompt="Run /sdd-plan-phase for Phase {PHASE}.
+  prompt="Run /sdd:plan-phase for Phase {PHASE}.
 
 Execute: Skill(skill='sdd-plan-phase', args='{PHASE} {SDD_WS}')
 
@@ -138,7 +138,7 @@ Display: `◆ Cycle {cycle}/{MAX_CYCLES} — spawning review agent...`
 ```text
 Agent(
   description="Cross-AI review Phase {PHASE} cycle {cycle}",
-  prompt="Run /sdd-review for Phase {PHASE}.
+  prompt="Run /sdd:review for Phase {PHASE}.
 
 Execute: Skill(skill='sdd-review', args='--phase {PHASE} {REVIEWER_FLAGS} {SDD_WS}')
 
@@ -226,7 +226,7 @@ Display:
  No HIGH concerns remaining.
 
  REVIEWS.md: {REVIEWS_FILE}
- Next: /sdd-execute-phase {PHASE}
+ Next: /sdd:execute-phase {PHASE}
 ```
 
 Exit — convergence achieved.
@@ -280,8 +280,8 @@ If "Manual review":
 ```text
 Review the concerns in: {REVIEWS_FILE}
 
-To replan manually:  /sdd-plan-phase {PHASE} --reviews
-To restart loop:     /sdd-plan-review-convergence {PHASE} {REVIEWER_FLAGS}
+To replan manually:  /sdd:plan-phase {PHASE} --reviews
+To restart loop:     /sdd:plan-review-convergence {PHASE} {REVIEWER_FLAGS}
 ```
 Exit workflow.
 
@@ -296,7 +296,7 @@ Display: `◆ Spawning replan agent with review feedback...`
 ```text
 Agent(
   description="Replan Phase {PHASE} with review feedback cycle {cycle}",
-  prompt="Run /sdd-plan-phase with --reviews for Phase {PHASE}.
+  prompt="Run /sdd:plan-phase with --reviews for Phase {PHASE}.
 
 Execute: Skill(skill='sdd-plan-phase', args='{PHASE} --reviews --skip-research {SDD_WS}')
 

@@ -41,7 +41,7 @@ function buildBannerOutput(state) {
   const installed = cache.installed || 'unknown';
   const latest = cache.latest || 'unknown';
   return {
-    systemMessage: `SDD update available: ${installed} → ${latest}. Run /sdd-update.`,
+    systemMessage: `SDD update available: ${installed} → ${latest}. Run /sdd:update.`,
   };
 }
 

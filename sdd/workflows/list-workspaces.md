@@ -25,7 +25,7 @@ Parse JSON for: `workspace_base`, `workspaces`, `workspace_count`.
 No workspaces found in ~/sdd-workspaces/
 
 Create one with:
-  /sdd-workspace --new --name my-workspace --repos repo1,repo2
+  /sdd:workspace --new --name my-workspace --repos repo1,repo2
 ```
 
 Done.

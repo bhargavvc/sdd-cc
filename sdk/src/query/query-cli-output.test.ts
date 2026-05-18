@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SDDToolsError } from '../sdd-tools.js';
+import { SDDToolsError } from '../sdd-tools-error.js';
 import { buildQueryCliOutputFromError } from './query-cli-output.js';
 
 describe('query-cli-output', () => {

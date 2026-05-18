@@ -1,6 +1,6 @@
 {
   "name": "@bhargavvc/sdd-cc",
-  "version": "1.41.0",
+  "version": "1.42.3",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
   "bin": {
     "sdd-cc": "bin/install.js",
@@ -14,6 +14,7 @@
     "hooks",
     "scripts",
     "sdk/src",
+    "sdk/shared",
     "sdk/prompts",
     "sdk/dist",
     "sdk/package.json",
@@ -52,14 +53,19 @@
   "devDependencies": {
     "c8": "^11.0.0"
   },
+  "optionalDependencies": {
+    "fallow": "^2.70.0"
+  },
   "scripts": {
     "build:hooks": "node scripts/build-hooks.js",
     "build:sdk": "cd sdk && npm ci && npm run build",
     "check:alias-drift": "cd sdk && npm run check:alias-drift",
+    "check:state-document-fresh": "cd sdk && npm run check:state-document-fresh",
     "prepublishOnly": "npm run build:hooks && npm run build:sdk",
-    "pretest": "npm run build:sdk",
+    "pretest": "npm run build:sdk && npm run lint:skill-deps",
     "pretest:coverage": "npm run build:sdk",
     "lint:descriptions": "node scripts/lint-descriptions.cjs",
+    "lint:skill-deps": "node scripts/lint-skill-deps.cjs",
     "lint:tests": "node scripts/lint-no-source-grep.cjs",
     "lint:changeset": "node scripts/changeset/lint.cjs",
     "changeset": "node scripts/changeset/new.cjs",

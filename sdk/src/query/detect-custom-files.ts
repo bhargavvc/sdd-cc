@@ -14,6 +14,7 @@ const SDD_MANAGED_DIRS = [
   'agents',
   join('commands', 'sdd'),
   'hooks',
+  'skills',
 ];
 
 function walkDir(dir: string, baseDir: string): string[] {

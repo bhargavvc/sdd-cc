@@ -65,8 +65,8 @@ describe('buildBannerOutput', () => {
       'banner should name latest version'
     );
     assert.ok(
-      out.systemMessage.includes('/sdd-update'),
-      'banner should reference /sdd-update command'
+      out.systemMessage.includes('/sdd:update'),
+      'banner should reference /sdd:update command'
     );
   });
 
@@ -211,7 +211,7 @@ describe('sdd-update-banner.js end-to-end', () => {
       const parsed = JSON.parse(r.stdout);
       assert.equal(typeof parsed.systemMessage, 'string');
       assert.ok(parsed.systemMessage.includes('1.40.0'));
-      assert.ok(parsed.systemMessage.includes('/sdd-update'));
+      assert.ok(parsed.systemMessage.includes('/sdd:update'));
     } finally {
       fs.rmSync(home, { recursive: true, force: true });
     }

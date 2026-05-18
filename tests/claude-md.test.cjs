@@ -40,9 +40,9 @@ describe('generate-claude-md', () => {
     const claudePath = path.join(tmpDir, 'CLAUDE.md');
     const content = fs.readFileSync(claudePath, 'utf-8');
     assert.ok(content.includes('## SDD Workflow Enforcement'));
-    assert.ok(content.includes('/sdd-quick'));
-    assert.ok(content.includes('/sdd-debug'));
-    assert.ok(content.includes('/sdd-execute-phase'));
+    assert.ok(content.includes('/sdd:quick'));
+    assert.ok(content.includes('/sdd:debug'));
+    assert.ok(content.includes('/sdd:execute-phase'));
     assert.ok(content.includes('Do not make direct repo edits outside a SDD workflow'));
   });
 

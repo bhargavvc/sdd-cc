@@ -156,7 +156,7 @@ Updated after each plan completion.
 **Pending Todos:** Ideas captured via /sdd-add-todo
 - Count of pending todos
 - Reference to .planning/todos/pending/
-- Brief list if few, count if many (e.g., "5 pending todos — see /sdd-capture --list")
+- Brief list if few, count if many (e.g., "5 pending todos — see /sdd:capture --list")
 
 **Blockers/Concerns:** From "Next Phase Readiness" sections
 - Issues that affect future work

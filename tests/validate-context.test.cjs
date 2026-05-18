@@ -58,7 +58,7 @@ describe('sdd-tools validate context — JSON vs human rendering', () => {
     assert.strictEqual(r.success, true);
     assert.match(r.output, /70%/);
     assert.match(r.output, /critical/);
-    assert.match(r.output, /\/sdd-thread/);
+    assert.match(r.output, /\/sdd:thread/);
   });
 
   test('human mode omits the recommendation line for healthy state', () => {
@@ -66,25 +66,25 @@ describe('sdd-tools validate context — JSON vs human rendering', () => {
     assert.strictEqual(r.success, true);
     assert.match(r.output, /20%/);
     assert.match(r.output, /healthy/);
-    assert.doesNotMatch(r.output, /\/sdd-thread/, 'healthy output must not nag the user');
+    assert.doesNotMatch(r.output, /\/sdd:thread/, 'healthy output must not nag the user');
   });
 });
 
 describe('sdd-tools validate context — recommendation copy per state', () => {
   // The CLI owns the recommendation strings (the classifier does not).
   // These tests pin the wording so a regression to the prose is caught.
-  test('warning state recommends /sdd-thread', () => {
+  test('warning state recommends /sdd:thread', () => {
     const r = runSddTools(['validate', 'context', '--tokens-used', '130000', '--context-window', '200000', '--json']);
     const obj = JSON.parse(r.output);
     assert.strictEqual(obj.state, 'warning');
-    assert.match(obj.recommendation, /\/sdd-thread/);
+    assert.match(obj.recommendation, /\/sdd:thread/);
   });
 
   test('critical state names the fracture-point reasoning risk', () => {
     const r = runSddTools(['validate', 'context', '--tokens-used', '160000', '--context-window', '200000', '--json']);
     const obj = JSON.parse(r.output);
     assert.strictEqual(obj.state, 'critical');
-    assert.match(obj.recommendation, /\/sdd-thread/);
+    assert.match(obj.recommendation, /\/sdd:thread/);
     assert.match(obj.recommendation, /reasoning|degrade|fracture/i);
   });
 });

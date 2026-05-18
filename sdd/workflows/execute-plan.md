@@ -9,6 +9,16 @@ Read config.json for planning behavior settings.
 @~/.claude/sdd/references/git-integration.md
 </required_reading>
 
+<atomic_close_out_invariant>
+For each executed plan, the only complete close-out order is:
+`production-code commit(s) -> SUMMARY commit -> STATE/ROADMAP update`.
+
+The only legal half-state is mid-production-commits while the executor is still
+actively working. Once production commits for a plan exist, returning without a
+committed SUMMARY.md is an illegal partial-plan state. The next execute-phase
+resume must detect that condition before dispatching another executor.
+</atomic_close_out_invariant>
+
 <available_agent_types>
 Valid SDD subagent types (use exact names — do not fall back to 'general-purpose'):
 - sdd-executor — Executes plan tasks, commits, creates SUMMARY.md
@@ -493,9 +503,9 @@ If `USER_SETUP_CREATED=true`: display `⚠️ USER SETUP REQUIRED` with path + e
 
 | Condition | Route | Action |
 |-----------|-------|--------|
-| summaries < plans | **A: More plans** | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan, suggest `/sdd-execute-phase {phase}` + `/sdd-verify-work`. STOP here. |
-| summaries = plans, current < highest phase | **B: Phase done** | Show completion, suggest `/sdd-plan-phase {Z+1}` + `/sdd-verify-work {Z}` + `/sdd-discuss-phase {Z+1}` |
-| summaries = plans, current = highest phase | **C: Milestone done** | Show banner, suggest `/sdd-complete-milestone` + `/sdd-verify-work` + `/sdd-add-phase` |
+| summaries < plans | **A: More plans** | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan, suggest `/sdd:execute-phase {phase}` + `/sdd:verify-work`. STOP here. |
+| summaries = plans, current < highest phase | **B: Phase done** | Show completion, suggest `/sdd:plan-phase {Z+1}` + `/sdd:verify-work {Z}` + `/sdd:discuss-phase {Z+1}` |
+| summaries = plans, current = highest phase | **C: Milestone done** | Show banner, suggest `/sdd:complete-milestone` + `/sdd:verify-work` + `/sdd-add-phase` |
 
 All routes: `/clear` first for fresh context.
 </step>

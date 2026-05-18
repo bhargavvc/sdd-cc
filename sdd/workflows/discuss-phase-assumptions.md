@@ -77,7 +77,7 @@ Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phas
 ```
 Phase [X] not found in roadmap.
 
-Use /sdd-progress to see available phases.
+Use /sdd:progress to see available phases.
 ```
 Exit workflow.
 
@@ -603,13 +603,13 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 `/clear` then:
 
-`/sdd-plan-phase ${PHASE}`
+`/sdd:plan-phase ${PHASE}`
 
 ---
 
 **Also available:**
-- `/sdd-plan-phase ${PHASE} --skip-research` — plan without research
-- `/sdd-ui-phase ${PHASE}` — generate UI design contract (if frontend work)
+- `/sdd:plan-phase ${PHASE} --skip-research` — plan without research
+- `/sdd:ui-phase ${PHASE}` — generate UI design contract (if frontend work)
 - Review/edit CONTEXT.md before continuing
 
 ---

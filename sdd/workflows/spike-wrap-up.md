@@ -2,7 +2,7 @@
 Package spike experiment findings into a persistent project skill — an implementation blueprint
 for future build conversations. Reads from `.planning/spikes/`, writes skill to
 `./.claude/skills/spike-findings-[project]/` (project-local) and summary to
-`.planning/spikes/WRAP-UP-SUMMARY.md`. Companion to `/sdd-spike`.
+`.planning/spikes/WRAP-UP-SUMMARY.md`. Companion to `/sdd:spike`.
 </purpose>
 
 <required_reading>
@@ -31,7 +31,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 If no unprocessed spikes exist:
 ```
 No unprocessed spikes found in `.planning/spikes/`.
-Run `/sdd-spike` first to create experiments.
+Run `/sdd:spike` first to create experiments.
 ```
 Exit.
 
@@ -278,14 +278,14 @@ After the summary, present next-step options:
 
 **Explore frontier spikes** — see what else is worth spiking based on what we've learned
 
-`/sdd-spike` (run with no argument — its frontier mode analyzes the spike landscape and proposes integration and frontier spikes)
+`/sdd:spike` (run with no argument — its frontier mode analyzes the spike landscape and proposes integration and frontier spikes)
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
-- `/sdd-plan-phase` — start planning the real implementation
-- `/sdd-spike [idea]` — spike a specific new idea
-- `/sdd-explore` — continue exploring
+- `/sdd:plan-phase` — start planning the real implementation
+- `/sdd:spike [idea]` — spike a specific new idea
+- `/sdd:explore` — continue exploring
 - Other
 
 ───────────────────────────────────────────────────────────────
@@ -302,5 +302,5 @@ After the summary, present next-step options:
 - [ ] `.planning/spikes/WRAP-UP-SUMMARY.md` written for project history
 - [ ] Project CLAUDE.md has auto-load routing line
 - [ ] Summary presented
-- [ ] Next-step options presented (including frontier spike exploration via `/sdd-spike`)
+- [ ] Next-step options presented (including frontier spike exploration via `/sdd:spike`)
 </success_criteria>

@@ -401,7 +401,7 @@ runs its default whole-repo scan.
 | **Tools** | Read |
 | **Model (balanced)** | Sonnet |
 | **Color** | Magenta |
-| **Produces** | `USER-PROFILE.md`, `/sdd-dev-preferences`, `CLAUDE.md` profile section |
+| **Produces** | `USER-PROFILE.md`, `CLAUDE.md` profile section |
 
 **Behavioral Dimensions:**
 Communication style, decision patterns, debugging approach, UX preferences, vendor choices, frustration triggers, learning style, explanation depth.
@@ -480,7 +480,7 @@ Communication style, decision patterns, debugging approach, UX preferences, vend
 
 ## Advanced and Specialized Agents
 
-Twelve additional agents ship under `agents/sdd-*.md` and are used by specialty workflows (`/sdd-ai-integration-phase`, `/sdd-eval-review`, `/sdd-code-review`, `/sdd-code-review --fix`, `/sdd-debug`, `/sdd-map-codebase --query`, `/sdd-select-framework`, `/sdd-ingest-docs`) and by the planner pipeline. Each carries full frontmatter in its agent file; the stubs below are concise by design. The authoritative roster (with spawner and primary-doc status per agent) lives in [`docs/INVENTORY.md`](INVENTORY.md).
+Twelve additional agents ship under `agents/sdd-*.md` and are used by specialty workflows (`/sdd-ai-integration-phase`, `/sdd-eval-review`, `/sdd-code-review`, `/sdd-code-review --fix`, `/sdd-debug`, `/sdd-map-codebase --query`, `/sdd-ingest-docs`) and by the planner pipeline. Each carries full frontmatter in its agent file; the stubs below are concise by design. The authoritative roster (with spawner and primary-doc status per agent) lives in [`docs/INVENTORY.md`](INVENTORY.md).
 
 ### sdd-pattern-mapper
 
@@ -648,7 +648,7 @@ Twelve additional agents ship under `agents/sdd-*.md` and are used by specialty 
 
 | Property | Value |
 |----------|-------|
-| **Spawned by** | `/sdd-ai-integration-phase`, `/sdd-select-framework` |
+| **Spawned by** | `/sdd-ai-integration-phase` |
 | **Parallelism** | Single instance (interactive) |
 | **Tools** | Read, Bash, Grep, Glob, WebSearch, AskUserQuestion |
 | **Model (balanced)** | Sonnet |

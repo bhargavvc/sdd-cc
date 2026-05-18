@@ -72,6 +72,81 @@ const CONFIG_KEY_SUGGESTIONS: Record<string, string> = {
   'plan_checker': 'workflow.plan_check',
 };
 
+const SHIP_PR_BODY_SECTION_KEYS = new Set(['heading', 'enabled', 'source', 'fallback', 'template']);
+const SHIP_PR_BODY_TEMPLATE_TOKENS = new Set([
+  'phase_number',
+  'phase_name',
+  'phase_dir',
+  'base_branch',
+  'padded_phase',
+]);
+const SHIP_PR_BODY_SOURCE_RE = /^(ROADMAP|PLAN|SUMMARY|VERIFICATION|STATE|REQUIREMENTS|CONTEXT)\.md\s+##\s+[^\r\n#][^\r\n]*$/;
+
+function validateShipPrBodySections(value: unknown): void {
+  if (!Array.isArray(value)) {
+    throw new SDDError(
+      'Invalid ship.pr_body_sections value. Expected a JSON array of section objects.',
+      ErrorClassification.Validation,
+    );
+  }
+
+  value.forEach((section, index) => {
+    const prefix = `Invalid ship.pr_body_sections[${index}]`;
+    if (!section || typeof section !== 'object' || Array.isArray(section)) {
+      throw new SDDError(`${prefix}. Expected an object.`, ErrorClassification.Validation);
+    }
+
+    const record = section as Record<string, unknown>;
+    const unknownKeys = Object.keys(record).filter((key) => !SHIP_PR_BODY_SECTION_KEYS.has(key));
+    if (unknownKeys.length > 0) {
+      throw new SDDError(`${prefix}. Unknown field(s): ${unknownKeys.join(', ')}.`, ErrorClassification.Validation);
+    }
+
+    if (typeof record.heading !== 'string' || record.heading.trim() === '') {
+      throw new SDDError(`${prefix}. heading must be a non-empty string.`, ErrorClassification.Validation);
+    }
+    if (/[\r\n]/.test(record.heading)) {
+      throw new SDDError(`${prefix}. heading must be a single line.`, ErrorClassification.Validation);
+    }
+
+    if ('enabled' in record && typeof record.enabled !== 'boolean') {
+      throw new SDDError(`${prefix}. enabled must be true or false.`, ErrorClassification.Validation);
+    }
+
+    for (const field of ['source', 'fallback', 'template']) {
+      if (field in record && typeof record[field] !== 'string') {
+        throw new SDDError(`${prefix}. ${field} must be a string.`, ErrorClassification.Validation);
+      }
+    }
+
+    const hasContent = ['source', 'fallback', 'template'].some((field) => {
+      return typeof record[field] === 'string' && record[field].trim() !== '';
+    });
+    if (!hasContent) {
+      throw new SDDError(`${prefix}. Provide at least one of source, fallback, or template.`, ErrorClassification.Validation);
+    }
+
+    if (typeof record.source === 'string' && record.source.trim() !== '') {
+      const selectors = record.source.split('||').map((selector) => selector.trim()).filter(Boolean);
+      if (selectors.length === 0 || selectors.some((selector) => !SHIP_PR_BODY_SOURCE_RE.test(selector))) {
+        throw new SDDError(
+          `${prefix}. source must use selectors like "PLAN.md ## Risks", separated with "||".`,
+          ErrorClassification.Validation,
+        );
+      }
+    }
+
+    if (typeof record.template === 'string') {
+      const tokens = record.template.matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g);
+      for (const match of tokens) {
+        if (!SHIP_PR_BODY_TEMPLATE_TOKENS.has(match[1])) {
+          throw new SDDError(`${prefix}. Unsupported template token: {${match[1]}}.`, ErrorClassification.Validation);
+        }
+      }
+    }
+  });
+}
+
 // ─── isValidConfigKey ─────────────────────────────────────────────────────
 
 /**
@@ -194,6 +269,13 @@ export const configSet: QueryHandler = async (args, projectDir, workstream) => {
   if (!keyPath) {
     throw new SDDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
   }
+  // #3593: parity with CJS cmdConfigSet — reject `config-set <key>` invocations
+  // that omit the value. Without this guard parsedValue stays undefined and the
+  // write either silently strips the key (JSON.stringify drops undefined) or
+  // persists a corrupt entry.
+  if (rawValue === undefined) {
+    throw new SDDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
+  }
 
   const validation = isValidConfigKey(keyPath);
   if (!validation.valid) {
@@ -213,6 +295,10 @@ export const configSet: QueryHandler = async (args, projectDir, workstream) => {
       `Invalid context value '${rawValue}'. Valid values: ${VALID_CONTEXT_VALUES.join(', ')}`,
       ErrorClassification.Validation,
     );
+  }
+
+  if (keyPath === 'ship.pr_body_sections') {
+    validateShipPrBodySections(parsedValue);
   }
 
   // D6: Lock protection for read-modify-write (match CJS config.cjs:296)
@@ -395,6 +481,9 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       code_review: true,
       code_review_depth: 'standard',
     },
+    ship: {
+      pr_body_sections: [],
+    },
     hooks: {
       context_warnings: true,
     },
@@ -419,6 +508,11 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       ...((globalDefaults.workflow as Record<string, unknown>) || {}),
       ...((userChoices.workflow as Record<string, unknown>) || {}),
     },
+    ship: {
+      ...(defaults.ship as Record<string, unknown>),
+      ...((globalDefaults.ship as Record<string, unknown>) || {}),
+      ...((userChoices.ship as Record<string, unknown>) || {}),
+    },
     hooks: {
       ...(defaults.hooks as Record<string, unknown>),
       ...((globalDefaults.hooks as Record<string, unknown>) || {}),
@@ -435,6 +529,9 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       ...((userChoices.features as Record<string, unknown>) || {}),
     },
   };
+
+  const ship = config.ship as Record<string, unknown>;
+  validateShipPrBodySections(ship.pr_body_sections);
 
   await atomicWriteConfig(paths.config, config);
 

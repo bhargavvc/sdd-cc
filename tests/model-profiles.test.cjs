@@ -8,6 +8,9 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 const {
   MODEL_PROFILES,
   VALID_PROFILES,
@@ -15,20 +18,20 @@ const {
   getAgentToModelMapForProfile,
 } = require('../sdd/bin/lib/model-profiles.cjs');
 
+function agentFilesOnDisk() {
+  return fs.readdirSync(path.join(__dirname, '..', 'agents'))
+    .filter((f) => /^sdd-.*\.md$/.test(f))
+    .map((f) => f.replace(/\.md$/, ''))
+    .sort();
+}
+
 // ─── MODEL_PROFILES data integrity ────────────────────────────────────────────
 
 describe('MODEL_PROFILES', () => {
-  test('contains all expected SDD agents', () => {
-    const expectedAgents = [
-      'sdd-planner', 'sdd-roadmapper', 'sdd-executor',
-      'sdd-phase-researcher', 'sdd-project-researcher', 'sdd-research-synthesizer',
-      'sdd-debugger', 'sdd-codebase-mapper', 'sdd-verifier',
-      'sdd-plan-checker', 'sdd-integration-checker', 'sdd-nyquist-auditor',
-      'sdd-ui-researcher', 'sdd-ui-checker', 'sdd-ui-auditor',
-    ];
-    for (const agent of expectedAgents) {
-      assert.ok(MODEL_PROFILES[agent], `Missing agent: ${agent}`);
-    }
+  test('contains every shipped sdd agent file on disk (#3229)', () => {
+    const expectedAgents = agentFilesOnDisk();
+    const actualAgents = Object.keys(MODEL_PROFILES).sort();
+    assert.deepStrictEqual(actualAgents, expectedAgents);
   });
 
   test('every agent has quality, balanced, budget, and adaptive profiles', () => {

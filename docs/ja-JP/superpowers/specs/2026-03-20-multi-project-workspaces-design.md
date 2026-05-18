@@ -1,4 +1,4 @@
-# マルチプロジェクトワークスペース (`/sdd-new-workspace`)
+# マルチプロジェクトワークスペース (`/sdd-workspace --new`)
 
 **Issue:** #1241
 **Date:** 2026-03-20
@@ -18,13 +18,13 @@ SDD は作業ディレクトリごとに1つの `.planning/` ディレクトリ�
 
 ## コマンド
 
-### `/sdd-new-workspace`
+### `/sdd-workspace --new`
 
 リポジトリのコピーと独自の `.planning/` を持つワークスペースディレクトリを作成します。
 
-```
-/sdd-new-workspace --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
-/sdd-new-workspace --name feature-b --repos . --strategy worktree   # same-repo isolation
+```bash
+/sdd-workspace --new --name feature-b --repos hr-ui,ZeymoAPI --path ~/workspaces/feature-b
+/sdd-workspace --new --name feature-b --repos . --strategy worktree   # same-repo isolation
 ```
 
 **引数:**
@@ -38,11 +38,11 @@ SDD は作業ディレクトリごとに1つの `.planning/` ディレクトリ�
 | `--branch` | いいえ | `workspace/<name>` | チェックアウトするブランチ |
 | `--auto` | いいえ | false | 対話的な質問をスキップし、デフォルト値を使用 |
 
-### `/sdd-list-workspaces`
+### `/sdd-workspace --list`
 
 `~/sdd-workspaces/*/WORKSPACE.md` をスキャンしてワークスペースマニフェストを検索します。名前、パス、リポジトリ数、SDD ステータス（PROJECT.md の有無、現在のフェーズ）をテーブル形式で表示します。
 
-### `/sdd-remove-workspace`
+### `/sdd-workspace --remove`
 
 確認後にワークスペースディレクトリを削除します。worktree 戦略の場合、まず各メンバーリポジトリに対して `git worktree remove` を実行します。コミットされていない変更があるリポジトリがある場合は削除を拒否します。
 
@@ -89,7 +89,7 @@ Strategy: worktree
 
 ## ワークフロー
 
-### `/sdd-new-workspace` のワークフロー手順
+### `/sdd-workspace --new` のワークフロー手順
 
 1. **セットアップ** — `init new-workspace` を呼び出し、JSON コンテキストを解析する
 2. **入力の収集** — `--name`/`--repos`/`--path` が指定されていない場合、対話的に質問する。リポジトリの選択時は、カレントディレクトリ内の子 `.git` ディレクトリを選択肢として表示する

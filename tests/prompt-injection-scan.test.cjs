@@ -52,6 +52,7 @@ const SCAN_EXTS = new Set(['.md', '.cjs', '.js', '.json']);
 const ALLOWLIST = new Set([
   'sdd/bin/lib/security.cjs',        // The security module itself
   'sdd/workflows/discuss-phase.md',  // Large workflow (~50K) with power mode + i18n
+  'sdd/workflows/new-project.md',     // Large workflow (~50K) — agent install, runtime detect, brownfield map, #3491 worktree gating
   'sdd/workflows/execute-phase.md',  // Large orchestration workflow (~51K) with wave execution + code-review gate
   'sdd/workflows/plan-phase.md',      // Large orchestration workflow (~51K) with TDD mode integration
   'hooks/sdd-prompt-guard.js',                  // The prompt guard hook

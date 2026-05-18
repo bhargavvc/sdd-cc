@@ -44,25 +44,33 @@ Write machine-parseable, evidence-based intelligence. Every claim references act
 <upstream_input>
 ## Upstream Input
 
-### From `/sdd-intel` Command
+### From `/sdd:map-codebase --query` Command
 
-- **Spawned by:** `/sdd-intel` command
+- **Spawned by:** `/sdd:map-codebase --query` command
 - **Receives:** Focus directive -- either `full` (all 5 files) or `partial --files <paths>` (update specific file entries only)
 - **Input format:** Spawn prompt with `focus: full|partial` directive and project root path
 
 ### Config Gate
 
-The /sdd-intel command has already confirmed that intel.enabled is true before spawning this agent. Proceed directly to Step 1.
+The /sdd:map-codebase --query command has already confirmed that intel.enabled is true before spawning this agent. Proceed directly to Step 1.
 </upstream_input>
 
 ## Project Scope
 
-**Runtime layout detection (do this first):** Check which runtime root exists by running:
+<!-- Layout detection: only meaningful when analysing the SDD framework's own repo (#3290). -->
+
+**Runtime layout detection (SDD framework repo only):** If `package.json` `"name"` equals `"@bhargavvc/sdd-cc"`, this project IS the SDD framework. In that case, detect the runtime root to choose canonical paths:
+
 ```bash
-ls -d .kilo 2>/dev/null && echo "kilo" || (ls -d .claude/sdd 2>/dev/null && echo "claude") || echo "unknown"
+# Only run layout detection when analysing the SDD framework repo itself.
+if [[ "$(jq -r '.name // ""' package.json 2>/dev/null)" == "@bhargavvc/sdd-cc" ]]; then
+  ls -d .kilo 2>/dev/null && echo "kilo" || (ls -d .claude/sdd 2>/dev/null && echo "claude") || echo "unknown"
+fi
 ```
 
-Use the detected root to resolve all canonical paths below:
+For all other projects, skip this step and proceed directly to Step 1.
+
+Use the detected root (when applicable) to resolve all canonical paths below:
 
 | Source type | Standard `.claude` layout | `.kilo` layout |
 |-------------|--------------------------|----------------|

@@ -211,8 +211,8 @@ Missing artifacts: {list or "none"}
 
 Next steps:
 - Review extracted learnings for accuracy
-- /sdd-progress — see overall project state
-- /sdd-execute-phase {next} — continue to next phase
+- /sdd:progress — see overall project state
+- /sdd:execute-phase {next} — continue to next phase
 
 ---------------------------------------------------------------
 ```

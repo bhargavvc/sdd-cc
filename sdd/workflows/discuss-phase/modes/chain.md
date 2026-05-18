@@ -75,22 +75,22 @@
 
      /clear then:
 
-     Next: /sdd-discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${SDD_WS}
+     Next: /sdd:discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${SDD_WS}
      ```
    - **PLANNING COMPLETE** → Planning done, execution didn't complete:
      ```
      Auto-advance partial: Planning complete, execution did not finish.
-     Continue: /sdd-execute-phase ${PHASE} ${SDD_WS}
+     Continue: /sdd:execute-phase ${PHASE} ${SDD_WS}
      ```
    - **PLANNING INCONCLUSIVE / CHECKPOINT** → Stop chain:
      ```
      Auto-advance stopped: Planning needs input.
-     Continue: /sdd-plan-phase ${PHASE} ${SDD_WS}
+     Continue: /sdd:plan-phase ${PHASE} ${SDD_WS}
      ```
    - **GAPS FOUND** → Stop chain:
      ```
      Auto-advance stopped: Gaps found during execution.
-     Continue: /sdd-plan-phase ${PHASE} --gaps ${SDD_WS}
+     Continue: /sdd:plan-phase ${PHASE} --gaps ${SDD_WS}
      ```
 
 7. **If none of `--auto`, `--chain`, nor config enabled:** route to

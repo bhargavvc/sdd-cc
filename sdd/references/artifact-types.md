@@ -72,15 +72,15 @@ reads is inert — the consumption mechanism is what gives an artifact meaning.
 - **Location**: `.planning/spikes/SPIKE-NNN/`
 - **Consumed by**: Planner when spike is referenced; `pause-work` for spike context handoff
 
-### Spike README.md / MANIFEST.md (per-spike, via /sdd-spike)
+### Spike README.md / MANIFEST.md (per-spike, via /sdd:spike)
 - **Shape**: YAML frontmatter (spike, name, validates, verdict, related, tags) + run instructions + results
-- **Lifecycle**: Created by `/sdd-spike` → Verified → Wrapped up by `/sdd-spike-wrap-up`
+- **Lifecycle**: Created by `/sdd:spike` → Verified → Wrapped up by `/sdd-spike-wrap-up`
 - **Location**: `.planning/spikes/NNN-name/README.md`, `.planning/spikes/MANIFEST.md`
 - **Consumed by**: `/sdd-spike-wrap-up` for curation; `pause-work` for spike context handoff
 
 ### Sketch README.md / MANIFEST.md / index.html (per-sketch)
 - **Shape**: YAML frontmatter (sketch, name, question, winner, tags) + variants as tabbed HTML
-- **Lifecycle**: Created by `/sdd-sketch` → Evaluated → Wrapped up by `/sdd-sketch-wrap-up`
+- **Lifecycle**: Created by `/sdd:sketch` → Evaluated → Wrapped up by `/sdd-sketch-wrap-up`
 - **Location**: `.planning/sketches/NNN-name/README.md`, `.planning/sketches/NNN-name/index.html`, `.planning/sketches/MANIFEST.md`
 - **Consumed by**: `/sdd-sketch-wrap-up` for curation; `pause-work` for sketch context handoff
 

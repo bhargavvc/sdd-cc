@@ -12,25 +12,25 @@ These files live directly at `.planning/` — not inside phase subdirectories.
 
 | File | Template | Produced by | Purpose |
 |------|----------|-------------|---------|
-| `PROJECT.md` | `project.md` | `/sdd-new-project` | Project identity, goals, requirements summary |
-| `ROADMAP.md` | `roadmap.md` | `/sdd-new-milestone`, `/sdd-new-project` | Phase plan with milestones and progress tracking |
-| `STATE.md` | `state.md` | `/sdd-new-project`, `/sdd-health --repair` | Current session state, active phase, last activity |
-| `REQUIREMENTS.md` | `requirements.md` | `/sdd-new-milestone` | Functional requirements with traceability |
-| `MILESTONES.md` | `milestone.md` | `/sdd-complete-milestone` | Log of completed milestones with accomplishments |
+| `PROJECT.md` | `project.md` | `/sdd:new-project` | Project identity, goals, requirements summary |
+| `ROADMAP.md` | `roadmap.md` | `/sdd:new-milestone`, `/sdd:new-project` | Phase plan with milestones and progress tracking |
+| `STATE.md` | `state.md` | `/sdd:new-project`, `/sdd:health --repair` | Current session state, active phase, last activity |
+| `REQUIREMENTS.md` | `requirements.md` | `/sdd:new-milestone` | Functional requirements with traceability |
+| `MILESTONES.md` | `milestone.md` | `/sdd:complete-milestone` | Log of completed milestones with accomplishments |
 | `BACKLOG.md` | *(inline)* | `/sdd-add-backlog` | Pending ideas and deferred work |
-| `LEARNINGS.md` | *(inline)* | `/sdd-extract-learnings`, `/sdd-execute-phase` | Phase retrospective learnings for future plans |
-| `THREADS.md` | *(inline)* | `/sdd-thread` | Persistent discussion threads |
-| `config.json` | `config.json` | `/sdd-new-project`, `/sdd-health --repair` | Project-specific SDD configuration |
+| `LEARNINGS.md` | *(inline)* | `/sdd:extract-learnings`, `/sdd:execute-phase` | Phase retrospective learnings for future plans |
+| `THREADS.md` | *(inline)* | `/sdd:thread` | Persistent discussion threads |
+| `config.json` | `config.json` | `/sdd:new-project`, `/sdd:health --repair` | Project-specific SDD configuration |
 | `CLAUDE.md` | `claude-md.md` | `/sdd-profile` | Auto-assembled Claude Code context file |
-| `RETROSPECTIVE.md` | *(inline)* | `/sdd-complete-milestone` | Living milestone retrospective updated at each milestone close |
+| `RETROSPECTIVE.md` | *(inline)* | `/sdd:complete-milestone` | Living milestone retrospective updated at each milestone close |
 
 ### Version-stamped artifacts (pattern: `vX.Y-*.md`)
 
 | Pattern | Produced by | Purpose |
 |---------|-------------|---------|
-| `vX.Y-MILESTONE-AUDIT.md` | `/sdd-audit-milestone` | Milestone audit report before archiving |
+| `vX.Y-MILESTONE-AUDIT.md` | `/sdd:audit-milestone` | Milestone audit report before archiving |
 
-These files are archived to `.planning/milestones/` by `/sdd-complete-milestone`. Finding them at the `.planning/` root after completion indicates the archive step was skipped.
+These files are archived to `.planning/milestones/` by `/sdd:complete-milestone`. Finding them at the `.planning/` root after completion indicates the archive step was skipped.
 
 ---
 
@@ -40,24 +40,24 @@ These files live inside a phase directory. They are NOT checked by W019 (which o
 
 | File Pattern | Template | Produced by | Purpose |
 |-------------|----------|-------------|---------|
-| `NN-MM-PLAN.md` | `phase-prompt.md` | `/sdd-plan-phase` | Executable implementation plan |
-| `NN-MM-SUMMARY.md` | `summary.md` | `/sdd-execute-phase` | Post-execution summary with learnings |
-| `NN-CONTEXT.md` | `context.md` | `/sdd-discuss-phase` | Scoped discussion decisions for the phase |
-| `NN-RESEARCH.md` | `research.md` | `/sdd-plan-phase`, `/sdd-plan-phase --research-phase <N>` | Technical research for the phase |
-| `NN-VALIDATION.md` | `VALIDATION.md` | `/sdd-plan-phase` (Nyquist) | Validation architecture (Nyquist method) |
-| `NN-UAT.md` | `UAT.md` | `/sdd-validate-phase` | User acceptance test results |
-| `NN-PATTERNS.md` | *(inline)* | `/sdd-plan-phase` (pattern mapper) | Analog file mapping for the phase |
-| `NN-UI-SPEC.md` | `UI-SPEC.md` | `/sdd-ui-phase` | UI design contract |
-| `NN-SECURITY.md` | `SECURITY.md` | `/sdd-secure-phase` | Security threat model |
-| `NN-AI-SPEC.md` | `AI-SPEC.md` | `/sdd-ai-integration-phase` | AI integration spec with eval strategy |
-| `NN-DEBUG.md` | `DEBUG.md` | `/sdd-debug` | Debug session log |
-| `NN-REVIEWS.md` | *(inline)* | `/sdd-review` | Cross-AI review feedback |
+| `NN-MM-PLAN.md` | `phase-prompt.md` | `/sdd:plan-phase` | Executable implementation plan |
+| `NN-MM-SUMMARY.md` | `summary.md` | `/sdd:execute-phase` | Post-execution summary with learnings |
+| `NN-CONTEXT.md` | `context.md` | `/sdd:discuss-phase` | Scoped discussion decisions for the phase |
+| `NN-RESEARCH.md` | `research.md` | `/sdd:plan-phase`, `/sdd:plan-phase --research-phase <N>` | Technical research for the phase |
+| `NN-VALIDATION.md` | `VALIDATION.md` | `/sdd:plan-phase` (Nyquist) | Validation architecture (Nyquist method) |
+| `NN-UAT.md` | `UAT.md` | `/sdd:validate-phase` | User acceptance test results |
+| `NN-PATTERNS.md` | *(inline)* | `/sdd:plan-phase` (pattern mapper) | Analog file mapping for the phase |
+| `NN-UI-SPEC.md` | `UI-SPEC.md` | `/sdd:ui-phase` | UI design contract |
+| `NN-SECURITY.md` | `SECURITY.md` | `/sdd:secure-phase` | Security threat model |
+| `NN-AI-SPEC.md` | `AI-SPEC.md` | `/sdd:ai-integration-phase` | AI integration spec with eval strategy |
+| `NN-DEBUG.md` | `DEBUG.md` | `/sdd:debug` | Debug session log |
+| `NN-REVIEWS.md` | *(inline)* | `/sdd:review` | Cross-AI review feedback |
 
 ---
 
 ## Milestone Archive (`.planning/milestones/`)
 
-Files archived by `/sdd-complete-milestone`. These are never checked by W019.
+Files archived by `/sdd:complete-milestone`. These are never checked by W019.
 
 | File Pattern | Source |
 |-------------|--------|

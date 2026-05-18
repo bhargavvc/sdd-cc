@@ -1,6 +1,6 @@
 # Add Backlog Item Workflow
 
-Invoked by `/sdd-capture --backlog` (`commands/sdd/capture.md`).
+Invoked by `/sdd:capture --backlog` (`commands/sdd/capture.md`).
 
 Adds an idea to the ROADMAP.md backlog parking lot using 999.x numbering. Backlog items
 are unsequenced ideas that aren't ready for active planning — they live outside the normal
@@ -44,21 +44,26 @@ of ROADMAP.md:
 **Plans:** 0 plans
 
 Plans:
-- [ ] TBD (promote with /sdd-review-backlog when ready)
+- [ ] TBD (promote with /sdd:review-backlog when ready)
 ```
 
 ## Step 4: Create the phase directory
 
+Apply the `project_code` prefix (if set in `.planning/config.json`) so the backlog directory name is consistent with all other phase-creation paths:
+
 ```bash
 SLUG=$(sdd-sdk query generate-slug "$ARGUMENTS" --raw)
-mkdir -p ".planning/phases/${NEXT}-${SLUG}"
-touch ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
+PROJECT_CODE=$(sdd-sdk query config-get project_code --raw 2>/dev/null || echo "")
+PREFIX=$([ -n "$PROJECT_CODE" ] && echo "${PROJECT_CODE}-" || echo "")
+PHASE_DIR=".planning/phases/${PREFIX}${NEXT}-${SLUG}"
+mkdir -p "${PHASE_DIR}"
+touch "${PHASE_DIR}/.gitkeep"
 ```
 
 ## Step 5: Commit
 
 ```bash
-sdd-sdk query commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .planning/ROADMAP.md ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
+sdd-sdk query commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .planning/ROADMAP.md "${PHASE_DIR}/.gitkeep"
 ```
 
 ## Step 6: Report
@@ -67,19 +72,19 @@ sdd-sdk query commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .
 ## 📋 Backlog Item Added
 
 Phase {NEXT}: {description}
-Directory: .planning/phases/{NEXT}-{slug}/
+Directory: {PHASE_DIR}/
 
 This item lives in the backlog parking lot.
-Use /sdd-discuss-phase {NEXT} to explore it further.
-Use /sdd-review-backlog to promote items to active milestone.
+Use /sdd:discuss-phase {NEXT} to explore it further.
+Use /sdd:review-backlog to promote items to active milestone.
 ```
 
 </process>
 
 <notes>
 - 999.x numbering keeps backlog items out of the active phase sequence
-- Phase directories are created immediately so /sdd-discuss-phase and /sdd-plan-phase work on them
+- Phase directories are created immediately so /sdd:discuss-phase and /sdd:plan-phase work on them
 - No `Depends on:` field — backlog items are unsequenced by definition
 - Sparse numbering is fine (999.1, 999.3) — always uses next-decimal
-- Promote backlog items to the active milestone with /sdd-review-backlog
+- Promote backlog items to the active milestone with /sdd:review-backlog
 </notes>

@@ -161,8 +161,13 @@ describe('debug skill dispatch and sub-orchestrator (#2148, #2151)', () => {
 
   test('sdd-debug-session-manager agent exists with correct tools', () => {
     const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'sdd-debug-session-manager.md'), 'utf8');
-    assert.ok(content.includes('Task'), 'sdd-debug-session-manager missing Task tool');
+    assert.ok(content.includes('Agent'), 'sdd-debug-session-manager missing Agent tool');
     assert.ok(content.includes('AskUserQuestion'), 'sdd-debug-session-manager missing AskUserQuestion tool');
+  });
+
+  test('sdd-debug-session-manager spawns debugger with Agent() dispatcher', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'sdd-debug-session-manager.md'), 'utf8');
+    assert.ok(content.includes('\nAgent('), 'session manager must dispatch debugger with Agent(');
   });
 
   test('sdd-debug-session-manager uses DATA_START/DATA_END for checkpoint responses', () => {

@@ -546,15 +546,15 @@ SDD 보증을 갖춘 임시 작업을 실행합니다.
 /sdd-autonomous --only 4            # 페이즈 4만 자율 실행
 ```
 
-### `/sdd-do`
+### `/sdd-fast`
 
 자유 형식 텍스트를 적절한 SDD 명령어로 라우팅합니다.
 
 ```bash
-/sdd-do                             # 원하는 작업을 설명합니다
+/sdd-fast                             # 원하는 작업을 설명합니다
 ```
 
-### `/sdd-note`
+### `/sdd-capture`
 
 마찰 없는 아이디어 캡처 — 노트 추가, 목록 조회, 또는 노트를 할 일로 승격합니다.
 
@@ -569,9 +569,9 @@ SDD 보증을 갖춘 임시 작업을 실행합니다.
 | `--global` | 노트 작업에 전역 범위 사용 |
 
 ```bash
-/sdd-note "Consider caching strategy for API responses"
-/sdd-note list
-/sdd-note promote 3
+/sdd-capture "Consider caching strategy for API responses"
+/sdd-capture list
+/sdd-capture promote 3
 ```
 
 ### `/sdd-debug`
@@ -642,7 +642,6 @@ Claude Code 세션 분석을 통해 8개 차원(커뮤니케이션 스타일, �
 
 **생성 아티팩트.**
 - `USER-PROFILE.md` — 전체 행동 프로필
-- `/sdd-dev-preferences` 명령어 — 모든 세션에서 선호도를 로드합니다
 - `CLAUDE.md` 프로필 섹션 — Claude Code에 의해 자동으로 인식됩니다
 
 ```bash

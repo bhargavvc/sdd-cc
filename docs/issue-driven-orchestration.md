@@ -53,7 +53,7 @@ Symphony docs, blog posts, or third-party orchestration write-ups.
 | Proof-of-work / test evidence | `/sdd-verify-work` (UAT.md persisted across `/clear`) |
 | Adversarial review | `/sdd-review` (cross-AI peer review of plans) |
 | Human merge gate | `/sdd-ship` (creates PR, optional code review, prepares merge) |
-| Follow-up capture | `/sdd-note`, `/sdd-capture --seed`, `/sdd-new-milestone`, or a manually opened tracker issue |
+| Follow-up capture | `/sdd-capture`, `/sdd-capture --seed`, `/sdd-new-milestone`, or a manually opened tracker issue |
 | Concurrency control | Manager / background-agent semantics (no always-on poller) |
 
 The mapping is one-way: SDD owns the safety gates (verification, human
@@ -97,7 +97,7 @@ tracker issue end-to-end. Replace bracketed placeholders before running.
    blind spots model-by-model), then `/sdd-ship` to open the PR with a
    rich body assembled from the planning artifacts. Both gates require a
    human decision before anything reaches the remote.
-7. **Capture follow-up work explicitly.** Use `/sdd-note` for inline
+7. **Capture follow-up work explicitly.** Use `/sdd-capture` for inline
    notes, `/sdd-capture --seed` for ideas worth a future phase, or
    `/sdd-new-milestone` for a coherent group of follow-ups. Creating a
    tracker issue from a discovered follow-up requires explicit user

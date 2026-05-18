@@ -13,8 +13,9 @@ allowed-tools:
   - AskUserQuestion
 argument-instructions: |
   Parse the argument as a phase number (integer, decimal, or letter-suffix), plus optional free-text instructions.
-  Example: /sdd-add-tests 12
-  Example: /sdd-add-tests 12 focus on edge cases in the pricing module
+  Example: /sdd:add-tests 12
+  Example: /sdd:add-tests 12 focus on edge cases in the pricing module
+requires: [phase]
 ---
 <objective>
 Generate unit and E2E tests for a completed phase, using its SUMMARY.md, CONTEXT.md, and VERIFICATION.md as specifications.
