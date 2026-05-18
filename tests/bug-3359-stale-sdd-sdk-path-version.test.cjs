@@ -114,7 +114,7 @@ describe('bug #3359: installer detects stale sdd-sdk earlier on PATH', () => {
       `warning must include detected and installer versions. Output:\n${combined}`,
     );
     assert.ok(
-      /npm install -g @bhargavvc/sdd-cc@latest/.test(combined),
+      /npm install -g @bhargavvc\/sdd-cc@latest/.test(combined),
       `warning must include global update remediation. Output:\n${combined}`,
     );
     assert.ok(

@@ -170,7 +170,7 @@ if [ -f "package.json" ]; then
     const pkg = require('./package.json');
     const fs = require('fs');
     pkg.name = '@bhargavvc/sdd-cc';
-    pkg.bin = { 'sdd-cc': 'bin/install.js', 'sdd-sdk': 'bin/sdd-sdk.js' };
+    pkg.bin = { 'sdd-cc': 'bin/install.js', 'sdd-sdk': 'bin/sdd-sdk.js', 'sdd-tools': 'bin/sdd-sdk.js' };
     pkg.description = pkg.description
       .replace(/Get Shit Done/gi, 'Spec-Driven Development')
       .replace(/GSD/g, 'SDD')

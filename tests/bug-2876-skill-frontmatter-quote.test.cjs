@@ -27,7 +27,7 @@ const fs = require('node:fs');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8'));
-const installPath = path.resolve(REPO_ROOT, pkg.bin['@bhargavvc/sdd-cc']);
+const installPath = path.resolve(REPO_ROOT, pkg.bin['sdd-cc']);
 const install = require(installPath);
 
 // Build a minimal Claude command source whose description starts with the

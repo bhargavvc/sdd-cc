@@ -74,9 +74,14 @@ function listShippedSlashBaseNames() {
 
 function extractSlashReferences(contents) {
   const names = new Set();
+  // Strip the npm package name first: `@bhargavvc/sdd-cc` contains the literal
+  // substring `/sdd-cc`, which the slash-command regex would otherwise mis-read
+  // as a `/sdd-cc` command. (Rebrand artifact — upstream's `get-shit-done-cc`
+  // package name had no such collision.)
+  const cleaned = contents.replace(/@bhargavvc\/sdd-cc/g, '@bhargavvc-sdd-cc');
   const tokenRe = /\/sdd[:-]([a-z][a-z0-9-]*)/g;
   let match;
-  while ((match = tokenRe.exec(contents)) !== null) {
+  while ((match = tokenRe.exec(cleaned)) !== null) {
     names.add(match[1]);
   }
   return names;

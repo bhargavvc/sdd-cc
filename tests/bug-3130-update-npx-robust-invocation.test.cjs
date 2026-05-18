@@ -30,7 +30,7 @@ const src = fs.readFileSync(UPDATE_WF, 'utf8');
 test('bug #3130: update.md contains no bare npx invocations (cache-stale form)', () => {
   // Any occurrence of `npx -y @bhargavvc/sdd-cc@latest` without `--package=`
   // is the stale form that triggers the two failure modes.
-  const stale = (src.match(/npx -y @bhargavvc/sdd-cc@latest[^\n]*/g) || []);
+  const stale = (src.match(/npx -y @bhargavvc\/sdd-cc@latest[^\n]*/g) || []);
   assert.deepEqual(
     stale,
     [],
@@ -40,7 +40,7 @@ test('bug #3130: update.md contains no bare npx invocations (cache-stale form)',
 
 test('bug #3130: update.md has >=3 robust npx invocations (--package= + -- separator)', () => {
   // Three sibling invocations: local, global, and unknown/fallback.
-  const robust = (src.match(/npx -y --package=@bhargavvc/sdd-cc@latest -- @bhargavvc/sdd-cc/g) || []);
+  const robust = (src.match(/npx -y --package=@bhargavvc\/sdd-cc@latest -- @bhargavvc\/sdd-cc/g) || []);
   assert.ok(
     robust.length >= 3,
     `Expected >=3 robust npx invocations in update.md, found ${robust.length}`,
