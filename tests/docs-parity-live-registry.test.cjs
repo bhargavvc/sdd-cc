@@ -111,6 +111,12 @@ const INTERNAL_COMPONENT_SLUGS = new Set([
   // The regex captures "/sdd-build" from the URL path. Not a slash command.
   'build',
 
+  // cc — npm package name "@bhargavvc/sdd-cc". The regex captures "/sdd-cc"
+  // from the scoped package name (e.g. "npx @bhargavvc/sdd-cc@latest"). Not a
+  // slash command. (Rebrand artifact — upstream's "get-shit-done-cc" package
+  // name had no "/sdd-" substring so this never tripped upstream.)
+  'cc',
+
   // ~/sdd-workspaces/ — filesystem directory path used by /sdd-workspace.
   // Docs reference "~/sdd-workspaces/<name>" as the default workspace directory
   // in shell examples and option tables (e.g. "--path /target (default: ~/sdd-workspaces/<name>)").
@@ -164,7 +170,14 @@ function stripHtmlComments(content) {
  * Returns: { slash: Set<string>, colon: Set<string>, dollar: Set<string> }
  */
 function extractCommandTokens(content) {
-  const stripped = stripHtmlComments(content);
+  // Neutralize the npm package name before tokenizing: `@bhargavvc/sdd-cc`
+  // (and split-package variants like `@bhargavvc/sdd-cc-core`) contain the
+  // literal substring `/sdd-cc`, which the slash-command regex would mis-read
+  // as a command. Replacing the `/` with `-` breaks the false match without
+  // affecting real `/sdd-<cmd>` tokens. (Rebrand artifact — upstream's
+  // `get-shit-done-cc` package name had no `/sdd-` substring.)
+  const stripped = stripHtmlComments(content)
+    .replace(/@bhargavvc\/sdd-cc/g, '@bhargavvc-sdd-cc');
 
   function isInternal(token) {
     // Strip the /sdd- or /sdd: or $sdd- prefix to get the slug

@@ -162,7 +162,7 @@ Confirm against `GOLDEN_PARITY_EXCEPTIONS` in `golden-policy.ts` for the live li
 
 ## Not in the SDK registry (product decision)
 
-- **`graphify`**, **`from-gsd2` / `gsd2-import`** — CLI-only; no registry handler.
+- **`graphify`**, **`from-sdd2` / `sdd2-import`** — CLI-only; no registry handler.
 
 ---
 

@@ -165,7 +165,7 @@
  *   learnings delete <id>                Delete a learning by ID
  *
  * SDD-2 Migration:
- *   from-gsd2 [--path <dir>] [--force] [--dry-run]
+ *   from-sdd2 [--path <dir>] [--force] [--dry-run]
  *             Import a SDD-2 (.sdd/) project back to SDD v1 (.planning/) format
  */
 
@@ -369,7 +369,7 @@ async function main() {
     'Commands: agent-skills, audit-open, audit-uat, check-commit, commit, commit-to-subrepo, ' +
     'config-ensure-section, config-get, config-new-project, config-path, config-set, ' +
     'current-timestamp, detect-custom-files, docs-init, extract-messages, find-phase, ' +
-    'from-gsd2, frontmatter, gap-analysis, generate-claude-md, generate-claude-profile, ' +
+    'from-sdd2, frontmatter, gap-analysis, generate-claude-md, generate-claude-profile, ' +
     'generate-dev-preferences, generate-slug, graphify, history-digest, init, intel, ' +
     'learnings, list-todos, milestone, phase, phase-plan-index, phases, profile-questionnaire, ' +
     'profile-sample, progress, requirements, resolve-model, roadmap, scaffold, state, ' +
@@ -1193,9 +1193,9 @@ async function runCommand(command, args, cwd, raw, defaultValue, originalCommand
 
     // ─── SDD-2 Reverse Migration ───────────────────────────────────────────
 
-    case 'from-gsd2': {
-      const gsd2Import = require('./lib/gsd2-import.cjs');
-      gsd2Import.cmdFromGsd2(args.slice(1), cwd, raw);
+    case 'from-sdd2': {
+      const sdd2Import = require('./lib/sdd2-import.cjs');
+      sdd2Import.cmdFromSdd2(args.slice(1), cwd, raw);
       break;
     }
 

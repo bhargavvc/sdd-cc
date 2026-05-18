@@ -599,16 +599,16 @@ Ingest an external plan file into the SDD planning system with conflict detectio
 
 | Flag | Required | Description |
 |------|----------|--------------|
-| `--from <filepath>` | Yes (or `--from-gsd2`) | Path to the external plan file to import |
-| `--from-gsd2` | Yes (or `--from`) | Reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format |
-| `--path <dir>` | No | With `--from-gsd2`: path to the SDD-2 project directory (defaults to current directory) |
+| `--from <filepath>` | Yes (or `--from-sdd2`) | Path to the external plan file to import |
+| `--from-sdd2` | Yes (or `--from`) | Reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format |
+| `--path <dir>` | No | With `--from-sdd2`: path to the SDD-2 project directory (defaults to current directory) |
 
 **Process:** Detects conflicts → prompts for resolution → writes as SDD PLAN.md → validates via `sdd-plan-checker`
 
 ```bash
 /sdd-import --from /tmp/team-plan.md    # Import and validate an external plan
-/sdd-import --from-gsd2                # Migrate from SDD-2 back to v1 (current dir)
-/sdd-import --from-gsd2 --path ~/old-project  # Migrate from a different path
+/sdd-import --from-sdd2                # Migrate from SDD-2 back to v1 (current dir)
+/sdd-import --from-sdd2 --path ~/old-project  # Migrate from a different path
 ```
 
 ---

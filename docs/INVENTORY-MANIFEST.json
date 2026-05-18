@@ -277,7 +277,7 @@
       "frontmatter.cjs",
       "gap-checker.cjs",
       "graphify.cjs",
-      "gsd2-import.cjs",
+      "sdd2-import.cjs",
       "init-command-router.cjs",
       "init.cjs",
       "install-profiles.cjs",

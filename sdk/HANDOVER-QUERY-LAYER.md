@@ -58,7 +58,7 @@ Previously `state.json` and `state.load` were easy to confuse: CJS has two diffe
 | Status                   | Surface                                                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------------------ |
 | **Registered**           | Essentially all `sdd-tools.cjs` `runCommand` surfaces, including `phase.add-batch`.          |
-| **CLI-only (by design)** | `graphify`, `from-gsd2` — not in `createRegistry()`; documented in `QUERY-HANDLERS.md`.  |
+| **CLI-only (by design)** | `graphify`, `from-sdd2` — not in `createRegistry()`; documented in `QUERY-HANDLERS.md`.  |
 | **SDK-only extra**       | `phases.archive` — no `sdd-tools phases archive` subcommand (CJS has `list` / `clear` only). |
 
 
@@ -141,7 +141,7 @@ Source: `.planning/research/decision-routing-audit.md` §3. **Tier** = priority 
 
 1. ~~**Golden test for `phase.add-batch`**~~ — Done: `sdk/src/golden/mutation-subprocess.integration.test.ts` (`phase.add-batch` JSON parity vs CJS).
 2. ~~**Re-export `normalizeQueryCommand`**~~ — Done: exported from `sdk/src/query/index.ts` and `sdk/src/index.ts` (`@bhargavvc/sdk`).
-3. **Issue #2302 follow-ups** — Runner alignment (`SDDTools` → registry where appropriate). **`configGet`** now uses `dispatchNativeJson` with canonical `config-get` (fixes subprocess argv vs real `sdd-tools.cjs`, which has no `config` + `get` top-level). Keep `graphify` / `from-gsd2` out of scope unless product reopens.
+3. **Issue #2302 follow-ups** — Runner alignment (`SDDTools` → registry where appropriate). **`configGet`** now uses `dispatchNativeJson` with canonical `config-get` (fixes subprocess argv vs real `sdd-tools.cjs`, which has no `config` + `get` top-level). Keep `graphify` / `from-sdd2` out of scope unless product reopens.
 4. **Drift check** — When adding CJS commands, update `QUERY-HANDLERS.md` matrix and golden docs in the same PR.
 
 ---
@@ -163,7 +163,7 @@ npx vitest run src/golden/golden.integration.test.ts --project integration
 
 - Parity expectations and CJS↔SDK matrix documented in one place (`QUERY-HANDLERS.md`).
 - `sdd-sdk query` understands two-token command patterns like `sdd-tools`.
-- `phase add-batch` implemented and registered; **only** intentional CLI-only gaps remain (**graphify**, **from-gsd2**).
+- `phase add-batch` implemented and registered; **only** intentional CLI-only gaps remain (**graphify**, **from-sdd2**).
 
 ---
 

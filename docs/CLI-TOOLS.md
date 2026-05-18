@@ -64,7 +64,7 @@ Use this when authoring workflows, not when you only need the command list below
 
 **SDK state reads:** `state.json` and `state.load` are both registered query handlers with parity coverage. You can invoke them through `sdd-sdk query …` and through the SDK Runtime Bridge (`SDDTools` → `sdk/src/query-runtime-bridge.ts`), honoring `allowFallbackToSubprocess` / `strictSdk` and emitting `onDispatchEvent` observability. For direct typed dispatch, use `createRegistry()` from `sdk/src/query/index.ts`. Full routing and golden rules: [QUERY-HANDLERS.md](../sdk/src/query/QUERY-HANDLERS.md).
 
-**CLI-only (not in registry):** e.g. **graphify**, **from-gsd2** / **gsd2-import** — call `sdd-tools.cjs` until registered.
+**CLI-only (not in registry):** e.g. **graphify**, **from-sdd2** / **sdd2-import** — call `sdd-tools.cjs` until registered.
 
 **Mutation events (SDK):** `QUERY_MUTATION_COMMANDS` in `sdk/src/query/index.ts` lists commands that may emit structured events after a successful dispatch. Exceptions called out in QUERY-HANDLERS: `state validate` (read-only), `skill-manifest` (writes only with `--write`), `intel update` (stub).
 
@@ -420,8 +420,8 @@ node sdd-tools.cjs audit-uat
 # Cross-artifact audit queue — scan `.planning/` for unresolved audit items
 node sdd-tools.cjs audit-open [--json]
 
-# Reverse-migrate a SDD-2 project into the current structure (backs `/sdd-import --from-gsd2`)
-node sdd-tools.cjs from-gsd2 [--path <dir>] [--force] [--dry-run]
+# Reverse-migrate a SDD-2 project into the current structure (backs `/sdd-import --from-sdd2`)
+node sdd-tools.cjs from-sdd2 [--path <dir>] [--force] [--dry-run]
 
 # Git commit with config checks
 node sdd-tools.cjs commit <message> [--files f1 f2] [--amend] [--no-verify] [--respect-staged]
@@ -484,7 +484,7 @@ User-facing entry point: `/sdd-graphify` (see [Command Reference](COMMANDS.md#sd
 | Graphify | `lib/graphify.cjs` | Knowledge graph build/query/status/diff/snapshot (backs `/sdd-graphify`) |
 | Learnings | `lib/learnings.cjs` | Extract learnings from phases/SUMMARY artifacts (backs `/sdd-extract-learnings`) |
 | Audit | `lib/audit.cjs` | Phase/milestone audit queue handlers; `audit-open` helper |
-| GSD2 Import | `lib/gsd2-import.cjs` | Reverse-migration importer from SDD-2 projects (backs `/sdd-import --from-gsd2`) |
+| SDD2 Import | `lib/sdd2-import.cjs` | Reverse-migration importer from SDD-2 projects (backs `/sdd-import --from-sdd2`) |
 | Intel | `lib/intel.cjs` | Queryable codebase intelligence index (backs `/sdd-map-codebase --query`) |
 
 ---

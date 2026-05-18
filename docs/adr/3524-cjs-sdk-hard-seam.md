@@ -51,7 +51,7 @@ The table below indexes by Module, not by physical layer. Each row names the sou
 These remain CJS-only. Drift cannot occur because there is no SDK counterpart. If any later needs an SDK port, that port is a new enhancement, not a parallel implementation.
 
 - `bin/lib/graphify.cjs`
-- `bin/lib/gsd2-import.cjs`
+- `bin/lib/sdd2-import.cjs`
 - `bin/lib/schema-detect.cjs`
 - `bin/lib/fallow-runner.cjs`
 - `bin/lib/intel.cjs`
@@ -79,7 +79,7 @@ A top-of-file banner is auto-inserted by each generator into the emitted `.gener
 - **Configuration Module** (added during Phase 2): Module owning config load, legacy-key normalization, defaults merge, and explicit on-disk migration for `.planning/config.json`. Interface: `loadConfig(cwd) → MergedConfig` (pure read, no disk write); `normalizeLegacyKeys(parsed) → { parsed, normalizations[] }` (idempotent, returns the list of normalizations applied for migration logging); `mergeDefaults(parsed) → MergedConfig`; `migrateOnDisk(cwd) → MigrationReport` (explicit, opt-in, called only by the installer and by `sdd-tools migrate-config`). Invariants: never mutates disk inside `loadConfig`; legacy top-level keys (`branching_strategy`, `sub_repos`, `multiRepo`, `depth`) are normalized into their canonical nested locations in the returned value; defaults come from the shared `config-defaults.manifest.json`.
 - **Project-Root Resolution Module** (added during Phase 4): Module owning project-root and effective-root resolution heuristics including own-`.planning` detection, parent-`sub_repos` traversal, legacy `multiRepo`, and `.git`-ancestor fallback.
 - **Workstream Inventory Module — Builder split** (CONTEXT.md amendment during Phase 3): the existing Module entry gains a sub-paragraph noting that the pure projection logic is the source of truth and the per-side Reader Adapters are hand-authored over the generated Builder.
-- **CJS Command Router Adapter Module — runtime-bridge delegation** (CONTEXT.md amendment during Phase 5): the existing Module entry gains a paragraph noting that the per-family `handlers` map delegates to `QueryRuntimeBridge.execute()` in-process via `require('../../sdk/dist/query-runtime-bridge.cjs')`. Per-side CJS handler files (`state.cjs`, `verify.cjs`, etc.) that previously held parallel implementations are reduced to delegates or deleted once their SDK counterpart is the only remaining implementation. CJS-only Module handlers (graphify, gsd2-import, schema-detect, fallow-runner, intel, drift) keep their in-process CJS implementations because no SDK counterpart exists.
+- **CJS Command Router Adapter Module — runtime-bridge delegation** (CONTEXT.md amendment during Phase 5): the existing Module entry gains a paragraph noting that the per-family `handlers` map delegates to `QueryRuntimeBridge.execute()` in-process via `require('../../sdk/dist/query-runtime-bridge.cjs')`. Per-side CJS handler files (`state.cjs`, `verify.cjs`, etc.) that previously held parallel implementations are reduced to delegates or deleted once their SDK counterpart is the only remaining implementation. CJS-only Module handlers (graphify, sdd2-import, schema-detect, fallow-runner, intel, drift) keep their in-process CJS implementations because no SDK counterpart exists.
 
 ## Consequences
 
@@ -94,7 +94,7 @@ A top-of-file banner is auto-inserted by each generator into the emitted `.gener
 
 ## Out of scope
 
-- Migrating CJS-only Modules (graphify, gsd2-import, schema-detect, fallow-runner, intel, drift) to SDK handlers — each is its own enhancement.
+- Migrating CJS-only Modules (graphify, sdd2-import, schema-detect, fallow-runner, intel, drift) to SDK handlers — each is its own enhancement.
 - Sync→async migration of CJS state/verify Adapters — leaves the per-side Adapter shape intact, which is the point.
 - Defining a Verify Module before the verify surface has a shared Interface — that is precondition work for a future enhancement, not this one.
 

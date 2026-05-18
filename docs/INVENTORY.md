@@ -385,7 +385,7 @@ Full listing: `sdd/bin/lib/*.cjs`.
 | `frontmatter.cjs` | YAML frontmatter CRUD operations |
 | `gap-checker.cjs` | Post-planning gap analysis (#2493): unified REQUIREMENTS.md + CONTEXT.md decisions vs PLAN.md coverage report (`sdd-tools gap-analysis`) |
 | `graphify.cjs` | Knowledge-graph build/query/status/diff for `/sdd-graphify` |
-| `gsd2-import.cjs` | External-plan ingest for `/sdd-import --from-gsd2` |
+| `sdd2-import.cjs` | External-plan ingest for `/sdd-import --from-sdd2` |
 | `init-command-router.cjs` | Thin CJS subcommand router adapter for `sdd-tools init` |
 | `init.cjs` | Compound context loading for each workflow type |
 | `install-profiles.cjs` | Install profile allowlist + skill staging for `--minimal` install (#2762); single source of truth for which `sdd-*` skills/agents land in runtime config dirs |

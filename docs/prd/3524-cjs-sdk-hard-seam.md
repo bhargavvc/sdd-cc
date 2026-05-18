@@ -36,7 +36,7 @@ The fix is mechanical: for every hand-synced pair, replace one side with a gener
 ## Non-goals
 
 - Removing the CJS CLI. `sdd-tools` continues to exist for shell-script back-compat. (Its dispatcher delegates to the SDK runtime bridge after Phase 5; the external CLI contract is unchanged.)
-- Migrating CJS-only Modules (graphify, gsd2-import, schema-detect, fallow-runner, intel, drift) to SDK handlers.
+- Migrating CJS-only Modules (graphify, sdd2-import, schema-detect, fallow-runner, intel, drift) to SDK handlers.
 - Defining a Verify Module before the verify surface has a shared Interface. Verify-surface deepening is precondition work for a future enhancement.
 
 ## Approach
@@ -157,7 +157,7 @@ Phases are sized to ship in one to two PRs each. Each phase has its own GitHub i
 - Replace each canonical-family `handlers` map in `bin/lib/*-command-router.cjs` with a generated delegate emitter that, per subcommand, calls `executeForCjs({ canonical, argv, env, cwd })` and writes the result through the existing CJS output Adapter.
 - For each canonical command family in order — `state.*`, `verify.*`, `phase.*`, `phases.*`, `validate.*`, `roadmap.*`, `init.*`, `frontmatter.*`, `config.*`, plus the non-family commands listed in `sdk/src/query/command-manifest.non-family.ts` — migrate one family per sub-PR. Run the golden parity matrix per family before merging.
 - Delete CJS-side handler files (or shrink to delegates) for each migrated family: `state.cjs`, `verify.cjs`, `init.cjs`, `phase.cjs`, `phases.cjs`, `validate.cjs`, `roadmap.cjs`, `milestone.cjs`, `frontmatter.cjs`, `config.cjs` write paths, plan-scan handlers, etc. The pure-transform Shared Modules from Phases 1–4 remain untouched; only the per-family handler entry points are replaced.
-- CJS-only Module handlers (`graphify`, `gsd2-import`, `schema-detect`, `fallow-runner`, `intel`, `drift`, `installer-migrations`) keep their in-process CJS implementations. They are not in the canonical family registry and do not route through the SDK runtime bridge.
+- CJS-only Module handlers (`graphify`, `sdd2-import`, `schema-detect`, `fallow-runner`, `intel`, `drift`, `installer-migrations`) keep their in-process CJS implementations. They are not in the canonical family registry and do not route through the SDK runtime bridge.
 - Extend `sdk/src/golden/golden.integration.test.ts` to verify identical exit code + stdout chunks + stderr lines between `sdd-tools <family> <subcommand>` (now delegated) and `sdd-sdk query <canonical>` for every canonical command in the manifest.
 
 **Acceptance criteria:**
@@ -170,7 +170,7 @@ Phases are sized to ship in one to two PRs each. Each phase has its own GitHub i
 
 **Rollback (per family):** Each family's PR is independently revertible. The CJS handler files for an un-migrated family remain on disk in git history; if a family's delegation regresses, revert that family's PR and the CJS-side handler is restored.
 
-**Out-of-scope under Phase 5:** The CJS-only Modules (graphify, gsd2-import, etc.) and workflow markdown that calls them — those calls continue to hit the in-process CJS handler, no change. Migrating CJS-only Modules to SDK is a separate enhancement.
+**Out-of-scope under Phase 5:** The CJS-only Modules (graphify, sdd2-import, etc.) and workflow markdown that calls them — those calls continue to hit the in-process CJS handler, no change. Migrating CJS-only Modules to SDK is a separate enhancement.
 
 ---
 

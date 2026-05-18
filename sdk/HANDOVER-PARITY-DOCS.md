@@ -22,7 +22,7 @@ Paste this document (or `@sdk/HANDOVER-PARITY-DOCS.md`) at the start of a new ch
 
 ## What already exists (do not duplicate blindly)
 
-- `sdk/src/query/QUERY-HANDLERS.md` — Registry conventions, partial “not registered” list (**graphify**, **from-gsd2**), CLI name differences (**summary-extract** vs **summary.extract**, **scaffold** vs **phase.scaffold**), **intel.update** (CJS JSON parity; refresh via agent), **skill-manifest --write** / mutation events, **docs-init** golden note (agent install fields), **stateExtractField** rule.
+- `sdk/src/query/QUERY-HANDLERS.md` — Registry conventions, partial “not registered” list (**graphify**, **from-sdd2**), CLI name differences (**summary-extract** vs **summary.extract**, **scaffold** vs **phase.scaffold**), **intel.update** (CJS JSON parity; refresh via agent), **skill-manifest --write** / mutation events, **docs-init** golden note (agent install fields), **stateExtractField** rule.
 - `sdk/src/golden/golden.integration.test.ts` — Source of truth for **which commands** are golden-tested and **how** (full equality vs subset vs normalized `existing_docs` vs omitted fields; `init.quick` strips clock-derived keys via `init-golden-normalize.ts`).
 - `sdk/src/golden/capture.ts` — `captureSddToolsOutput()` spawns `sdd/bin/sdd-tools.cjs`.
 - `docs/CLI-TOOLS.md` — User-facing CLI reference; should **link** to the parity exceptions + matrix (or host a short summary with pointer to `sdk/`).
@@ -51,7 +51,7 @@ Cover at least:
 
 Build the table by **diffing** `sdd/bin/sdd-tools.cjs` `switch (command)` top-level cases against `createRegistry()` registrations in `sdk/src/query/index.ts`.
 
-**Already documented as product-out-of-scope for registry:** **graphify**, **from-gsd2** / **gsd2-import**.
+**Already documented as product-out-of-scope for registry:** **graphify**, **from-sdd2** / **sdd2-import**.
 
 **Already documented as naming/alias differences (registered, different string):** **summary-extract** ↔ **summary.extract**; top-level **scaffold** ↔ **phase.scaffold**.
 

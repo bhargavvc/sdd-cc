@@ -139,7 +139,7 @@ describe('outright deleted dead skills are removed', () => {
     // list-phase-assumptions → discuss-phase --assumptions (pending #3131)
     // session-report     → pause-work --report (pending #3131)
     // analyze-dependencies → manager --analyze-deps (pending #3131)
-    // from-gsd2          → import --from-gsd2 (pending #3131)
+    // from-sdd2          → import --from-sdd2 (pending #3131)
   ];
 
   for (const name of deleted) {
@@ -160,7 +160,7 @@ describe('#3131 re-wired workflows: standalone command files must not exist', ()
     ['list-phase-assumptions', 'absorbed into discuss-phase.md --assumptions'],
     ['session-report',         'absorbed into pause-work.md --report'],
     ['analyze-dependencies',   'absorbed into manager.md --analyze-deps'],
-    ['from-gsd2',              'absorbed into import.md --from-gsd2'],
+    ['from-sdd2',              'absorbed into import.md --from-sdd2'],
   ];
 
   for (const [name, reason] of rewired) {
@@ -198,11 +198,11 @@ describe('#3131 re-wired workflows: parent command argument-hints advertise the 
     );
   });
 
-  test('import.md argument-hint contains --from-gsd2', () => {
+  test('import.md argument-hint contains --from-sdd2', () => {
     const fm = parseFrontmatter(skillPath('import'));
     assert.ok(
-      (fm['argument-hint'] || '').includes('--from-gsd2'),
-      'import.md argument-hint does not contain --from-gsd2. got: ' + (fm['argument-hint'] || '(none)'),
+      (fm['argument-hint'] || '').includes('--from-sdd2'),
+      'import.md argument-hint does not contain --from-sdd2. got: ' + (fm['argument-hint'] || '(none)'),
     );
   });
 });
@@ -234,10 +234,10 @@ describe('#3131 re-wired workflows: parent command bodies dispatch to workflow f
     );
   });
 
-  test('import.md body references from-gsd2', () => {
+  test('import.md body references from-sdd2', () => {
     assert.ok(
-      bodyContains('import', 'from-gsd2'),
-      'import.md body does not reference from-gsd2 — --from-gsd2 flag dispatch is missing',
+      bodyContains('import', 'from-sdd2'),
+      'import.md body does not reference from-sdd2 — --from-sdd2 flag dispatch is missing',
     );
   });
 });

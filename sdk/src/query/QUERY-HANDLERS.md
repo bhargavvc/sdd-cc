@@ -5,7 +5,7 @@ This document records contracts for the typed query layer consumed by `sdd-sdk q
 ## Registry coverage vs `sdd-tools.cjs`
 
 - **In scope:** Native handlers are registered in `createRegistry()` (`index.ts`) so SDK output can match `sdd/bin/sdd-tools.cjs` JSON (see `sdk/src/golden/`).
-- **Explicitly not registered** (product decision): `**graphify**`, `**from-gsd2**` / `**gsd2-import**` — remain CLI-only.
+- **Explicitly not registered** (product decision): `**graphify**`, `**from-sdd2**` / `**sdd2-import**` — remain CLI-only.
 - **CLI name differences** (same behavior, different dispatch string):
   - CJS `**summary-extract**` → SDK `**summary.extract**` / `**summary extract**` / `**history-digest**` (see `index.ts`).
   - CJS top-level `**scaffold <type> ...**` → SDK `**phase.scaffold**` / `**phase scaffold**` with the scaffold type as the first argument (no separate `scaffold` alias on the registry).
@@ -277,7 +277,7 @@ Authoritative CJS entry points: `runCommand` `switch (command)` in `sdd/bin/sdd-
 | CJS surface           | Justification                                                                                  |
 | --------------------- | ---------------------------------------------------------------------------------------------- |
 | `**graphify`**        | Depends on Graphify CLI / Python stack; not ported to the typed query layer.                   |
-| `**from-gsd2**`       | Legacy GSD2 → SDD migration (`gsd2-import.cjs`); CLI-only helper.                              |
+| `**from-sdd2**`       | Legacy SDD2 → SDD migration (`sdd2-import.cjs`); CLI-only helper.                              |
 
 
 **SDK-only (registered dispatch without an equivalent `sdd-tools` top-level subcommand):**
@@ -338,7 +338,7 @@ Disposition: **Registered** = handled in `createRegistry()` under the listed SDK
 | `docs-init`                                                                                                                             | `docs-init`                                                               | Registered              | Golden: normalized compare (see above).                                   |
 | `learnings`                                                                                                                             | `learnings.list`, `learnings.query`, …                                    | Registered              |                                                                           |
 | `detect-custom-files`                                                                                                                   | `detect-custom-files`                                                     | Registered              | Requires `--config-dir`.                                                  |
-| `from-gsd2`                                                                                                                             | —                                                                         | CLI-only                | See **CLI-only** table.                                                   |
+| `from-sdd2`                                                                                                                             | —                                                                         | CLI-only                | See **CLI-only** table.                                                   |
 
 
 ---

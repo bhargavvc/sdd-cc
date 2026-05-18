@@ -150,7 +150,7 @@ describe('forensics workflow', () => {
     // contains the repo string.
     assert.match(
       content,
-      /gh issue create[\s\S]{0,250}--repo\s+sdd-build\/sdd/,
+      /gh issue create[\s\S]{0,250}--repo\s+bhargavvc\/sdd-cc/,
       'gh issue create must use --repo bhargavvc/sdd-cc to avoid submitting to the user\'s current project repo'
     );
   });
@@ -160,7 +160,7 @@ describe('forensics workflow', () => {
     // Regex is more robust than a fixed-length slice to formatting changes
     assert.match(
       content,
-      /gh label list[\s\S]{0,250}--repo\s+sdd-build\/sdd/,
+      /gh label list[\s\S]{0,250}--repo\s+bhargavvc\/sdd-cc/,
       'gh label list must target bhargavvc/sdd-cc'
     );
   });

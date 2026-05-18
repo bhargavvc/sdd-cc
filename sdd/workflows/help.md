@@ -574,7 +574,7 @@ The commands above cover the most common day-to-day flows. Every command listed 
 - **`/sdd:spec-phase <phase> [--auto] [--text]`** — Clarify WHAT a phase delivers with ambiguity scoring; produces a SPEC.md before discuss-phase.
 - **`/sdd:ai-integration-phase [phase]`** — Generate an AI-SPEC.md design contract for phases that involve building AI systems.
 - **`/sdd:ui-phase [phase]`** — Generate UI design contract (UI-SPEC.md) for frontend phases.
-- **`/sdd:import --from <filepath> | --from-gsd2`** — Ingest external plans with conflict detection, or reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format.
+- **`/sdd:import --from <filepath> | --from-sdd2`** — Ingest external plans with conflict detection, or reverse-migrate a SDD-2 (`.sdd/`) project back to SDD v1 (`.planning/`) format.
 - **`/sdd:ingest-docs [path] [--mode new|merge] [--manifest <file>] [--resolve auto|interactive]`** — Bootstrap or merge a `.planning/` setup from existing ADRs, PRDs, SPECs, and docs in a repo.
 
 ### Planning & Execution
