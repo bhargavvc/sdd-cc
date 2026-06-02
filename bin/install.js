@@ -20,6 +20,21 @@ const {
   projectCodexHookTomlCommand,
 } = require('../sdd/bin/lib/shell-command-projection.cjs');
 
+// ─── @bhargavvc/sdd-cc fork: skip-list for git-related commands/hooks ───────
+// Local-only filter applied by every copyCommandsAs*Skills runtime copier and
+// by the hook-install path. Files remain in the source tree (preserves docs,
+// translations, tests, and INVENTORY parity) — they are skipped only at
+// install time so the user's installed .cursor/.claude/etc. surface does not
+// expose them. Recurring post-sync patch: this block is overwritten by every
+// fresh-clone rebrand; the copier-loop skip checks must also be re-added.
+// See `.claude/knowledge/sdd-cc-rebrand-file-map.md` "MANDATORY: git-command
+// install-time skip" for the full re-application steps.
+const SDD_GIT_COMMAND_SKIP = new Set(['pr-branch', 'undo']);
+const SDD_GIT_HOOK_SKIP = new Set(['sdd-validate-commit.sh']);
+function shouldSkipSourceCommand(baseName) {
+  return SDD_GIT_COMMAND_SKIP.has(baseName);
+}
+
 // Colors
 const cyan = '\x1b[36m';
 const green = '\x1b[32m';
@@ -2240,6 +2255,8 @@ function copyCommandsAsAugmentSkills(srcDir, skillsDir, prefix, pathPrefix, runt
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5508,6 +5525,8 @@ function copyFlattenedCommands(srcDir, destDir, prefix, pathPrefix, runtime) {
     } else if (entry.name.endsWith('.md')) {
       // Flatten: help.md -> sdd-help.md
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const destName = `${prefix}-${baseName}.md`;
       const destPath = path.join(destDir, destName);
 
@@ -5572,6 +5591,8 @@ function copyCommandsAsCodexSkills(srcDir, skillsDir, prefix, pathPrefix, runtim
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5625,6 +5646,8 @@ function copyCommandsAsCursorSkills(srcDir, skillsDir, prefix, pathPrefix, runti
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5682,6 +5705,8 @@ function copyCommandsAsWindsurfSkills(srcDir, skillsDir, prefix, pathPrefix, run
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5734,6 +5759,8 @@ function copyCommandsAsTraeSkills(srcDir, skillsDir, prefix, pathPrefix, runtime
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5797,6 +5824,8 @@ function copyCommandsAsCodebuddySkills(srcDir, skillsDir, prefix, pathPrefix, ru
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5861,6 +5890,8 @@ function copyCommandsAsCopilotSkills(srcDir, skillsDir, prefix, isGlobal = false
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -5958,6 +5989,8 @@ function copyCommandsAsClaudeSkills(srcDir, skillsDir, prefix, pathPrefix, runti
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -6060,6 +6093,8 @@ function copyCommandsAsAntigravitySkills(srcDir, skillsDir, prefix, isGlobal = f
       }
 
       const baseName = entry.name.replace('.md', '');
+      // @bhargavvc/sdd-cc fork: skip git-related commands at install time.
+      if (shouldSkipSourceCommand(baseName)) continue;
       const skillName = `${currentPrefix}-${baseName}`;
       const skillDir = path.join(skillsDir, skillName);
       fs.mkdirSync(skillDir, { recursive: true });
@@ -6854,7 +6889,9 @@ function uninstall(isGlobal, runtime = 'claude') {
   // 4. Remove SDD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const sddHooks = ['sdd-statusline.js', 'sdd-check-update.js', 'sdd-context-monitor.js', 'sdd-prompt-guard.js', 'sdd-read-guard.js', 'sdd-read-injection-scanner.js', 'sdd-update-banner.js', 'sdd-workflow-guard.js', 'sdd-session-state.sh', 'sdd-validate-commit.sh', 'sdd-phase-boundary.sh'];
+    // @bhargavvc/sdd-cc fork: sdd-validate-commit.sh removed from this list
+    // (git commit-format enforcer is not shipped). See SDD_GIT_HOOK_SKIP.
+    const sddHooks = ['sdd-statusline.js', 'sdd-check-update.js', 'sdd-context-monitor.js', 'sdd-prompt-guard.js', 'sdd-read-guard.js', 'sdd-read-injection-scanner.js', 'sdd-update-banner.js', 'sdd-workflow-guard.js', 'sdd-session-state.sh', 'sdd-phase-boundary.sh'].filter(h => !SDD_GIT_HOOK_SKIP.has(h));
     let hookCount = 0;
     for (const hook of sddHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -8657,7 +8694,7 @@ function install(isGlobal, runtime = 'claude', options = {}) {
       if (verifyInstalled(hooksDest, 'hooks')) {
         console.log(`  ${green}✓${reset} Installed hooks (bundled)`);
         // Warn if expected community .sh hooks are missing (non-fatal)
-        const expectedShHooks = ['sdd-session-state.sh', 'sdd-validate-commit.sh', 'sdd-phase-boundary.sh'];
+        const expectedShHooks = ['sdd-session-state.sh', 'sdd-phase-boundary.sh'].filter(h => !SDD_GIT_HOOK_SKIP.has(h));
         for (const sh of expectedShHooks) {
           if (!fs.existsSync(path.join(hooksDest, sh))) {
             console.warn(`  ${yellow}⚠${reset}  Missing expected hook: ${sh}`);
@@ -9424,6 +9461,11 @@ function install(isGlobal, runtime = 'claude', options = {}) {
     }
 
     // Configure commit validation hook (Conventional Commits enforcement, opt-in)
+    // @bhargavvc/sdd-cc fork: skipped entirely — sdd-validate-commit.sh is not
+    // shipped from this fork. SDD_GIT_HOOK_SKIP gates the early-return.
+    if (SDD_GIT_HOOK_SKIP.has('sdd-validate-commit.sh')) {
+      // Intentionally skip the entire commit-validation block below.
+    } else {
     const validateCommitCommand = isGlobal
       ? buildHookCommand(targetDir, 'sdd-validate-commit.sh', hookOpts)
       : localShellCmd('sdd-validate-commit.sh');
@@ -9451,6 +9493,7 @@ function install(isGlobal, runtime = 'claude', options = {}) {
     } else if (!hasValidateCommitHook && !validateCommitCommand) {
       console.warn(`  ${yellow}⚠${reset}  Skipped commit validation hook — Bash executable path unavailable (#3393)`);
     }
+    } // end @bhargavvc/sdd-cc fork: SDD_GIT_HOOK_SKIP guard
 
     // Configure session state orientation hook (opt-in)
     const sessionStateCommand = isGlobal

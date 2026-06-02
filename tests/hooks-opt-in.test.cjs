@@ -191,9 +191,11 @@ describe('installer hook registration', () => {
       sddHooksContent.includes('sdd-session-state.sh'),
       'sddHooks should include sdd-session-state.sh'
     );
+    // @bhargavvc/sdd-cc fork: sdd-validate-commit.sh is intentionally removed
+    // from sddHooks (git commit-format enforcer is not shipped from this fork).
     assert.ok(
-      sddHooksContent.includes('sdd-validate-commit.sh'),
-      'sddHooks should include sdd-validate-commit.sh'
+      !sddHooksContent.includes('sdd-validate-commit.sh'),
+      'sddHooks must NOT include sdd-validate-commit.sh in this fork'
     );
     assert.ok(
       sddHooksContent.includes('sdd-phase-boundary.sh'),
