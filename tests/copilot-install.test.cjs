@@ -629,11 +629,15 @@ describe('copyCommandsAsCopilotSkills', () => {
     assert.ok(fs.existsSync(path.join(tempDir, 'sdd-help')), 'sdd-help folder exists');
     assert.ok(fs.existsSync(path.join(tempDir, 'sdd-progress')), 'sdd-progress folder exists');
 
-    // Count sdd-* directories — should match number of source command files
+    // Count sdd-* directories — should match number of source command files,
+    // minus @bhargavvc/sdd-cc fork's install-time SKIP list (pr-branch, undo).
+    const FORK_GIT_COMMAND_SKIP = new Set(['pr-branch', 'undo']);
     const dirs = fs.readdirSync(tempDir, { withFileTypes: true })
       .filter(e => e.isDirectory() && e.name.startsWith('sdd-'));
     const expectedSkillCount = fs.readdirSync(path.join(__dirname, '..', 'commands', 'sdd'))
-      .filter(f => f.endsWith('.md')).length;
+      .filter(f => f.endsWith('.md'))
+      .filter(f => !FORK_GIT_COMMAND_SKIP.has(f.slice(0, -3)))
+      .length;
     assert.strictEqual(dirs.length, expectedSkillCount, `expected ${expectedSkillCount} skill folders, got ${dirs.length}`);
   });
 
@@ -1127,8 +1131,13 @@ const { execFileSync } = require('child_process');
 const crypto = require('crypto');
 
 const INSTALL_PATH = path.join(__dirname, '..', 'bin', 'install.js');
+// @bhargavvc/sdd-cc fork: install-time SKIP for git commands — mirror of
+// SDD_GIT_COMMAND_SKIP in install.js.
+const E2E_FORK_GIT_COMMAND_SKIP = new Set(['pr-branch', 'undo']);
 const EXPECTED_SKILLS = fs.readdirSync(path.join(__dirname, '..', 'commands', 'sdd'))
-  .filter(f => f.endsWith('.md')).length;
+  .filter(f => f.endsWith('.md'))
+  .filter(f => !E2E_FORK_GIT_COMMAND_SKIP.has(f.slice(0, -3)))
+  .length;
 const EXPECTED_AGENTS = fs.readdirSync(path.join(__dirname, '..', 'agents'))
   .filter(f => f.startsWith('sdd-') && f.endsWith('.md')).length;
 

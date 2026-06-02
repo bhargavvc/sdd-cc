@@ -63,6 +63,10 @@ function stripAnsi(s) {
  * `copyCommandsAsCodexSkills` in bin/install.js: nested dirs collapse to
  * `sdd-<dir>-<file>` with the .md stripped.
  */
+// @bhargavvc/sdd-cc fork: git commands are install-time skipped — must be
+// excluded from the expected set. Mirror of SDD_GIT_COMMAND_SKIP in install.js.
+const FORK_GIT_COMMAND_SKIP = new Set(['pr-branch', 'undo']);
+
 function expectedSkillNames() {
   const names = new Set();
   function recurse(dir, prefix) {
@@ -71,6 +75,7 @@ function expectedSkillNames() {
         recurse(path.join(dir, entry.name), `${prefix}-${entry.name}`);
       } else if (entry.name.endsWith('.md')) {
         const base = entry.name.slice(0, -3);
+        if (FORK_GIT_COMMAND_SKIP.has(base)) continue;
         names.add(`${prefix}-${base}`);
       }
     }
