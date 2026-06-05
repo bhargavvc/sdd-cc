@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-14",
+  "generated": "2026-06-05",
   "families": {
     "agents": [
       "sdd-advisor-researcher",
@@ -46,6 +46,7 @@
       "/sdd-capture",
       "/sdd-cleanup",
       "/sdd-code-review",
+      "/sdd-commit",
       "/sdd-complete-milestone",
       "/sdd-config",
       "/sdd-debug",
@@ -120,6 +121,7 @@
       "cleanup.md",
       "code-review-fix.md",
       "code-review.md",
+      "commit.md",
       "complete-milestone.md",
       "debug.md",
       "diagnose-issues.md",
@@ -277,7 +279,6 @@
       "frontmatter.cjs",
       "gap-checker.cjs",
       "graphify.cjs",
-      "sdd2-import.cjs",
       "init-command-router.cjs",
       "init.cjs",
       "install-profiles.cjs",
@@ -301,6 +302,7 @@
       "roadmap.cjs",
       "runtime-homes.cjs",
       "schema-detect.cjs",
+      "sdd2-import.cjs",
       "secrets.cjs",
       "security.cjs",
       "shell-command-projection.cjs",

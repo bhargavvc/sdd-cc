@@ -54,7 +54,7 @@ Full roster at `agents/sdd-*.md`. The "Primary doc" column flags whether [`docs/
 
 ---
 
-## Commands (67 shipped)
+## Commands (68 shipped)
 
 Full roster at `commands/sdd/*.md`. The groupings below mirror `docs/COMMANDS.md` section order; each row carries the command name, a one-line role derived from the command's frontmatter `description:`, and a link to the source file. `tests/command-count-sync.test.cjs` locks the count against the filesystem.
 
@@ -92,6 +92,7 @@ These six routers are descriptor-only entries that the model picks first; the bo
 | `/sdd-ship` | Create PR, run review, and prepare for merge after verification. | [commands/sdd/ship.md](../commands/sdd/ship.md) |
 | `/sdd-fast` | Execute a trivial task inline — no subagents, no planning overhead. | [commands/sdd/fast.md](../commands/sdd/fast.md) |
 | `/sdd-quick` | Execute a quick task with SDD guarantees (atomic commits, state tracking) but skip optional agents. | [commands/sdd/quick.md](../commands/sdd/quick.md) |
+| `/sdd-commit` | Stage and commit current changes interactively with a conventional commit message. | [commands/sdd/commit.md](../commands/sdd/commit.md) |
 | `/sdd-ui-review` | Retroactive 6-pillar visual audit of implemented frontend code. | [commands/sdd/ui-review.md](../commands/sdd/ui-review.md) |
 | `/sdd-code-review` | Review source files changed during a phase for bugs, security, and code-quality problems; use `--fix` to auto-apply findings. | [commands/sdd/code-review.md](../commands/sdd/code-review.md) |
 | `/sdd-eval-review` | Retroactively audit an executed AI phase's evaluation coverage; produces EVAL-REVIEW.md. | [commands/sdd/eval-review.md](../commands/sdd/eval-review.md) |

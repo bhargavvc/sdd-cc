@@ -191,6 +191,23 @@ For tasks too small to justify planning: typo fixes, config changes, forgotten c
 Usage: `/sdd:fast "fix the typo in README"`
 Usage: `/sdd:fast "add .env to gitignore"`
 
+---
+
+**`/sdd:commit [<message> | --all]`**
+Stage and commit current changes interactively with a conventional commit message.
+
+For when you have changes ready to checkpoint outside a phase workflow: review the diff, approve a suggested conventional message, commit specific files. Never `git add -A` without explicit user consent.
+
+- Surveys tracked vs untracked changes before staging
+- Suggests a conventional commit message from the diff (`feat`, `fix`, `refactor`, …)
+- Refuses common secret patterns (`.env`, `*.pem`, `*credentials*`) without per-file confirmation
+- Never `--amend`, never `--no-verify`, never `git push`
+- Replaces the auto-commit step previously embedded in `/sdd:fast`
+
+Usage: `/sdd:commit`
+Usage: `/sdd:commit "fix(auth): correct token refresh"`
+Usage: `/sdd:commit --all`
+
 ### Roadmap Management
 
 **`/sdd:phase <description>`**
