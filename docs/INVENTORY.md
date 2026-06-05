@@ -165,7 +165,7 @@ These six routers are descriptor-only entries that the model picks first; the bo
 
 ---
 
-## Workflows (88 shipped)
+## Workflows (89 shipped)
 
 Full roster at `sdd/workflows/*.md`. Workflows are thin orchestrators that commands reference internally; most are not read directly by end users. Rows below map each workflow file to its role (derived from the `<purpose>` block) and, where applicable, to the command that invokes it.
 
@@ -185,6 +185,7 @@ Full roster at `sdd/workflows/*.md`. Workflows are thin orchestrators that comma
 | `cleanup.md` | Archive accumulated phase directories from completed milestones. | `/sdd-cleanup` |
 | `code-review-fix.md` | Auto-fix issues from REVIEW.md via sdd-code-fixer with per-fix atomic commits. | `/sdd-code-review --fix` |
 | `code-review.md` | Review phase source changes via sdd-code-reviewer; produces REVIEW.md. | `/sdd-code-review` |
+| `commit.md` | Stage and commit current changes interactively with a conventional commit message. | `/sdd-commit` |
 | `complete-milestone.md` | Mark a shipped version as complete — MILESTONES.md entry, PROJECT.md evolution, tag. | `/sdd-complete-milestone` |
 | `diagnose-issues.md` | Orchestrate parallel debug agents to investigate UAT gaps and find root causes. | `/sdd-verify-work` (auto-diagnosis) |
 | `discovery-phase.md` | Execute discovery at the appropriate depth level. | `/sdd-new-project` (discovery path) |
