@@ -51,12 +51,13 @@ Do the work directly:
 **No PLAN.md.** Just do it.
 </step>
 
-<step name="commit">
-Commit the change atomically:
+<step name="halt_for_manual_commit">
+**FORK NOTE — this fork disables auto-commit.** Do NOT run `git add` or `git commit`. Stop here and tell the user:
 
-```bash
-git add -A
-git commit -m "fix: {concise description of what changed}"
+```
+✅ Changes applied. Review the diff and commit manually:
+   git add -A
+   git commit -m "fix: <concise description>"
 ```
 
 Use conventional commit format: `fix:`, `feat:`, `docs:`, `chore:`, `refactor:` as appropriate.
@@ -80,8 +81,8 @@ Report completion:
 
 ```
 ✅ Done: {what was changed}
-   Commit: {short hash}
    Files: {list of changed files}
+   Manual git: review diff and commit when ready (this fork does not auto-commit).
 ```
 
 No next-step suggestions. No workflow routing. Just done.
@@ -99,7 +100,7 @@ No next-step suggestions. No workflow routing. Just done.
 
 <success_criteria>
 - [ ] Task completed in current context (no subagents)
-- [ ] Atomic git commit with conventional message
+- [ ] Changes staged for user to commit manually (fork policy — no auto-commit)
 - [ ] STATE.md updated if it exists
 - [ ] Total operation under 2 minutes wall time
 </success_criteria>
